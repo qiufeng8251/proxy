@@ -1187,7 +1187,7 @@ app.get("/", (req, res) => {
       }
       if (hints.length > 0) {
         hints.push("确定要继续切换吗？");
-        if (!window.confirm(hints.join("\n\n"))) {
+        if (!window.confirm(hints.join("\\n\\n"))) {
           return;
         }
       }
