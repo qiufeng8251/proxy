@@ -159,6 +159,7 @@
     },
     {
       "type": "trojan",
+      "tag": "TrojanTCP",
       "listen": "::",
       "listen_port": 24748,
       "users": [
@@ -314,6 +315,7 @@
     },
     {
       "type": "hysteria2",
+      "tag": "Hysteria2-in",
       "listen": "::",
       "listen_port": 30653,
       "up_mbps": 100,
@@ -697,12 +699,44 @@
   ],
   "outbounds": [
     {
+      "type": "direct",
+      "tag": "direct"
+    },
+    {
       "type": "socks",
       "tag": "socks-proxy",
       "server": "154.198.33.181",
       "server_port": 9093,
       "username": "info5998@gmail.com.Guo3_pp",
       "password": "Aa1234567@"
+    },
+    {
+      "type": "socks",
+      "tag": "socks-proxy-2",
+      "server": "127.0.0.1",
+      "server_port": 1080
     }
-  ]
+  ],
+  "route": {
+    "rules": [
+      {
+        "auth_user": [
+          "71ff27bf-314c-46a6-b688-688d64c8c250",
+          "71ff27bf-VLESS_TCP/TLS_Vision",
+          "71ff27bf-VLESS_WS",
+          "71ff27bf-Trojan_TCP",
+          "71ff27bf-VMess_WS",
+          "71ff27bf-singbox_hysteria2",
+          "71ff27bf-VLESS_Reality_Vision",
+          "71ff27bf-VLESS_Reality_gPRC",
+          "71ff27bf-singbox_tuic",
+          "71ff27bf-singbox_naive",
+          "71ff27bf-VMess_HTTPUpgrade",
+          "71ff27bf-anytls"
+        ],
+        "outbound": "socks-proxy"
+      }
+    ],
+    "final": "socks-proxy-2"
+  }
 }
