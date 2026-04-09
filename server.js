@@ -8,7 +8,6 @@ const { STATE_CODE_ROWS } = require("./stateCodes");
 const app = express();
 const PORT = 3000;
 const CONFIG_PATH = "/etc/v2ray-agent/sing-box/conf/config.json";
-const ACTIVE_BINDING = "127.0.0.1:60000";
 const IPINFO_CACHE = new Map();
 const IP_GEO_CACHE = new Map();
 
@@ -323,11 +322,20 @@ app.get("/api/switch-proxy", async (req, res) => {
         });
     }
 
+    let port = 60000;
+    const rawPort = req.query.port;
+    if (rawPort != null && String(rawPort).trim() !== "") {
+        const n = Number(String(rawPort).trim());
+        if (!Number.isNaN(n) && n > 0) {
+            port = n;
+        }
+    }
+
     try {
         const result = await axios.get("http://127.0.0.1:8080/api/forward", {
             params: {
                 t: 2,
-                port: 60000,
+                port,
                 id
             }
         });
@@ -747,6 +755,21 @@ app.get("/", (req, res) => {
             </div>
           </div>
         </dialog>
+        <dialog id="switchProxyDialog">
+          <div class="modal-inner">
+            <h3 style="margin-top:0;">切换代理</h3>
+            <p class="status" id="switchProxyMeta" style="margin:0 0 10px;font-size:13px;color:#374151;"></p>
+            <div class="modal-row">
+              <label for="switchUserSelect">绑定用户（本地 SOCKS 端口）</label>
+              <select id="switchUserSelect"></select>
+            </div>
+            <div class="status" id="switchStatusText"></div>
+            <div class="modal-actions">
+              <button type="button" id="cancelSwitchBtn" class="cancel-btn">取消</button>
+              <button type="button" id="confirmSwitchBtn" class="switch-btn">确认切换</button>
+            </div>
+          </div>
+        </dialog>
         <table>
           <thead>
             <tr>
@@ -798,10 +821,16 @@ app.get("/", (req, res) => {
     const userBody = document.getElementById("userBody");
     const userStatusText = document.getElementById("userStatusText");
     const refreshUsersBtn = document.getElementById("refreshUsersBtn");
+    const switchProxyDialog = document.getElementById("switchProxyDialog");
+    const switchUserSelect = document.getElementById("switchUserSelect");
+    const switchProxyMeta = document.getElementById("switchProxyMeta");
+    const switchStatusText = document.getElementById("switchStatusText");
+    const cancelSwitchBtn = document.getElementById("cancelSwitchBtn");
+    const confirmSwitchBtn = document.getElementById("confirmSwitchBtn");
     const endpoint = "/api/proxy-list";
-    const activeBinding = "${ACTIVE_BINDING}";
     let statesByCountry = {};
     let allProxyList = [];
+    let pendingSwitchProxyId = "";
 
     function setStatus(text) {
       statusText.textContent = text;
@@ -825,6 +854,20 @@ app.get("/", (req, res) => {
 
     function normAddr(s) {
       return String(s || "").replace(/\s+/g, "").toLowerCase();
+    }
+
+    function parsePortFromSocks(addr) {
+      const s = String(addr || "").trim();
+      const idx = s.lastIndexOf(":");
+      if (idx < 0) {
+        return null;
+      }
+      const p = Number(s.slice(idx + 1));
+      return Number.isFinite(p) && p > 0 ? p : null;
+    }
+
+    function setSwitchStatus(text) {
+      switchStatusText.textContent = text;
     }
 
     function matchPortRow(portRows, socksAddr) {
@@ -1011,8 +1054,6 @@ app.get("/", (req, res) => {
         const hasBinding = bindingStr !== "";
         const useStatusText = hasBinding ? "正在使用" : "-";
         const useStatusClass = hasBinding ? "using" : "";
-        const activeTrim = String(activeBinding || "").trim();
-        const isCurrentForward = hasBinding && bindingStr === activeTrim;
         const rowClass = hasBinding ? "row-using" : "";
         return \`
           <tr class="\${rowClass}">
@@ -1027,11 +1068,11 @@ app.get("/", (req, res) => {
             <td class="\${useStatusClass}">\${useStatusText}</td>
             <td>
               <button
+                type="button"
                 class="switch-btn"
-                onclick="switchProxy('\${item.id || ""}')"
-                \${isCurrentForward ? "disabled" : ""}
+                onclick="openSwitchModal('\${item.id || ""}')"
               >
-                \${isCurrentForward ? "当前代理" : "切换到此代理"}
+                切换
               </button>
             </td>
           </tr>
@@ -1039,25 +1080,137 @@ app.get("/", (req, res) => {
       }).join("");
     }
 
-    async function switchProxy(id) {
-      if (!id) {
-        setStatus("切换失败: 缺少代理 ID");
+    async function openSwitchModal(proxyId) {
+      if (!proxyId) {
+        setStatus("缺少代理 ID");
         return;
+      }
+      pendingSwitchProxyId = proxyId;
+      setSwitchStatus("");
+      const row = allProxyList.find((p) => String(p.id) === String(proxyId));
+      switchProxyMeta.textContent = row
+        ? "代理 ID: " + proxyId + (row.ip ? " · IP " + row.ip : "")
+        : "代理 ID: " + proxyId;
+
+      try {
+        const resp = await fetch("/api/singbox-users");
+        const data = await resp.json();
+        if (!resp.ok || data.success === false) {
+          throw new Error(data.msg || data.error || "读取用户失败");
+        }
+        const users = Array.isArray(data.users) ? data.users : [];
+        const parts = [];
+        for (let i = 0; i < users.length; i += 1) {
+          const u = users[i];
+          const port = parsePortFromSocks(u.socks_address);
+          if (port == null) {
+            continue;
+          }
+          const addr = String(u.socks_address || "").trim();
+          const label = (u.outbound || "用户") + "（" + addr + "，端口 " + port + "）";
+          parts.push(
+            '<option value="' +
+              port +
+              '" data-socks="' +
+              escapeHtml(addr) +
+              '">' +
+              escapeHtml(label) +
+              "</option>"
+          );
+        }
+        switchUserSelect.innerHTML = parts.length
+          ? parts.join("")
+          : '<option value="">无可用用户（请检查 sing-box SOCKS 出站）</option>';
+
+        if (parts.length) {
+          const bindNorm = row && row.binding ? normAddr(row.binding) : "";
+          let matched = false;
+          for (let j = 0; j < switchUserSelect.options.length; j += 1) {
+            const opt = switchUserSelect.options[j];
+            const sn = opt.getAttribute("data-socks");
+            if (bindNorm && sn && normAddr(sn) === bindNorm) {
+              switchUserSelect.selectedIndex = j;
+              matched = true;
+              break;
+            }
+          }
+          if (!matched) {
+            switchUserSelect.selectedIndex = 0;
+          }
+        }
+        switchProxyDialog.showModal();
+      } catch (err) {
+        setStatus("打开切换窗口失败: " + err.message);
+      }
+    }
+
+    async function confirmSwitchProxy() {
+      const opt = switchUserSelect.selectedOptions[0];
+      if (!opt || !opt.value) {
+        setSwitchStatus("请选择要绑定的用户");
+        return;
+      }
+      const port = opt.value;
+      const socksAttr = opt.getAttribute("data-socks");
+      const targetNorm = socksAttr ? normAddr(socksAttr) : "";
+
+      const others = allProxyList.filter((item) => {
+        if (String(item.id) === String(pendingSwitchProxyId)) {
+          return false;
+        }
+        if (!item.binding) {
+          return false;
+        }
+        return targetNorm && normAddr(item.binding) === targetNorm;
+      });
+
+      const selfRow = allProxyList.find((p) => String(p.id) === String(pendingSwitchProxyId));
+      const hints = [];
+      if (others.length > 0) {
+        const o = others[0];
+        hints.push(
+          "所选用户已被占用：其他代理（ID: " +
+            (o.id || "-") +
+            "）已绑定 " +
+            (o.binding || "") +
+            "。"
+        );
+      }
+      if (selfRow && selfRow.binding && String(selfRow.binding).trim() !== "") {
+        hints.push(
+          "当前代理已有绑定（" +
+            selfRow.binding +
+            "），将改绑到端口 " +
+            port +
+            "。"
+        );
+      }
+      if (hints.length > 0) {
+        hints.push("确定要继续切换吗？");
+        if (!window.confirm(hints.join("\n\n"))) {
+          return;
+        }
       }
 
       try {
-        setStatus("正在切换...");
-        const resp = await fetch("/api/switch-proxy?id=" + encodeURIComponent(id));
+        setSwitchStatus("正在切换...");
+        const resp = await fetch(
+          "/api/switch-proxy?id=" +
+            encodeURIComponent(pendingSwitchProxyId) +
+            "&port=" +
+            encodeURIComponent(port)
+        );
         const data = await resp.json();
         const forwardOk = data?.data?.error === false;
         if (!resp.ok || data.success === false || !forwardOk) {
           throw new Error(data.msg || data.error || "切换失败");
         }
         const detailMsg = data?.data?.message ? "（" + data.data.message + "）" : "";
-        setStatus("切换成功" + detailMsg + "，正在刷新列表...");
+        setStatus("切换成功" + detailMsg);
+        switchProxyDialog.close();
         await loadProxyList();
       } catch (err) {
-        setStatus("切换失败: " + err.message);
+        setSwitchStatus("切换失败: " + err.message);
       }
     }
 
@@ -1119,6 +1272,10 @@ app.get("/", (req, res) => {
     cancelAddModalBtn.addEventListener("click", () => {
       addProxyDialog.close();
     });
+    cancelSwitchBtn.addEventListener("click", () => {
+      switchProxyDialog.close();
+    });
+    confirmSwitchBtn.addEventListener("click", confirmSwitchProxy);
     refreshBtn.addEventListener("click", loadProxyList);
     filterCountrySelect.addEventListener("change", applyFilters);
     filterStateSelect.addEventListener("change", applyFilters);
