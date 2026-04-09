@@ -134,7 +134,7 @@ CONFIG_FILE="/etc/v2ray-agent/sing-box/conf/config.json"
 echo "备份 sing-box 配置..."
 sudo cp "$CONFIG_FILE" "${CONFIG_FILE}.bak" || die "备份 sing-box 配置失败"
 
-echo "按入站 UUID 用户生成 socks-proxy-0..N（127.0.0.1:60000 起）与 auth_user 路由..."
+echo "按入站 UUID 用户生成 SOCKS 出站：tag=用户ID（UUID 首段 8 位），端口 60000 起递增，并写入 auth_user 路由..."
 
 TMP_JSON="$(mktemp)"
 trap 'rm -f "$TMP_JSON"' EXIT
@@ -153,28 +153,33 @@ def auth_strings(u):
   [.uuid, .password, .Password, .name, .Username]
   | map(select(type == "string" and . != ""));
 
-def should_remove_socks(o):
+def should_remove_socks(o; r):
   (o.type == "socks") and (
     (o.tag == "socks-proxy" and (o.server == "127.0.0.1")) or
-    ((o.tag // "") | test("^socks-proxy-[0-9]+$"))
+    ((o.tag // "") | test("^socks-proxy-[0-9]+$")) or
+    (
+      (o.server == "127.0.0.1") and
+      ((r | index((o.tag // "") | ascii_downcase)) != null)
+    )
   );
 
 . as $root
 | ([ $root.inbounds[] | .users[]? | select(type == "object") ] | map(select(account_key(.) != null))) as $all
 | ($all | map(account_key(.)) | unique | sort) as $keys
-| (($root.outbounds // []) | map(select(should_remove_socks(.) | not))) as $kept
+| ($keys | map(split("-")[0] | ascii_downcase) | unique) as $rid_tags
+| (($root.outbounds // []) | map(select(should_remove_socks(.; $rid_tags) | not))) as $kept
 | (if ($kept | any(.tag == "direct")) then $kept else ([{type:"direct",tag:"direct"}] + $kept) end) as $ob1
-| ($keys | to_entries | map({
+| ($keys | to_entries | map(. as $e | {
     type: "socks",
-    tag: ("socks-proxy-" + (.key | tostring)),
+    tag: ($e.value | split("-")[0] | ascii_downcase),
     server: "127.0.0.1",
-    server_port: (60000 + .key)
+    server_port: (60000 + $e.key)
   })) as $new_socks
 | ($keys | to_entries | map(. as $e | {
     auth_user: (
       [ $all[] | select(account_key(.) == $e.value) | auth_strings(.) ] | add // [] | unique
     ),
-    outbound: ("socks-proxy-" + ($e.key | tostring))
+    outbound: ($e.value | split("-")[0] | ascii_downcase)
   })) as $rules
 | $root
 | .outbounds = ($ob1 + $new_socks)
