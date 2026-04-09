@@ -270,7 +270,7 @@ app.get("/api/switch-proxy", async (req, res) => {
         const result = await axios.get("http://127.0.0.1:8080/api/forward", {
             params: {
                 t: 2,
-                ports: '60000,60001,60002',
+                port: 60000,
                 id
             }
         });
