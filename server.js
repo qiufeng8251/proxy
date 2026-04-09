@@ -308,7 +308,7 @@ app.get("/api/singbox-users", (req, res) => {
 
 app.get("/api/port_status", async (req, res) => {
     try {
-        const r = await axios.get("http://127.0.0.1:8080/api/port_status", {
+        const r = await axios.get("http://127.0.0.1:8080/api/port_status?t=2", {
             timeout: 15000
         });
         const body = r.data;
