@@ -7,29 +7,43 @@ die() {
     exit 1
 }
 
+have_cmd() {
+    command -v "$1" >/dev/null 2>&1
+}
+
 echo "========== Step 0: 安装基础依赖 =========="
 
-sudo apt update || die "apt update 失败"
-sudo apt install -y wget curl git jq || die "安装基础依赖失败"
+NEED_BASE=0
+for c in wget curl git jq; do
+    have_cmd "$c" || NEED_BASE=1
+done
 
-echo "jq 已安装完成"
+if [ "$NEED_BASE" -eq 0 ]; then
+    echo "基础依赖已存在 (wget curl git jq)，跳过 apt 安装"
+else
+    sudo apt update || die "apt update 失败"
+    sudo apt install -y wget curl git jq || die "安装基础依赖失败"
+fi
 
 echo "========== Step 1: 安装 9proxy =========="
 
 DEB_FILE="9proxy-linux-debian-amd64.deb"
 DOWNLOAD_URL="https://static.9proxy-cdn.net/download/latest/linux/9proxy-linux-debian-amd64.deb"
 
-# 判断是否已存在
-if [ -f "$DEB_FILE" ]; then
-    echo "文件已存在，跳过下载: $DEB_FILE"
+if have_cmd 9proxy; then
+    echo "9proxy 已安装，跳过 deb 下载与 apt 安装"
 else
-    echo "开始下载 9proxy..."
-    wget "$DOWNLOAD_URL" -O "$DEB_FILE" || die "下载 9proxy deb 失败"
-    [ -s "$DEB_FILE" ] || die "下载的 deb 文件为空: $DEB_FILE"
-fi
+    if [ -f "$DEB_FILE" ]; then
+        echo "文件已存在，跳过下载: $DEB_FILE"
+    else
+        echo "开始下载 9proxy..."
+        wget "$DOWNLOAD_URL" -O "$DEB_FILE" || die "下载 9proxy deb 失败"
+        [ -s "$DEB_FILE" ] || die "下载的 deb 文件为空: $DEB_FILE"
+    fi
 
-echo "安装 9proxy..."
-sudo apt install -y ./"$DEB_FILE" || die "安装 9proxy deb 失败"
+    echo "安装 9proxy..."
+    sudo apt install -y ./"$DEB_FILE" || die "安装 9proxy deb 失败"
+fi
 
 echo "启动 9proxy 服务..."
 sudo systemctl start 9proxyd.service || die "启动 9proxyd.service 失败"
@@ -55,15 +69,31 @@ echo "========== Step 1 完成 =========="
 
 echo "========== Step 2: 安装 Node.js 20 =========="
 
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - || die "NodeSource 安装脚本执行失败"
-sudo apt install -y nodejs || die "安装 nodejs 失败"
+if have_cmd node; then
+    NODE_MAJOR="$(node -p "parseInt(process.versions.node, 10)" 2>/dev/null || echo 0)"
+    if [ "${NODE_MAJOR:-0}" -ge 20 ]; then
+        echo "Node.js 已安装 $(node -v)，主版本 >= 20，跳过 NodeSource 安装"
+    else
+        echo "当前 Node 主版本为 ${NODE_MAJOR}，安装 Node.js 20..."
+        curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - || die "NodeSource 安装脚本执行失败"
+        sudo apt install -y nodejs || die "安装 nodejs 失败"
+    fi
+else
+    echo "未检测到 node，安装 Node.js 20..."
+    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - || die "NodeSource 安装脚本执行失败"
+    sudo apt install -y nodejs || die "安装 nodejs 失败"
+fi
 
 echo "Node 版本："
 node -v || die "node 不可用"
 
 echo "========== Step 3: 安装 PM2 =========="
 
-sudo npm install -g pm2 || die "安装 PM2 失败"
+if have_cmd pm2; then
+    echo "PM2 已安装 ($(pm2 -v 2>/dev/null || echo ok))，跳过 npm 全局安装"
+else
+    sudo npm install -g pm2 || die "安装 PM2 失败"
+fi
 
 echo "========== Step 4: 下载项目 =========="
 
