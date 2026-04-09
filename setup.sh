@@ -190,16 +190,7 @@ sudo jq empty "$CONFIG_FILE" || die "写入后的 sing-box 配置 JSON 无效"
 USER_RULES="$(sudo jq -r '(.route.rules // []) | length' "$CONFIG_FILE")"
 echo "sing-box 配置已更新（路由用户数: $USER_RULES）"
 
-echo "重启 sing-box 相关服务..."
-RESTART_OK=0
-for svc in sing-box v2ray v2ray-agent; do
-    if sudo systemctl cat "${svc}.service" >/dev/null 2>&1; then
-        sudo systemctl restart "$svc" || die "systemctl restart ${svc} 失败"
-        echo "已重启: ${svc}.service"
-        RESTART_OK=1
-        break
-    fi
-done
-[ "$RESTART_OK" -eq 1 ] || die "未找到 sing-box / v2ray / v2ray-agent 的 systemd 单元，请手动重启"
+echo "重启 sing-box..."
+sudo systemctl restart sing-box || die "systemctl restart sing-box 失败"
 
 echo "========== 全部完成 =========="
