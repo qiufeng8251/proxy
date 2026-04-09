@@ -98,6 +98,45 @@ async function testProxy(proxy) {
     }
 }
 
+function getSingboxRouteUsers() {
+    try {
+        if (!fs.existsSync(CONFIG_PATH)) {
+            return {
+                ok: false,
+                error: "配置文件不存在: " + CONFIG_PATH,
+                users: []
+            };
+        }
+        const config = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
+        const rules = config?.route?.rules;
+        if (!Array.isArray(rules)) {
+            return { ok: true, users: [] };
+        }
+        const users = [];
+        for (let i = 0; i < rules.length; i += 1) {
+            const rule = rules[i];
+            if (!rule || typeof rule.outbound !== "string") {
+                continue;
+            }
+            const auth = rule.auth_user;
+            if (!Array.isArray(auth)) {
+                continue;
+            }
+            users.push({
+                outbound: rule.outbound,
+                auth_user: auth.map((x) => String(x))
+            });
+        }
+        return { ok: true, users };
+    } catch (e) {
+        return {
+            ok: false,
+            error: e.message || String(e),
+            users: []
+        };
+    }
+}
+
 function updateV2Ray(proxy) {
     const config = JSON.parse(fs.readFileSync(CONFIG_PATH));
 
@@ -215,6 +254,15 @@ app.get("/api/location-codes", (req, res) => {
     });
 });
 
+app.get("/api/singbox-users", (req, res) => {
+    const { ok, error, users } = getSingboxRouteUsers();
+    res.json({
+        success: ok,
+        msg: ok ? "ok" : error || "读取失败",
+        users
+    });
+});
+
 app.get("/api/add-proxy", async (req, res) => {
     try {
         const allowedKeys = [
@@ -262,17 +310,99 @@ app.get("/", (req, res) => {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>代理列表</title>
+  <title>代理控制台</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: Arial, sans-serif;
-      margin: 24px;
+      margin: 0;
       color: #1f2937;
+      background: #e5e7eb;
+      min-height: 100vh;
+    }
+    .app-shell {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      background: #111827;
+      color: #e5e7eb;
+      padding: 20px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .sidebar-brand {
+      padding: 0 16px 16px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      border-bottom: 1px solid #374151;
+      margin-bottom: 8px;
+    }
+    .sidebar nav {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 0 10px;
+    }
+    .nav-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 10px 12px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: #d1d5db;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .nav-item:hover {
+      background: #1f2937;
+      color: #fff;
+    }
+    .nav-item.active {
+      background: #2563eb;
+      color: #fff;
+    }
+    .main-content {
+      flex: 1;
+      padding: 24px;
+      overflow: auto;
       background: #f9fafb;
+    }
+    .panel {
+      display: none;
+    }
+    .panel.active {
+      display: block;
     }
     h1 {
       margin: 0 0 16px;
       font-size: 24px;
+    }
+    .user-hint {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+    .auth-list {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 13px;
+      color: #374151;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .auth-list li {
+      margin: 2px 0;
+      word-break: break-all;
     }
     .toolbar {
       display: flex;
@@ -409,60 +539,90 @@ app.get("/", (req, res) => {
   </style>
 </head>
 <body>
-  <h1>代理列表</h1>
-  <div class="toolbar">
-    <button id="openAddModalBtn" class="add-btn">新增代理</button>
-    <button id="refreshBtn">刷新列表</button>
-    <span class="status" id="statusText">加载中...</span>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand">sing-box 控制台</div>
+      <nav>
+        <button type="button" class="nav-item" data-panel="users" id="navUsers">用户管理</button>
+        <button type="button" class="nav-item active" data-panel="proxies" id="navProxies">代理列表</button>
+      </nav>
+    </aside>
+    <main class="main-content">
+      <section id="panelUsers" class="panel">
+        <h1>用户管理</h1>
+        <p class="user-hint">数据来自 <code>${CONFIG_PATH}</code> 的 <code>route.rules</code>：每条规则对应一个用户，<strong>outbound</strong> 为用户 ID（与 SOCKS 出站 tag 一致），<strong>auth_user</strong> 为该用户在各入站协议下的认证名（可多条）。</p>
+        <div class="toolbar">
+          <button type="button" id="refreshUsersBtn">刷新用户</button>
+          <span class="status" id="userStatusText">加载中...</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:140px;">用户 ID（outbound）</th>
+              <th>认证用户名（auth_user）</th>
+            </tr>
+          </thead>
+          <tbody id="userBody"></tbody>
+        </table>
+      </section>
+      <section id="panelProxies" class="panel active">
+        <h1>代理列表</h1>
+        <div class="toolbar">
+          <button id="openAddModalBtn" class="add-btn">新增代理</button>
+          <button id="refreshBtn">刷新列表</button>
+          <span class="status" id="statusText">加载中...</span>
+        </div>
+        <dialog id="addProxyDialog">
+          <div class="modal-inner">
+            <h3 style="margin-top:0;">新增代理</h3>
+            <div class="modal-row">
+              <label for="countryInput">country（默认 US）</label>
+              <select id="countryInput">
+                <option value="US">US</option>
+              </select>
+            </div>
+            <div class="modal-row">
+              <label for="stateInput">state</label>
+              <select id="stateInput">
+                <option value="">请选择 state</option>
+              </select>
+            </div>
+            <div class="status" id="addStatusText"></div>
+            <div class="modal-actions">
+              <button id="cancelAddModalBtn" class="cancel-btn" type="button">取消</button>
+              <button id="addProxyBtn" class="add-btn" type="button">确认新增</button>
+            </div>
+          </div>
+        </dialog>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>城市</th>
+              <th>IP</th>
+              <th>
+                国家
+                <select id="filterCountrySelect">
+                  <option value="">全部</option>
+                </select>
+              </th>
+              <th>
+                州/地区
+                <select id="filterStateSelect">
+                  <option value="">全部</option>
+                </select>
+              </th>
+              <th>在线状态</th>
+              <th>绑定地址</th>
+              <th>当前使用</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="proxyBody"></tbody>
+        </table>
+      </section>
+    </main>
   </div>
-  <dialog id="addProxyDialog">
-    <div class="modal-inner">
-      <h3 style="margin-top:0;">新增代理</h3>
-      <div class="modal-row">
-        <label for="countryInput">country（默认 US）</label>
-        <select id="countryInput">
-          <option value="US">US</option>
-        </select>
-      </div>
-      <div class="modal-row">
-        <label for="stateInput">state</label>
-        <select id="stateInput">
-          <option value="">请选择 state</option>
-        </select>
-      </div>
-      <div class="status" id="addStatusText"></div>
-      <div class="modal-actions">
-        <button id="cancelAddModalBtn" class="cancel-btn" type="button">取消</button>
-        <button id="addProxyBtn" class="add-btn" type="button">确认新增</button>
-      </div>
-    </div>
-  </dialog>
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>城市</th>
-        <th>IP</th>
-        <th>
-          国家
-          <select id="filterCountrySelect">
-            <option value="">全部</option>
-          </select>
-        </th>
-        <th>
-          州/地区
-          <select id="filterStateSelect">
-            <option value="">全部</option>
-          </select>
-        </th>
-        <th>在线状态</th>
-        <th>绑定地址</th>
-        <th>当前使用</th>
-        <th>操作</th>
-      </tr>
-    </thead>
-    <tbody id="proxyBody"></tbody>
-  </table>
 
   <script>
     const statusText = document.getElementById("statusText");
@@ -477,6 +637,13 @@ app.get("/", (req, res) => {
     const stateInput = document.getElementById("stateInput");
     const filterCountrySelect = document.getElementById("filterCountrySelect");
     const filterStateSelect = document.getElementById("filterStateSelect");
+    const panelUsers = document.getElementById("panelUsers");
+    const panelProxies = document.getElementById("panelProxies");
+    const navUsers = document.getElementById("navUsers");
+    const navProxies = document.getElementById("navProxies");
+    const userBody = document.getElementById("userBody");
+    const userStatusText = document.getElementById("userStatusText");
+    const refreshUsersBtn = document.getElementById("refreshUsersBtn");
     const endpoint = "/api/proxy-list";
     const activeBinding = "${ACTIVE_BINDING}";
     let statesByCountry = {};
@@ -488,6 +655,60 @@ app.get("/", (req, res) => {
 
     function setAddStatus(text) {
       addStatusText.textContent = text;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function setUserStatus(text) {
+      userStatusText.textContent = text;
+    }
+
+    function renderUserRows(users) {
+      if (!Array.isArray(users) || users.length === 0) {
+        userBody.innerHTML = '<tr><td colspan="2">暂无规则或未读取到带 auth_user 的条目</td></tr>';
+        return;
+      }
+      userBody.innerHTML = users.map((row) => {
+        const names = Array.isArray(row.auth_user) ? row.auth_user : [];
+        const listHtml = names.length
+          ? '<ul class="auth-list">' + names.map((n) => '<li>' + escapeHtml(n) + '</li>').join("") + "</ul>"
+          : "-";
+        return '<tr><td><strong>' + escapeHtml(row.outbound || "-") + "</strong></td><td>" + listHtml + "</td></tr>";
+      }).join("");
+    }
+
+    async function loadSingboxUsers() {
+      try {
+        setUserStatus("正在加载...");
+        const resp = await fetch("/api/singbox-users");
+        const data = await resp.json();
+        if (!resp.ok || data.success === false) {
+          throw new Error(data.msg || data.error || "读取失败");
+        }
+        const users = Array.isArray(data.users) ? data.users : [];
+        renderUserRows(users);
+        setUserStatus("共 " + users.length + " 个用户（route 规则）");
+      } catch (err) {
+        renderUserRows([]);
+        setUserStatus("加载失败: " + err.message);
+      }
+    }
+
+    function showPanel(name) {
+      const isUsers = name === "users";
+      panelUsers.classList.toggle("active", isUsers);
+      panelProxies.classList.toggle("active", !isUsers);
+      navUsers.classList.toggle("active", isUsers);
+      navProxies.classList.toggle("active", !isUsers);
+      if (isUsers) {
+        loadSingboxUsers();
+      }
     }
 
     function countryFlag(code) {
@@ -681,6 +902,9 @@ app.get("/", (req, res) => {
     filterCountrySelect.addEventListener("change", applyFilters);
     filterStateSelect.addEventListener("change", applyFilters);
     addProxyBtn.addEventListener("click", addProxy);
+    navUsers.addEventListener("click", () => showPanel("users"));
+    navProxies.addEventListener("click", () => showPanel("proxies"));
+    refreshUsersBtn.addEventListener("click", loadSingboxUsers);
     loadLocationCodes();
     loadProxyList();
   </script>
