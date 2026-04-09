@@ -1,0 +1,708 @@
+{
+  "inbounds": [
+    {
+      "type": "vless",
+      "tag": "VLESSTCP",
+      "listen": "::",
+      "listen_port": 35854,
+      "users": [
+        {
+          "name": "71ff27bf-VLESS_TCP/TLS_Vision",
+          "uuid": "71ff27bf-314c-46a6-b688-688d64c8c250",
+          "flow": "xtls-rprx-vision"
+        }
+      ],
+      "tls": {
+        "enabled": true,
+        "server_name": "HG66C66.365buy.cfd",
+        "certificate": [
+          "-----BEGIN CERTIFICATE-----",
+          "MIIDjzCCAxSgAwIBAgISBpUGbdbRyRwqkQjt7kcnCUccMAoGCCqGSM49BAMDMDIx",
+          "CzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJF",
+          "ODAeFw0yNjAzMjcyMDI0NDhaFw0yNjA2MjUyMDI0NDdaMB0xGzAZBgNVBAMTEmhn",
+          "NjZjNjYuMzY1YnV5LmNmZDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABPqnd8xY",
+          "r4FOaLypja6pT+cNPENWdr65AWgD+x5B9aPH5rkN/OnHy27QRzltgL7bnrRlAqg0",
+          "QJFMEO2cuPOat4OjggIdMIICGTAOBgNVHQ8BAf8EBAMCB4AwEwYDVR0lBAwwCgYI",
+          "KwYBBQUHAwEwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUfePw85Fq0MRpmM/8YIeT",
+          "zyDPWfQwHwYDVR0jBBgwFoAUjw0TovYuftFQbDMYOF1ZjiNykcowMgYIKwYBBQUH",
+          "AQEEJjAkMCIGCCsGAQUFBzAChhZodHRwOi8vZTguaS5sZW5jci5vcmcvMB0GA1Ud",
+          "EQQWMBSCEmhnNjZjNjYuMzY1YnV5LmNmZDATBgNVHSAEDDAKMAgGBmeBDAECATAt",
+          "BgNVHR8EJjAkMCKgIKAehhxodHRwOi8vZTguYy5sZW5jci5vcmcvMjkuY3JsMIIB",
+          "CwYKKwYBBAHWeQIEAgSB/ASB+QD3AHUA0W6ppWgHfmY1oD83pd28A6U8QRIU1IgY",
+          "9ekxsyPLlQQAAAGdMS4auAAABAMARjBEAiBrYDDHYZLVkD2QAeQxIJk0DpgaorG7",
+          "kgMHuRqnfPF2TwIgB4/RSqZPNlNAfOXMmuTon9x+IZeWlYluU8G9c6SVkBoAfgAa",
+          "i51pSleYyJmgyoi99I/AtFZgzMNgDR9x9Gn/x9GsowAAAZ0xLhqNAAgAAAUAWPm0",
+          "jwQDAEcwRQIgf4mIJx0ibaHyM6de5KG/nQs+Ft8N++L9uiD00TCMDgICIQCw/0vF",
+          "QTyN5JvdAM9+i/P5Yl1OPoRIxZYgQZ2sxat9AzAKBggqhkjOPQQDAwNpADBmAjEA",
+          "4/PUBFM9bVQTaF+vWATxzjVfpOeio9ljga7Tw6vrZRgYBLy6MIV+gPRmtagvm1C8",
+          "AjEA0R1UAsF5Nx2ZMdh6LtQoqCJHaJaTnjQq3tiFY7wdUO0uS/G2vaOe7IO0Gv7k",
+          "3XhF",
+          "-----END CERTIFICATE-----",
+          "-----BEGIN CERTIFICATE-----",
+          "MIIEVjCCAj6gAwIBAgIQY5WTY8JOcIJxWRi/w9ftVjANBgkqhkiG9w0BAQsFADBP",
+          "MQswCQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJuZXQgU2VjdXJpdHkgUmVzZWFy",
+          "Y2ggR3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBYMTAeFw0yNDAzMTMwMDAwMDBa",
+          "Fw0yNzAzMTIyMzU5NTlaMDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBF",
+          "bmNyeXB0MQswCQYDVQQDEwJFODB2MBAGByqGSM49AgEGBSuBBAAiA2IABNFl8l7c",
+          "S7QMApzSsvru6WyrOq44ofTUOTIzxULUzDMMNMchIJBwXOhiLxxxs0LXeb5GDcHb",
+          "R6EToMffgSZjO9SNHfY9gjMy9vQr5/WWOrQTZxh7az6NSNnq3u2ubT6HTKOB+DCB",
+          "9TAOBgNVHQ8BAf8EBAMCAYYwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMB",
+          "MBIGA1UdEwEB/wQIMAYBAf8CAQAwHQYDVR0OBBYEFI8NE6L2Ln7RUGwzGDhdWY4j",
+          "cpHKMB8GA1UdIwQYMBaAFHm0WeZ7tuXkAXOACIjIGlj26ZtuMDIGCCsGAQUFBwEB",
+          "BCYwJDAiBggrBgEFBQcwAoYWaHR0cDovL3gxLmkubGVuY3Iub3JnLzATBgNVHSAE",
+          "DDAKMAgGBmeBDAECATAnBgNVHR8EIDAeMBygGqAYhhZodHRwOi8veDEuYy5sZW5j",
+          "ci5vcmcvMA0GCSqGSIb3DQEBCwUAA4ICAQBnE0hGINKsCYWi0Xx1ygxD5qihEjZ0",
+          "RI3tTZz1wuATH3ZwYPIp97kWEayanD1j0cDhIYzy4CkDo2jB8D5t0a6zZWzlr98d",
+          "AQFNh8uKJkIHdLShy+nUyeZxc5bNeMp1Lu0gSzE4McqfmNMvIpeiwWSYO9w82Ob8",
+          "otvXcO2JUYi3svHIWRm3+707DUbL51XMcY2iZdlCq4Wa9nbuk3WTU4gr6LY8MzVA",
+          "aDQG2+4U3eJ6qUF10bBnR1uuVyDYs9RhrwucRVnfuDj29CMLTsplM5f5wSV5hUpm",
+          "Uwp/vV7M4w4aGunt74koX71n4EdagCsL/Yk5+mAQU0+tue0JOfAV/R6t1k+Xk9s2",
+          "HMQFeoxppfzAVC04FdG9M+AC2JWxmFSt6BCuh3CEey3fE52Qrj9YM75rtvIjsm/1",
+          "Hl+u//Wqxnu1ZQ4jpa+VpuZiGOlWrqSP9eogdOhCGisnyewWJwRQOqK16wiGyZeR",
+          "xs/Bekw65vwSIaVkBruPiTfMOo0Zh4gVa8/qJgMbJbyrwwG97z/PRgmLKCDl8z3d",
+          "tA0Z7qq7fta0Gl24uyuB05dqI5J1LvAzKuWdIjT1tP8qCoxSE/xpix8hX2dt3h+/",
+          "jujUgFPFZ0EVZ0xSyBNRF3MboGZnYXFUxpNjTWPKpagDHJQmqrAcDmWJnMsFY3jS",
+          "u1igv3OefnWjSQ==",
+          "-----END CERTIFICATE-----"
+        ],
+        "certificate_path": "/etc/v2ray-agent/tls/HG66C66.365buy.cfd.crt",
+        "key": [
+          "-----BEGIN EC PRIVATE KEY-----",
+          "MHcCAQEEIO7joQ6vkSBmRqjXHkLsNV5ws2OFz3pQqEQ5MvSfavZXoAoGCCqGSM49",
+          "AwEHoUQDQgAE+qd3zFivgU5ovKmNrqlP5w08Q1Z2vrkBaAP7HkH1o8fmuQ386cfL",
+          "btBHOW2AvtuetGUCqDRAkUwQ7Zy485q3gw==",
+          "-----END EC PRIVATE KEY-----"
+        ],
+        "key_path": "/etc/v2ray-agent/tls/HG66C66.365buy.cfd.key"
+      }
+    },
+    {
+      "type": "vless",
+      "tag": "VLESSWS",
+      "listen": "::",
+      "listen_port": 35713,
+      "users": [
+        {
+          "name": "71ff27bf-VLESS_WS",
+          "uuid": "71ff27bf-314c-46a6-b688-688d64c8c250"
+        }
+      ],
+      "tls": {
+        "enabled": true,
+        "server_name": "HG66C66.365buy.cfd",
+        "certificate": [
+          "-----BEGIN CERTIFICATE-----",
+          "MIIDjzCCAxSgAwIBAgISBpUGbdbRyRwqkQjt7kcnCUccMAoGCCqGSM49BAMDMDIx",
+          "CzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJF",
+          "ODAeFw0yNjAzMjcyMDI0NDhaFw0yNjA2MjUyMDI0NDdaMB0xGzAZBgNVBAMTEmhn",
+          "NjZjNjYuMzY1YnV5LmNmZDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABPqnd8xY",
+          "r4FOaLypja6pT+cNPENWdr65AWgD+x5B9aPH5rkN/OnHy27QRzltgL7bnrRlAqg0",
+          "QJFMEO2cuPOat4OjggIdMIICGTAOBgNVHQ8BAf8EBAMCB4AwEwYDVR0lBAwwCgYI",
+          "KwYBBQUHAwEwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUfePw85Fq0MRpmM/8YIeT",
+          "zyDPWfQwHwYDVR0jBBgwFoAUjw0TovYuftFQbDMYOF1ZjiNykcowMgYIKwYBBQUH",
+          "AQEEJjAkMCIGCCsGAQUFBzAChhZodHRwOi8vZTguaS5sZW5jci5vcmcvMB0GA1Ud",
+          "EQQWMBSCEmhnNjZjNjYuMzY1YnV5LmNmZDATBgNVHSAEDDAKMAgGBmeBDAECATAt",
+          "BgNVHR8EJjAkMCKgIKAehhxodHRwOi8vZTguYy5sZW5jci5vcmcvMjkuY3JsMIIB",
+          "CwYKKwYBBAHWeQIEAgSB/ASB+QD3AHUA0W6ppWgHfmY1oD83pd28A6U8QRIU1IgY",
+          "9ekxsyPLlQQAAAGdMS4auAAABAMARjBEAiBrYDDHYZLVkD2QAeQxIJk0DpgaorG7",
+          "kgMHuRqnfPF2TwIgB4/RSqZPNlNAfOXMmuTon9x+IZeWlYluU8G9c6SVkBoAfgAa",
+          "i51pSleYyJmgyoi99I/AtFZgzMNgDR9x9Gn/x9GsowAAAZ0xLhqNAAgAAAUAWPm0",
+          "jwQDAEcwRQIgf4mIJx0ibaHyM6de5KG/nQs+Ft8N++L9uiD00TCMDgICIQCw/0vF",
+          "QTyN5JvdAM9+i/P5Yl1OPoRIxZYgQZ2sxat9AzAKBggqhkjOPQQDAwNpADBmAjEA",
+          "4/PUBFM9bVQTaF+vWATxzjVfpOeio9ljga7Tw6vrZRgYBLy6MIV+gPRmtagvm1C8",
+          "AjEA0R1UAsF5Nx2ZMdh6LtQoqCJHaJaTnjQq3tiFY7wdUO0uS/G2vaOe7IO0Gv7k",
+          "3XhF",
+          "-----END CERTIFICATE-----",
+          "-----BEGIN CERTIFICATE-----",
+          "MIIEVjCCAj6gAwIBAgIQY5WTY8JOcIJxWRi/w9ftVjANBgkqhkiG9w0BAQsFADBP",
+          "MQswCQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJuZXQgU2VjdXJpdHkgUmVzZWFy",
+          "Y2ggR3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBYMTAeFw0yNDAzMTMwMDAwMDBa",
+          "Fw0yNzAzMTIyMzU5NTlaMDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBF",
+          "bmNyeXB0MQswCQYDVQQDEwJFODB2MBAGByqGSM49AgEGBSuBBAAiA2IABNFl8l7c",
+          "S7QMApzSsvru6WyrOq44ofTUOTIzxULUzDMMNMchIJBwXOhiLxxxs0LXeb5GDcHb",
+          "R6EToMffgSZjO9SNHfY9gjMy9vQr5/WWOrQTZxh7az6NSNnq3u2ubT6HTKOB+DCB",
+          "9TAOBgNVHQ8BAf8EBAMCAYYwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMB",
+          "MBIGA1UdEwEB/wQIMAYBAf8CAQAwHQYDVR0OBBYEFI8NE6L2Ln7RUGwzGDhdWY4j",
+          "cpHKMB8GA1UdIwQYMBaAFHm0WeZ7tuXkAXOACIjIGlj26ZtuMDIGCCsGAQUFBwEB",
+          "BCYwJDAiBggrBgEFBQcwAoYWaHR0cDovL3gxLmkubGVuY3Iub3JnLzATBgNVHSAE",
+          "DDAKMAgGBmeBDAECATAnBgNVHR8EIDAeMBygGqAYhhZodHRwOi8veDEuYy5sZW5j",
+          "ci5vcmcvMA0GCSqGSIb3DQEBCwUAA4ICAQBnE0hGINKsCYWi0Xx1ygxD5qihEjZ0",
+          "RI3tTZz1wuATH3ZwYPIp97kWEayanD1j0cDhIYzy4CkDo2jB8D5t0a6zZWzlr98d",
+          "AQFNh8uKJkIHdLShy+nUyeZxc5bNeMp1Lu0gSzE4McqfmNMvIpeiwWSYO9w82Ob8",
+          "otvXcO2JUYi3svHIWRm3+707DUbL51XMcY2iZdlCq4Wa9nbuk3WTU4gr6LY8MzVA",
+          "aDQG2+4U3eJ6qUF10bBnR1uuVyDYs9RhrwucRVnfuDj29CMLTsplM5f5wSV5hUpm",
+          "Uwp/vV7M4w4aGunt74koX71n4EdagCsL/Yk5+mAQU0+tue0JOfAV/R6t1k+Xk9s2",
+          "HMQFeoxppfzAVC04FdG9M+AC2JWxmFSt6BCuh3CEey3fE52Qrj9YM75rtvIjsm/1",
+          "Hl+u//Wqxnu1ZQ4jpa+VpuZiGOlWrqSP9eogdOhCGisnyewWJwRQOqK16wiGyZeR",
+          "xs/Bekw65vwSIaVkBruPiTfMOo0Zh4gVa8/qJgMbJbyrwwG97z/PRgmLKCDl8z3d",
+          "tA0Z7qq7fta0Gl24uyuB05dqI5J1LvAzKuWdIjT1tP8qCoxSE/xpix8hX2dt3h+/",
+          "jujUgFPFZ0EVZ0xSyBNRF3MboGZnYXFUxpNjTWPKpagDHJQmqrAcDmWJnMsFY3jS",
+          "u1igv3OefnWjSQ==",
+          "-----END CERTIFICATE-----"
+        ],
+        "certificate_path": "/etc/v2ray-agent/tls/HG66C66.365buy.cfd.crt",
+        "key": [
+          "-----BEGIN EC PRIVATE KEY-----",
+          "MHcCAQEEIO7joQ6vkSBmRqjXHkLsNV5ws2OFz3pQqEQ5MvSfavZXoAoGCCqGSM49",
+          "AwEHoUQDQgAE+qd3zFivgU5ovKmNrqlP5w08Q1Z2vrkBaAP7HkH1o8fmuQ386cfL",
+          "btBHOW2AvtuetGUCqDRAkUwQ7Zy485q3gw==",
+          "-----END EC PRIVATE KEY-----"
+        ],
+        "key_path": "/etc/v2ray-agent/tls/HG66C66.365buy.cfd.key"
+      },
+      "transport": {
+        "type": "ws",
+        "path": "/NAIws",
+        "max_early_data": 2048,
+        "early_data_header_name": "Sec-WebSocket-Protocol"
+      }
+    },
+    {
+      "type": "trojan",
+      "listen": "::",
+      "listen_port": 24748,
+      "users": [
+        {
+          "name": "71ff27bf-Trojan_TCP",
+          "password": "71ff27bf-314c-46a6-b688-688d64c8c250"
+        }
+      ],
+      "tls": {
+        "enabled": true,
+        "server_name": "HG66C66.365buy.cfd",
+        "certificate": [
+          "-----BEGIN CERTIFICATE-----",
+          "MIIDjzCCAxSgAwIBAgISBpUGbdbRyRwqkQjt7kcnCUccMAoGCCqGSM49BAMDMDIx",
+          "CzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJF",
+          "ODAeFw0yNjAzMjcyMDI0NDhaFw0yNjA2MjUyMDI0NDdaMB0xGzAZBgNVBAMTEmhn",
+          "NjZjNjYuMzY1YnV5LmNmZDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABPqnd8xY",
+          "r4FOaLypja6pT+cNPENWdr65AWgD+x5B9aPH5rkN/OnHy27QRzltgL7bnrRlAqg0",
+          "QJFMEO2cuPOat4OjggIdMIICGTAOBgNVHQ8BAf8EBAMCB4AwEwYDVR0lBAwwCgYI",
+          "KwYBBQUHAwEwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUfePw85Fq0MRpmM/8YIeT",
+          "zyDPWfQwHwYDVR0jBBgwFoAUjw0TovYuftFQbDMYOF1ZjiNykcowMgYIKwYBBQUH",
+          "AQEEJjAkMCIGCCsGAQUFBzAChhZodHRwOi8vZTguaS5sZW5jci5vcmcvMB0GA1Ud",
+          "EQQWMBSCEmhnNjZjNjYuMzY1YnV5LmNmZDATBgNVHSAEDDAKMAgGBmeBDAECATAt",
+          "BgNVHR8EJjAkMCKgIKAehhxodHRwOi8vZTguYy5sZW5jci5vcmcvMjkuY3JsMIIB",
+          "CwYKKwYBBAHWeQIEAgSB/ASB+QD3AHUA0W6ppWgHfmY1oD83pd28A6U8QRIU1IgY",
+          "9ekxsyPLlQQAAAGdMS4auAAABAMARjBEAiBrYDDHYZLVkD2QAeQxIJk0DpgaorG7",
+          "kgMHuRqnfPF2TwIgB4/RSqZPNlNAfOXMmuTon9x+IZeWlYluU8G9c6SVkBoAfgAa",
+          "i51pSleYyJmgyoi99I/AtFZgzMNgDR9x9Gn/x9GsowAAAZ0xLhqNAAgAAAUAWPm0",
+          "jwQDAEcwRQIgf4mIJx0ibaHyM6de5KG/nQs+Ft8N++L9uiD00TCMDgICIQCw/0vF",
+          "QTyN5JvdAM9+i/P5Yl1OPoRIxZYgQZ2sxat9AzAKBggqhkjOPQQDAwNpADBmAjEA",
+          "4/PUBFM9bVQTaF+vWATxzjVfpOeio9ljga7Tw6vrZRgYBLy6MIV+gPRmtagvm1C8",
+          "AjEA0R1UAsF5Nx2ZMdh6LtQoqCJHaJaTnjQq3tiFY7wdUO0uS/G2vaOe7IO0Gv7k",
+          "3XhF",
+          "-----END CERTIFICATE-----",
+          "-----BEGIN CERTIFICATE-----",
+          "MIIEVjCCAj6gAwIBAgIQY5WTY8JOcIJxWRi/w9ftVjANBgkqhkiG9w0BAQsFADBP",
+          "MQswCQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJuZXQgU2VjdXJpdHkgUmVzZWFy",
+          "Y2ggR3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBYMTAeFw0yNDAzMTMwMDAwMDBa",
+          "Fw0yNzAzMTIyMzU5NTlaMDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBF",
+          "bmNyeXB0MQswCQYDVQQDEwJFODB2MBAGByqGSM49AgEGBSuBBAAiA2IABNFl8l7c",
+          "S7QMApzSsvru6WyrOq44ofTUOTIzxULUzDMMNMchIJBwXOhiLxxxs0LXeb5GDcHb",
+          "R6EToMffgSZjO9SNHfY9gjMy9vQr5/WWOrQTZxh7az6NSNnq3u2ubT6HTKOB+DCB",
+          "9TAOBgNVHQ8BAf8EBAMCAYYwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMB",
+          "MBIGA1UdEwEB/wQIMAYBAf8CAQAwHQYDVR0OBBYEFI8NE6L2Ln7RUGwzGDhdWY4j",
+          "cpHKMB8GA1UdIwQYMBaAFHm0WeZ7tuXkAXOACIjIGlj26ZtuMDIGCCsGAQUFBwEB",
+          "BCYwJDAiBggrBgEFBQcwAoYWaHR0cDovL3gxLmkubGVuY3Iub3JnLzATBgNVHSAE",
+          "DDAKMAgGBmeBDAECATAnBgNVHR8EIDAeMBygGqAYhhZodHRwOi8veDEuYy5sZW5j",
+          "ci5vcmcvMA0GCSqGSIb3DQEBCwUAA4ICAQBnE0hGINKsCYWi0Xx1ygxD5qihEjZ0",
+          "RI3tTZz1wuATH3ZwYPIp97kWEayanD1j0cDhIYzy4CkDo2jB8D5t0a6zZWzlr98d",
+          "AQFNh8uKJkIHdLShy+nUyeZxc5bNeMp1Lu0gSzE4McqfmNMvIpeiwWSYO9w82Ob8",
+          "otvXcO2JUYi3svHIWRm3+707DUbL51XMcY2iZdlCq4Wa9nbuk3WTU4gr6LY8MzVA",
+          "aDQG2+4U3eJ6qUF10bBnR1uuVyDYs9RhrwucRVnfuDj29CMLTsplM5f5wSV5hUpm",
+          "Uwp/vV7M4w4aGunt74koX71n4EdagCsL/Yk5+mAQU0+tue0JOfAV/R6t1k+Xk9s2",
+          "HMQFeoxppfzAVC04FdG9M+AC2JWxmFSt6BCuh3CEey3fE52Qrj9YM75rtvIjsm/1",
+          "Hl+u//Wqxnu1ZQ4jpa+VpuZiGOlWrqSP9eogdOhCGisnyewWJwRQOqK16wiGyZeR",
+          "xs/Bekw65vwSIaVkBruPiTfMOo0Zh4gVa8/qJgMbJbyrwwG97z/PRgmLKCDl8z3d",
+          "tA0Z7qq7fta0Gl24uyuB05dqI5J1LvAzKuWdIjT1tP8qCoxSE/xpix8hX2dt3h+/",
+          "jujUgFPFZ0EVZ0xSyBNRF3MboGZnYXFUxpNjTWPKpagDHJQmqrAcDmWJnMsFY3jS",
+          "u1igv3OefnWjSQ==",
+          "-----END CERTIFICATE-----"
+        ],
+        "certificate_path": "/etc/v2ray-agent/tls/HG66C66.365buy.cfd.crt",
+        "key": [
+          "-----BEGIN EC PRIVATE KEY-----",
+          "MHcCAQEEIO7joQ6vkSBmRqjXHkLsNV5ws2OFz3pQqEQ5MvSfavZXoAoGCCqGSM49",
+          "AwEHoUQDQgAE+qd3zFivgU5ovKmNrqlP5w08Q1Z2vrkBaAP7HkH1o8fmuQ386cfL",
+          "btBHOW2AvtuetGUCqDRAkUwQ7Zy485q3gw==",
+          "-----END EC PRIVATE KEY-----"
+        ],
+        "key_path": "/etc/v2ray-agent/tls/HG66C66.365buy.cfd.key"
+      }
+    },
+    {
+      "type": "vmess",
+      "tag": "VMessWS",
+      "listen": "::",
+      "listen_port": 42011,
+      "users": [
+        {
+          "name": "71ff27bf-VMess_WS",
+          "uuid": "71ff27bf-314c-46a6-b688-688d64c8c250"
+        }
+      ],
+      "tls": {
+        "enabled": true,
+        "server_name": "HG66C66.365buy.cfd",
+        "certificate": [
+          "-----BEGIN CERTIFICATE-----",
+          "MIIDjzCCAxSgAwIBAgISBpUGbdbRyRwqkQjt7kcnCUccMAoGCCqGSM49BAMDMDIx",
+          "CzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJF",
+          "ODAeFw0yNjAzMjcyMDI0NDhaFw0yNjA2MjUyMDI0NDdaMB0xGzAZBgNVBAMTEmhn",
+          "NjZjNjYuMzY1YnV5LmNmZDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABPqnd8xY",
+          "r4FOaLypja6pT+cNPENWdr65AWgD+x5B9aPH5rkN/OnHy27QRzltgL7bnrRlAqg0",
+          "QJFMEO2cuPOat4OjggIdMIICGTAOBgNVHQ8BAf8EBAMCB4AwEwYDVR0lBAwwCgYI",
+          "KwYBBQUHAwEwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUfePw85Fq0MRpmM/8YIeT",
+          "zyDPWfQwHwYDVR0jBBgwFoAUjw0TovYuftFQbDMYOF1ZjiNykcowMgYIKwYBBQUH",
+          "AQEEJjAkMCIGCCsGAQUFBzAChhZodHRwOi8vZTguaS5sZW5jci5vcmcvMB0GA1Ud",
+          "EQQWMBSCEmhnNjZjNjYuMzY1YnV5LmNmZDATBgNVHSAEDDAKMAgGBmeBDAECATAt",
+          "BgNVHR8EJjAkMCKgIKAehhxodHRwOi8vZTguYy5sZW5jci5vcmcvMjkuY3JsMIIB",
+          "CwYKKwYBBAHWeQIEAgSB/ASB+QD3AHUA0W6ppWgHfmY1oD83pd28A6U8QRIU1IgY",
+          "9ekxsyPLlQQAAAGdMS4auAAABAMARjBEAiBrYDDHYZLVkD2QAeQxIJk0DpgaorG7",
+          "kgMHuRqnfPF2TwIgB4/RSqZPNlNAfOXMmuTon9x+IZeWlYluU8G9c6SVkBoAfgAa",
+          "i51pSleYyJmgyoi99I/AtFZgzMNgDR9x9Gn/x9GsowAAAZ0xLhqNAAgAAAUAWPm0",
+          "jwQDAEcwRQIgf4mIJx0ibaHyM6de5KG/nQs+Ft8N++L9uiD00TCMDgICIQCw/0vF",
+          "QTyN5JvdAM9+i/P5Yl1OPoRIxZYgQZ2sxat9AzAKBggqhkjOPQQDAwNpADBmAjEA",
+          "4/PUBFM9bVQTaF+vWATxzjVfpOeio9ljga7Tw6vrZRgYBLy6MIV+gPRmtagvm1C8",
+          "AjEA0R1UAsF5Nx2ZMdh6LtQoqCJHaJaTnjQq3tiFY7wdUO0uS/G2vaOe7IO0Gv7k",
+          "3XhF",
+          "-----END CERTIFICATE-----",
+          "-----BEGIN CERTIFICATE-----",
+          "MIIEVjCCAj6gAwIBAgIQY5WTY8JOcIJxWRi/w9ftVjANBgkqhkiG9w0BAQsFADBP",
+          "MQswCQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJuZXQgU2VjdXJpdHkgUmVzZWFy",
+          "Y2ggR3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBYMTAeFw0yNDAzMTMwMDAwMDBa",
+          "Fw0yNzAzMTIyMzU5NTlaMDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBF",
+          "bmNyeXB0MQswCQYDVQQDEwJFODB2MBAGByqGSM49AgEGBSuBBAAiA2IABNFl8l7c",
+          "S7QMApzSsvru6WyrOq44ofTUOTIzxULUzDMMNMchIJBwXOhiLxxxs0LXeb5GDcHb",
+          "R6EToMffgSZjO9SNHfY9gjMy9vQr5/WWOrQTZxh7az6NSNnq3u2ubT6HTKOB+DCB",
+          "9TAOBgNVHQ8BAf8EBAMCAYYwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMB",
+          "MBIGA1UdEwEB/wQIMAYBAf8CAQAwHQYDVR0OBBYEFI8NE6L2Ln7RUGwzGDhdWY4j",
+          "cpHKMB8GA1UdIwQYMBaAFHm0WeZ7tuXkAXOACIjIGlj26ZtuMDIGCCsGAQUFBwEB",
+          "BCYwJDAiBggrBgEFBQcwAoYWaHR0cDovL3gxLmkubGVuY3Iub3JnLzATBgNVHSAE",
+          "DDAKMAgGBmeBDAECATAnBgNVHR8EIDAeMBygGqAYhhZodHRwOi8veDEuYy5sZW5j",
+          "ci5vcmcvMA0GCSqGSIb3DQEBCwUAA4ICAQBnE0hGINKsCYWi0Xx1ygxD5qihEjZ0",
+          "RI3tTZz1wuATH3ZwYPIp97kWEayanD1j0cDhIYzy4CkDo2jB8D5t0a6zZWzlr98d",
+          "AQFNh8uKJkIHdLShy+nUyeZxc5bNeMp1Lu0gSzE4McqfmNMvIpeiwWSYO9w82Ob8",
+          "otvXcO2JUYi3svHIWRm3+707DUbL51XMcY2iZdlCq4Wa9nbuk3WTU4gr6LY8MzVA",
+          "aDQG2+4U3eJ6qUF10bBnR1uuVyDYs9RhrwucRVnfuDj29CMLTsplM5f5wSV5hUpm",
+          "Uwp/vV7M4w4aGunt74koX71n4EdagCsL/Yk5+mAQU0+tue0JOfAV/R6t1k+Xk9s2",
+          "HMQFeoxppfzAVC04FdG9M+AC2JWxmFSt6BCuh3CEey3fE52Qrj9YM75rtvIjsm/1",
+          "Hl+u//Wqxnu1ZQ4jpa+VpuZiGOlWrqSP9eogdOhCGisnyewWJwRQOqK16wiGyZeR",
+          "xs/Bekw65vwSIaVkBruPiTfMOo0Zh4gVa8/qJgMbJbyrwwG97z/PRgmLKCDl8z3d",
+          "tA0Z7qq7fta0Gl24uyuB05dqI5J1LvAzKuWdIjT1tP8qCoxSE/xpix8hX2dt3h+/",
+          "jujUgFPFZ0EVZ0xSyBNRF3MboGZnYXFUxpNjTWPKpagDHJQmqrAcDmWJnMsFY3jS",
+          "u1igv3OefnWjSQ==",
+          "-----END CERTIFICATE-----"
+        ],
+        "certificate_path": "/etc/v2ray-agent/tls/HG66C66.365buy.cfd.crt",
+        "key": [
+          "-----BEGIN EC PRIVATE KEY-----",
+          "MHcCAQEEIO7joQ6vkSBmRqjXHkLsNV5ws2OFz3pQqEQ5MvSfavZXoAoGCCqGSM49",
+          "AwEHoUQDQgAE+qd3zFivgU5ovKmNrqlP5w08Q1Z2vrkBaAP7HkH1o8fmuQ386cfL",
+          "btBHOW2AvtuetGUCqDRAkUwQ7Zy485q3gw==",
+          "-----END EC PRIVATE KEY-----"
+        ],
+        "key_path": "/etc/v2ray-agent/tls/HG66C66.365buy.cfd.key"
+      },
+      "transport": {
+        "type": "ws",
+        "path": "/kyzz",
+        "max_early_data": 2048,
+        "early_data_header_name": "Sec-WebSocket-Protocol"
+      }
+    },
+    {
+      "type": "hysteria2",
+      "listen": "::",
+      "listen_port": 30653,
+      "up_mbps": 100,
+      "down_mbps": 50,
+      "users": [
+        {
+          "name": "71ff27bf-singbox_hysteria2",
+          "password": "71ff27bf-314c-46a6-b688-688d64c8c250"
+        }
+      ],
+      "tls": {
+        "enabled": true,
+        "server_name": "HG66C66.365buy.cfd",
+        "alpn": "h3",
+        "certificate": [
+          "-----BEGIN CERTIFICATE-----",
+          "MIIDjzCCAxSgAwIBAgISBpUGbdbRyRwqkQjt7kcnCUccMAoGCCqGSM49BAMDMDIx",
+          "CzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJF",
+          "ODAeFw0yNjAzMjcyMDI0NDhaFw0yNjA2MjUyMDI0NDdaMB0xGzAZBgNVBAMTEmhn",
+          "NjZjNjYuMzY1YnV5LmNmZDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABPqnd8xY",
+          "r4FOaLypja6pT+cNPENWdr65AWgD+x5B9aPH5rkN/OnHy27QRzltgL7bnrRlAqg0",
+          "QJFMEO2cuPOat4OjggIdMIICGTAOBgNVHQ8BAf8EBAMCB4AwEwYDVR0lBAwwCgYI",
+          "KwYBBQUHAwEwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUfePw85Fq0MRpmM/8YIeT",
+          "zyDPWfQwHwYDVR0jBBgwFoAUjw0TovYuftFQbDMYOF1ZjiNykcowMgYIKwYBBQUH",
+          "AQEEJjAkMCIGCCsGAQUFBzAChhZodHRwOi8vZTguaS5sZW5jci5vcmcvMB0GA1Ud",
+          "EQQWMBSCEmhnNjZjNjYuMzY1YnV5LmNmZDATBgNVHSAEDDAKMAgGBmeBDAECATAt",
+          "BgNVHR8EJjAkMCKgIKAehhxodHRwOi8vZTguYy5sZW5jci5vcmcvMjkuY3JsMIIB",
+          "CwYKKwYBBAHWeQIEAgSB/ASB+QD3AHUA0W6ppWgHfmY1oD83pd28A6U8QRIU1IgY",
+          "9ekxsyPLlQQAAAGdMS4auAAABAMARjBEAiBrYDDHYZLVkD2QAeQxIJk0DpgaorG7",
+          "kgMHuRqnfPF2TwIgB4/RSqZPNlNAfOXMmuTon9x+IZeWlYluU8G9c6SVkBoAfgAa",
+          "i51pSleYyJmgyoi99I/AtFZgzMNgDR9x9Gn/x9GsowAAAZ0xLhqNAAgAAAUAWPm0",
+          "jwQDAEcwRQIgf4mIJx0ibaHyM6de5KG/nQs+Ft8N++L9uiD00TCMDgICIQCw/0vF",
+          "QTyN5JvdAM9+i/P5Yl1OPoRIxZYgQZ2sxat9AzAKBggqhkjOPQQDAwNpADBmAjEA",
+          "4/PUBFM9bVQTaF+vWATxzjVfpOeio9ljga7Tw6vrZRgYBLy6MIV+gPRmtagvm1C8",
+          "AjEA0R1UAsF5Nx2ZMdh6LtQoqCJHaJaTnjQq3tiFY7wdUO0uS/G2vaOe7IO0Gv7k",
+          "3XhF",
+          "-----END CERTIFICATE-----",
+          "-----BEGIN CERTIFICATE-----",
+          "MIIEVjCCAj6gAwIBAgIQY5WTY8JOcIJxWRi/w9ftVjANBgkqhkiG9w0BAQsFADBP",
+          "MQswCQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJuZXQgU2VjdXJpdHkgUmVzZWFy",
+          "Y2ggR3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBYMTAeFw0yNDAzMTMwMDAwMDBa",
+          "Fw0yNzAzMTIyMzU5NTlaMDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBF",
+          "bmNyeXB0MQswCQYDVQQDEwJFODB2MBAGByqGSM49AgEGBSuBBAAiA2IABNFl8l7c",
+          "S7QMApzSsvru6WyrOq44ofTUOTIzxULUzDMMNMchIJBwXOhiLxxxs0LXeb5GDcHb",
+          "R6EToMffgSZjO9SNHfY9gjMy9vQr5/WWOrQTZxh7az6NSNnq3u2ubT6HTKOB+DCB",
+          "9TAOBgNVHQ8BAf8EBAMCAYYwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMB",
+          "MBIGA1UdEwEB/wQIMAYBAf8CAQAwHQYDVR0OBBYEFI8NE6L2Ln7RUGwzGDhdWY4j",
+          "cpHKMB8GA1UdIwQYMBaAFHm0WeZ7tuXkAXOACIjIGlj26ZtuMDIGCCsGAQUFBwEB",
+          "BCYwJDAiBggrBgEFBQcwAoYWaHR0cDovL3gxLmkubGVuY3Iub3JnLzATBgNVHSAE",
+          "DDAKMAgGBmeBDAECATAnBgNVHR8EIDAeMBygGqAYhhZodHRwOi8veDEuYy5sZW5j",
+          "ci5vcmcvMA0GCSqGSIb3DQEBCwUAA4ICAQBnE0hGINKsCYWi0Xx1ygxD5qihEjZ0",
+          "RI3tTZz1wuATH3ZwYPIp97kWEayanD1j0cDhIYzy4CkDo2jB8D5t0a6zZWzlr98d",
+          "AQFNh8uKJkIHdLShy+nUyeZxc5bNeMp1Lu0gSzE4McqfmNMvIpeiwWSYO9w82Ob8",
+          "otvXcO2JUYi3svHIWRm3+707DUbL51XMcY2iZdlCq4Wa9nbuk3WTU4gr6LY8MzVA",
+          "aDQG2+4U3eJ6qUF10bBnR1uuVyDYs9RhrwucRVnfuDj29CMLTsplM5f5wSV5hUpm",
+          "Uwp/vV7M4w4aGunt74koX71n4EdagCsL/Yk5+mAQU0+tue0JOfAV/R6t1k+Xk9s2",
+          "HMQFeoxppfzAVC04FdG9M+AC2JWxmFSt6BCuh3CEey3fE52Qrj9YM75rtvIjsm/1",
+          "Hl+u//Wqxnu1ZQ4jpa+VpuZiGOlWrqSP9eogdOhCGisnyewWJwRQOqK16wiGyZeR",
+          "xs/Bekw65vwSIaVkBruPiTfMOo0Zh4gVa8/qJgMbJbyrwwG97z/PRgmLKCDl8z3d",
+          "tA0Z7qq7fta0Gl24uyuB05dqI5J1LvAzKuWdIjT1tP8qCoxSE/xpix8hX2dt3h+/",
+          "jujUgFPFZ0EVZ0xSyBNRF3MboGZnYXFUxpNjTWPKpagDHJQmqrAcDmWJnMsFY3jS",
+          "u1igv3OefnWjSQ==",
+          "-----END CERTIFICATE-----"
+        ],
+        "certificate_path": "/etc/v2ray-agent/tls/HG66C66.365buy.cfd.crt",
+        "key": [
+          "-----BEGIN EC PRIVATE KEY-----",
+          "MHcCAQEEIO7joQ6vkSBmRqjXHkLsNV5ws2OFz3pQqEQ5MvSfavZXoAoGCCqGSM49",
+          "AwEHoUQDQgAE+qd3zFivgU5ovKmNrqlP5w08Q1Z2vrkBaAP7HkH1o8fmuQ386cfL",
+          "btBHOW2AvtuetGUCqDRAkUwQ7Zy485q3gw==",
+          "-----END EC PRIVATE KEY-----"
+        ],
+        "key_path": "/etc/v2ray-agent/tls/HG66C66.365buy.cfd.key"
+      }
+    },
+    {
+      "type": "vless",
+      "tag": "VLESSReality",
+      "listen": "::",
+      "listen_port": 34863,
+      "users": [
+        {
+          "name": "71ff27bf-VLESS_Reality_Vision",
+          "uuid": "71ff27bf-314c-46a6-b688-688d64c8c250",
+          "flow": "xtls-rprx-vision"
+        }
+      ],
+      "tls": {
+        "enabled": true,
+        "server_name": "www.cisco.com",
+        "reality": {
+          "enabled": true,
+          "handshake": {
+            "server": "www.cisco.com",
+            "server_port": 443
+          },
+          "private_key": "sP6iUwIpf2ALdAlozAjKO9_Wevyr8dXLlYs5FwLH8Gs",
+          "short_id": [
+            "",
+            "6ba85179e30d4fc2"
+          ]
+        }
+      }
+    },
+    {
+      "type": "vless",
+      "tag": "VLESSRealityGRPC",
+      "listen": "::",
+      "listen_port": 23774,
+      "users": [
+        {
+          "name": "71ff27bf-VLESS_Reality_gPRC",
+          "uuid": "71ff27bf-314c-46a6-b688-688d64c8c250"
+        }
+      ],
+      "tls": {
+        "enabled": true,
+        "server_name": "www.python.org",
+        "reality": {
+          "enabled": true,
+          "handshake": {
+            "server": "www.python.org",
+            "server_port": 443
+          },
+          "private_key": "sP6iUwIpf2ALdAlozAjKO9_Wevyr8dXLlYs5FwLH8Gs",
+          "short_id": [
+            "",
+            "6ba85179e30d4fc2"
+          ]
+        }
+      },
+      "transport": {
+        "type": "grpc",
+        "service_name": "grpc"
+      }
+    },
+    {
+      "type": "tuic",
+      "tag": "singbox-tuic-in",
+      "listen": "::",
+      "listen_port": 10165,
+      "users": [
+        {
+          "name": "71ff27bf-singbox_tuic",
+          "uuid": "71ff27bf-314c-46a6-b688-688d64c8c250",
+          "password": "71ff27bf-314c-46a6-b688-688d64c8c250"
+        }
+      ],
+      "congestion_control": "bbr",
+      "tls": {
+        "enabled": true,
+        "server_name": "HG66C66.365buy.cfd",
+        "alpn": "h3",
+        "certificate": [
+          "-----BEGIN CERTIFICATE-----",
+          "MIIDjzCCAxSgAwIBAgISBpUGbdbRyRwqkQjt7kcnCUccMAoGCCqGSM49BAMDMDIx",
+          "CzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJF",
+          "ODAeFw0yNjAzMjcyMDI0NDhaFw0yNjA2MjUyMDI0NDdaMB0xGzAZBgNVBAMTEmhn",
+          "NjZjNjYuMzY1YnV5LmNmZDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABPqnd8xY",
+          "r4FOaLypja6pT+cNPENWdr65AWgD+x5B9aPH5rkN/OnHy27QRzltgL7bnrRlAqg0",
+          "QJFMEO2cuPOat4OjggIdMIICGTAOBgNVHQ8BAf8EBAMCB4AwEwYDVR0lBAwwCgYI",
+          "KwYBBQUHAwEwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUfePw85Fq0MRpmM/8YIeT",
+          "zyDPWfQwHwYDVR0jBBgwFoAUjw0TovYuftFQbDMYOF1ZjiNykcowMgYIKwYBBQUH",
+          "AQEEJjAkMCIGCCsGAQUFBzAChhZodHRwOi8vZTguaS5sZW5jci5vcmcvMB0GA1Ud",
+          "EQQWMBSCEmhnNjZjNjYuMzY1YnV5LmNmZDATBgNVHSAEDDAKMAgGBmeBDAECATAt",
+          "BgNVHR8EJjAkMCKgIKAehhxodHRwOi8vZTguYy5sZW5jci5vcmcvMjkuY3JsMIIB",
+          "CwYKKwYBBAHWeQIEAgSB/ASB+QD3AHUA0W6ppWgHfmY1oD83pd28A6U8QRIU1IgY",
+          "9ekxsyPLlQQAAAGdMS4auAAABAMARjBEAiBrYDDHYZLVkD2QAeQxIJk0DpgaorG7",
+          "kgMHuRqnfPF2TwIgB4/RSqZPNlNAfOXMmuTon9x+IZeWlYluU8G9c6SVkBoAfgAa",
+          "i51pSleYyJmgyoi99I/AtFZgzMNgDR9x9Gn/x9GsowAAAZ0xLhqNAAgAAAUAWPm0",
+          "jwQDAEcwRQIgf4mIJx0ibaHyM6de5KG/nQs+Ft8N++L9uiD00TCMDgICIQCw/0vF",
+          "QTyN5JvdAM9+i/P5Yl1OPoRIxZYgQZ2sxat9AzAKBggqhkjOPQQDAwNpADBmAjEA",
+          "4/PUBFM9bVQTaF+vWATxzjVfpOeio9ljga7Tw6vrZRgYBLy6MIV+gPRmtagvm1C8",
+          "AjEA0R1UAsF5Nx2ZMdh6LtQoqCJHaJaTnjQq3tiFY7wdUO0uS/G2vaOe7IO0Gv7k",
+          "3XhF",
+          "-----END CERTIFICATE-----",
+          "-----BEGIN CERTIFICATE-----",
+          "MIIEVjCCAj6gAwIBAgIQY5WTY8JOcIJxWRi/w9ftVjANBgkqhkiG9w0BAQsFADBP",
+          "MQswCQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJuZXQgU2VjdXJpdHkgUmVzZWFy",
+          "Y2ggR3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBYMTAeFw0yNDAzMTMwMDAwMDBa",
+          "Fw0yNzAzMTIyMzU5NTlaMDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBF",
+          "bmNyeXB0MQswCQYDVQQDEwJFODB2MBAGByqGSM49AgEGBSuBBAAiA2IABNFl8l7c",
+          "S7QMApzSsvru6WyrOq44ofTUOTIzxULUzDMMNMchIJBwXOhiLxxxs0LXeb5GDcHb",
+          "R6EToMffgSZjO9SNHfY9gjMy9vQr5/WWOrQTZxh7az6NSNnq3u2ubT6HTKOB+DCB",
+          "9TAOBgNVHQ8BAf8EBAMCAYYwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMB",
+          "MBIGA1UdEwEB/wQIMAYBAf8CAQAwHQYDVR0OBBYEFI8NE6L2Ln7RUGwzGDhdWY4j",
+          "cpHKMB8GA1UdIwQYMBaAFHm0WeZ7tuXkAXOACIjIGlj26ZtuMDIGCCsGAQUFBwEB",
+          "BCYwJDAiBggrBgEFBQcwAoYWaHR0cDovL3gxLmkubGVuY3Iub3JnLzATBgNVHSAE",
+          "DDAKMAgGBmeBDAECATAnBgNVHR8EIDAeMBygGqAYhhZodHRwOi8veDEuYy5sZW5j",
+          "ci5vcmcvMA0GCSqGSIb3DQEBCwUAA4ICAQBnE0hGINKsCYWi0Xx1ygxD5qihEjZ0",
+          "RI3tTZz1wuATH3ZwYPIp97kWEayanD1j0cDhIYzy4CkDo2jB8D5t0a6zZWzlr98d",
+          "AQFNh8uKJkIHdLShy+nUyeZxc5bNeMp1Lu0gSzE4McqfmNMvIpeiwWSYO9w82Ob8",
+          "otvXcO2JUYi3svHIWRm3+707DUbL51XMcY2iZdlCq4Wa9nbuk3WTU4gr6LY8MzVA",
+          "aDQG2+4U3eJ6qUF10bBnR1uuVyDYs9RhrwucRVnfuDj29CMLTsplM5f5wSV5hUpm",
+          "Uwp/vV7M4w4aGunt74koX71n4EdagCsL/Yk5+mAQU0+tue0JOfAV/R6t1k+Xk9s2",
+          "HMQFeoxppfzAVC04FdG9M+AC2JWxmFSt6BCuh3CEey3fE52Qrj9YM75rtvIjsm/1",
+          "Hl+u//Wqxnu1ZQ4jpa+VpuZiGOlWrqSP9eogdOhCGisnyewWJwRQOqK16wiGyZeR",
+          "xs/Bekw65vwSIaVkBruPiTfMOo0Zh4gVa8/qJgMbJbyrwwG97z/PRgmLKCDl8z3d",
+          "tA0Z7qq7fta0Gl24uyuB05dqI5J1LvAzKuWdIjT1tP8qCoxSE/xpix8hX2dt3h+/",
+          "jujUgFPFZ0EVZ0xSyBNRF3MboGZnYXFUxpNjTWPKpagDHJQmqrAcDmWJnMsFY3jS",
+          "u1igv3OefnWjSQ==",
+          "-----END CERTIFICATE-----"
+        ],
+        "certificate_path": "/etc/v2ray-agent/tls/HG66C66.365buy.cfd.crt",
+        "key": [
+          "-----BEGIN EC PRIVATE KEY-----",
+          "MHcCAQEEIO7joQ6vkSBmRqjXHkLsNV5ws2OFz3pQqEQ5MvSfavZXoAoGCCqGSM49",
+          "AwEHoUQDQgAE+qd3zFivgU5ovKmNrqlP5w08Q1Z2vrkBaAP7HkH1o8fmuQ386cfL",
+          "btBHOW2AvtuetGUCqDRAkUwQ7Zy485q3gw==",
+          "-----END EC PRIVATE KEY-----"
+        ],
+        "key_path": "/etc/v2ray-agent/tls/HG66C66.365buy.cfd.key"
+      }
+    },
+    {
+      "type": "naive",
+      "tag": "singbox-naive-in",
+      "listen": "::",
+      "listen_port": 11300,
+      "users": [
+        {
+          "Username": "71ff27bf-singbox_naive",
+          "Password": "71ff27bf-314c-46a6-b688-688d64c8c250"
+        }
+      ],
+      "tls": {
+        "enabled": true,
+        "server_name": "HG66C66.365buy.cfd",
+        "certificate": [
+          "-----BEGIN CERTIFICATE-----",
+          "MIIDjzCCAxSgAwIBAgISBpUGbdbRyRwqkQjt7kcnCUccMAoGCCqGSM49BAMDMDIx",
+          "CzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJF",
+          "ODAeFw0yNjAzMjcyMDI0NDhaFw0yNjA2MjUyMDI0NDdaMB0xGzAZBgNVBAMTEmhn",
+          "NjZjNjYuMzY1YnV5LmNmZDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABPqnd8xY",
+          "r4FOaLypja6pT+cNPENWdr65AWgD+x5B9aPH5rkN/OnHy27QRzltgL7bnrRlAqg0",
+          "QJFMEO2cuPOat4OjggIdMIICGTAOBgNVHQ8BAf8EBAMCB4AwEwYDVR0lBAwwCgYI",
+          "KwYBBQUHAwEwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUfePw85Fq0MRpmM/8YIeT",
+          "zyDPWfQwHwYDVR0jBBgwFoAUjw0TovYuftFQbDMYOF1ZjiNykcowMgYIKwYBBQUH",
+          "AQEEJjAkMCIGCCsGAQUFBzAChhZodHRwOi8vZTguaS5sZW5jci5vcmcvMB0GA1Ud",
+          "EQQWMBSCEmhnNjZjNjYuMzY1YnV5LmNmZDATBgNVHSAEDDAKMAgGBmeBDAECATAt",
+          "BgNVHR8EJjAkMCKgIKAehhxodHRwOi8vZTguYy5sZW5jci5vcmcvMjkuY3JsMIIB",
+          "CwYKKwYBBAHWeQIEAgSB/ASB+QD3AHUA0W6ppWgHfmY1oD83pd28A6U8QRIU1IgY",
+          "9ekxsyPLlQQAAAGdMS4auAAABAMARjBEAiBrYDDHYZLVkD2QAeQxIJk0DpgaorG7",
+          "kgMHuRqnfPF2TwIgB4/RSqZPNlNAfOXMmuTon9x+IZeWlYluU8G9c6SVkBoAfgAa",
+          "i51pSleYyJmgyoi99I/AtFZgzMNgDR9x9Gn/x9GsowAAAZ0xLhqNAAgAAAUAWPm0",
+          "jwQDAEcwRQIgf4mIJx0ibaHyM6de5KG/nQs+Ft8N++L9uiD00TCMDgICIQCw/0vF",
+          "QTyN5JvdAM9+i/P5Yl1OPoRIxZYgQZ2sxat9AzAKBggqhkjOPQQDAwNpADBmAjEA",
+          "4/PUBFM9bVQTaF+vWATxzjVfpOeio9ljga7Tw6vrZRgYBLy6MIV+gPRmtagvm1C8",
+          "AjEA0R1UAsF5Nx2ZMdh6LtQoqCJHaJaTnjQq3tiFY7wdUO0uS/G2vaOe7IO0Gv7k",
+          "3XhF",
+          "-----END CERTIFICATE-----",
+          "-----BEGIN CERTIFICATE-----",
+          "MIIEVjCCAj6gAwIBAgIQY5WTY8JOcIJxWRi/w9ftVjANBgkqhkiG9w0BAQsFADBP",
+          "MQswCQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJuZXQgU2VjdXJpdHkgUmVzZWFy",
+          "Y2ggR3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBYMTAeFw0yNDAzMTMwMDAwMDBa",
+          "Fw0yNzAzMTIyMzU5NTlaMDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBF",
+          "bmNyeXB0MQswCQYDVQQDEwJFODB2MBAGByqGSM49AgEGBSuBBAAiA2IABNFl8l7c",
+          "S7QMApzSsvru6WyrOq44ofTUOTIzxULUzDMMNMchIJBwXOhiLxxxs0LXeb5GDcHb",
+          "R6EToMffgSZjO9SNHfY9gjMy9vQr5/WWOrQTZxh7az6NSNnq3u2ubT6HTKOB+DCB",
+          "9TAOBgNVHQ8BAf8EBAMCAYYwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMB",
+          "MBIGA1UdEwEB/wQIMAYBAf8CAQAwHQYDVR0OBBYEFI8NE6L2Ln7RUGwzGDhdWY4j",
+          "cpHKMB8GA1UdIwQYMBaAFHm0WeZ7tuXkAXOACIjIGlj26ZtuMDIGCCsGAQUFBwEB",
+          "BCYwJDAiBggrBgEFBQcwAoYWaHR0cDovL3gxLmkubGVuY3Iub3JnLzATBgNVHSAE",
+          "DDAKMAgGBmeBDAECATAnBgNVHR8EIDAeMBygGqAYhhZodHRwOi8veDEuYy5sZW5j",
+          "ci5vcmcvMA0GCSqGSIb3DQEBCwUAA4ICAQBnE0hGINKsCYWi0Xx1ygxD5qihEjZ0",
+          "RI3tTZz1wuATH3ZwYPIp97kWEayanD1j0cDhIYzy4CkDo2jB8D5t0a6zZWzlr98d",
+          "AQFNh8uKJkIHdLShy+nUyeZxc5bNeMp1Lu0gSzE4McqfmNMvIpeiwWSYO9w82Ob8",
+          "otvXcO2JUYi3svHIWRm3+707DUbL51XMcY2iZdlCq4Wa9nbuk3WTU4gr6LY8MzVA",
+          "aDQG2+4U3eJ6qUF10bBnR1uuVyDYs9RhrwucRVnfuDj29CMLTsplM5f5wSV5hUpm",
+          "Uwp/vV7M4w4aGunt74koX71n4EdagCsL/Yk5+mAQU0+tue0JOfAV/R6t1k+Xk9s2",
+          "HMQFeoxppfzAVC04FdG9M+AC2JWxmFSt6BCuh3CEey3fE52Qrj9YM75rtvIjsm/1",
+          "Hl+u//Wqxnu1ZQ4jpa+VpuZiGOlWrqSP9eogdOhCGisnyewWJwRQOqK16wiGyZeR",
+          "xs/Bekw65vwSIaVkBruPiTfMOo0Zh4gVa8/qJgMbJbyrwwG97z/PRgmLKCDl8z3d",
+          "tA0Z7qq7fta0Gl24uyuB05dqI5J1LvAzKuWdIjT1tP8qCoxSE/xpix8hX2dt3h+/",
+          "jujUgFPFZ0EVZ0xSyBNRF3MboGZnYXFUxpNjTWPKpagDHJQmqrAcDmWJnMsFY3jS",
+          "u1igv3OefnWjSQ==",
+          "-----END CERTIFICATE-----"
+        ],
+        "certificate_path": "/etc/v2ray-agent/tls/HG66C66.365buy.cfd.crt",
+        "key": [
+          "-----BEGIN EC PRIVATE KEY-----",
+          "MHcCAQEEIO7joQ6vkSBmRqjXHkLsNV5ws2OFz3pQqEQ5MvSfavZXoAoGCCqGSM49",
+          "AwEHoUQDQgAE+qd3zFivgU5ovKmNrqlP5w08Q1Z2vrkBaAP7HkH1o8fmuQ386cfL",
+          "btBHOW2AvtuetGUCqDRAkUwQ7Zy485q3gw==",
+          "-----END EC PRIVATE KEY-----"
+        ],
+        "key_path": "/etc/v2ray-agent/tls/HG66C66.365buy.cfd.key"
+      }
+    },
+    {
+      "type": "vmess",
+      "tag": "VMessHTTPUpgrade",
+      "listen": "127.0.0.1",
+      "listen_port": 31306,
+      "users": [
+        {
+          "name": "71ff27bf-VMess_HTTPUpgrade",
+          "uuid": "71ff27bf-314c-46a6-b688-688d64c8c250"
+        }
+      ],
+      "transport": {
+        "type": "httpupgrade",
+        "path": "/ktfa"
+      }
+    },
+    {
+      "type": "anytls",
+      "tag": "anytls",
+      "listen": "::",
+      "listen_port": 31856,
+      "tls": {
+        "enabled": true,
+        "server_name": "HG66C66.365buy.cfd",
+        "certificate": [
+          "-----BEGIN CERTIFICATE-----",
+          "MIIDjzCCAxSgAwIBAgISBpUGbdbRyRwqkQjt7kcnCUccMAoGCCqGSM49BAMDMDIx",
+          "CzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJF",
+          "ODAeFw0yNjAzMjcyMDI0NDhaFw0yNjA2MjUyMDI0NDdaMB0xGzAZBgNVBAMTEmhn",
+          "NjZjNjYuMzY1YnV5LmNmZDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABPqnd8xY",
+          "r4FOaLypja6pT+cNPENWdr65AWgD+x5B9aPH5rkN/OnHy27QRzltgL7bnrRlAqg0",
+          "QJFMEO2cuPOat4OjggIdMIICGTAOBgNVHQ8BAf8EBAMCB4AwEwYDVR0lBAwwCgYI",
+          "KwYBBQUHAwEwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUfePw85Fq0MRpmM/8YIeT",
+          "zyDPWfQwHwYDVR0jBBgwFoAUjw0TovYuftFQbDMYOF1ZjiNykcowMgYIKwYBBQUH",
+          "AQEEJjAkMCIGCCsGAQUFBzAChhZodHRwOi8vZTguaS5sZW5jci5vcmcvMB0GA1Ud",
+          "EQQWMBSCEmhnNjZjNjYuMzY1YnV5LmNmZDATBgNVHSAEDDAKMAgGBmeBDAECATAt",
+          "BgNVHR8EJjAkMCKgIKAehhxodHRwOi8vZTguYy5sZW5jci5vcmcvMjkuY3JsMIIB",
+          "CwYKKwYBBAHWeQIEAgSB/ASB+QD3AHUA0W6ppWgHfmY1oD83pd28A6U8QRIU1IgY",
+          "9ekxsyPLlQQAAAGdMS4auAAABAMARjBEAiBrYDDHYZLVkD2QAeQxIJk0DpgaorG7",
+          "kgMHuRqnfPF2TwIgB4/RSqZPNlNAfOXMmuTon9x+IZeWlYluU8G9c6SVkBoAfgAa",
+          "i51pSleYyJmgyoi99I/AtFZgzMNgDR9x9Gn/x9GsowAAAZ0xLhqNAAgAAAUAWPm0",
+          "jwQDAEcwRQIgf4mIJx0ibaHyM6de5KG/nQs+Ft8N++L9uiD00TCMDgICIQCw/0vF",
+          "QTyN5JvdAM9+i/P5Yl1OPoRIxZYgQZ2sxat9AzAKBggqhkjOPQQDAwNpADBmAjEA",
+          "4/PUBFM9bVQTaF+vWATxzjVfpOeio9ljga7Tw6vrZRgYBLy6MIV+gPRmtagvm1C8",
+          "AjEA0R1UAsF5Nx2ZMdh6LtQoqCJHaJaTnjQq3tiFY7wdUO0uS/G2vaOe7IO0Gv7k",
+          "3XhF",
+          "-----END CERTIFICATE-----",
+          "-----BEGIN CERTIFICATE-----",
+          "MIIEVjCCAj6gAwIBAgIQY5WTY8JOcIJxWRi/w9ftVjANBgkqhkiG9w0BAQsFADBP",
+          "MQswCQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJuZXQgU2VjdXJpdHkgUmVzZWFy",
+          "Y2ggR3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBYMTAeFw0yNDAzMTMwMDAwMDBa",
+          "Fw0yNzAzMTIyMzU5NTlaMDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBF",
+          "bmNyeXB0MQswCQYDVQQDEwJFODB2MBAGByqGSM49AgEGBSuBBAAiA2IABNFl8l7c",
+          "S7QMApzSsvru6WyrOq44ofTUOTIzxULUzDMMNMchIJBwXOhiLxxxs0LXeb5GDcHb",
+          "R6EToMffgSZjO9SNHfY9gjMy9vQr5/WWOrQTZxh7az6NSNnq3u2ubT6HTKOB+DCB",
+          "9TAOBgNVHQ8BAf8EBAMCAYYwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMB",
+          "MBIGA1UdEwEB/wQIMAYBAf8CAQAwHQYDVR0OBBYEFI8NE6L2Ln7RUGwzGDhdWY4j",
+          "cpHKMB8GA1UdIwQYMBaAFHm0WeZ7tuXkAXOACIjIGlj26ZtuMDIGCCsGAQUFBwEB",
+          "BCYwJDAiBggrBgEFBQcwAoYWaHR0cDovL3gxLmkubGVuY3Iub3JnLzATBgNVHSAE",
+          "DDAKMAgGBmeBDAECATAnBgNVHR8EIDAeMBygGqAYhhZodHRwOi8veDEuYy5sZW5j",
+          "ci5vcmcvMA0GCSqGSIb3DQEBCwUAA4ICAQBnE0hGINKsCYWi0Xx1ygxD5qihEjZ0",
+          "RI3tTZz1wuATH3ZwYPIp97kWEayanD1j0cDhIYzy4CkDo2jB8D5t0a6zZWzlr98d",
+          "AQFNh8uKJkIHdLShy+nUyeZxc5bNeMp1Lu0gSzE4McqfmNMvIpeiwWSYO9w82Ob8",
+          "otvXcO2JUYi3svHIWRm3+707DUbL51XMcY2iZdlCq4Wa9nbuk3WTU4gr6LY8MzVA",
+          "aDQG2+4U3eJ6qUF10bBnR1uuVyDYs9RhrwucRVnfuDj29CMLTsplM5f5wSV5hUpm",
+          "Uwp/vV7M4w4aGunt74koX71n4EdagCsL/Yk5+mAQU0+tue0JOfAV/R6t1k+Xk9s2",
+          "HMQFeoxppfzAVC04FdG9M+AC2JWxmFSt6BCuh3CEey3fE52Qrj9YM75rtvIjsm/1",
+          "Hl+u//Wqxnu1ZQ4jpa+VpuZiGOlWrqSP9eogdOhCGisnyewWJwRQOqK16wiGyZeR",
+          "xs/Bekw65vwSIaVkBruPiTfMOo0Zh4gVa8/qJgMbJbyrwwG97z/PRgmLKCDl8z3d",
+          "tA0Z7qq7fta0Gl24uyuB05dqI5J1LvAzKuWdIjT1tP8qCoxSE/xpix8hX2dt3h+/",
+          "jujUgFPFZ0EVZ0xSyBNRF3MboGZnYXFUxpNjTWPKpagDHJQmqrAcDmWJnMsFY3jS",
+          "u1igv3OefnWjSQ==",
+          "-----END CERTIFICATE-----"
+        ],
+        "certificate_path": "/etc/v2ray-agent/tls/HG66C66.365buy.cfd.crt",
+        "key": [
+          "-----BEGIN EC PRIVATE KEY-----",
+          "MHcCAQEEIO7joQ6vkSBmRqjXHkLsNV5ws2OFz3pQqEQ5MvSfavZXoAoGCCqGSM49",
+          "AwEHoUQDQgAE+qd3zFivgU5ovKmNrqlP5w08Q1Z2vrkBaAP7HkH1o8fmuQ386cfL",
+          "btBHOW2AvtuetGUCqDRAkUwQ7Zy485q3gw==",
+          "-----END EC PRIVATE KEY-----"
+        ],
+        "key_path": "/etc/v2ray-agent/tls/HG66C66.365buy.cfd.key"
+      },
+      "users": [
+        {
+          "name": "71ff27bf-anytls",
+          "password": "71ff27bf-314c-46a6-b688-688d64c8c250"
+        }
+      ]
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "socks",
+      "tag": "socks-proxy",
+      "server": "154.198.33.181",
+      "server_port": 9093,
+      "username": "info5998@gmail.com.Guo3_pp",
+      "password": "Aa1234567@"
+    }
+  ]
+}
