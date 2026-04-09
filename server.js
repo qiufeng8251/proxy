@@ -699,12 +699,12 @@ app.get("/", (req, res) => {
     <aside class="sidebar">
       <div class="sidebar-brand">sing-box 控制台</div>
       <nav>
-        <button type="button" class="nav-item" data-panel="users" id="navUsers">用户管理</button>
-        <button type="button" class="nav-item active" data-panel="proxies" id="navProxies">代理列表</button>
+        <button type="button" class="nav-item active" data-panel="users" id="navUsers">用户管理</button>
+        <button type="button" class="nav-item" data-panel="proxies" id="navProxies">代理列表</button>
       </nav>
     </aside>
     <main class="main-content">
-      <section id="panelUsers" class="panel">
+      <section id="panelUsers" class="panel active">
         <h1>用户管理</h1>
         <p class="user-hint">用户与 <code>route.rules</code> / SOCKS 出站对应；出口 IP、国家、州/省、城市由 <code>/api/port_status</code>（转发 9proxy 8080）与公网 IP 地理信息共同补齐。绑定地址 <code>socks_address</code> 与接口里的 <code>address</code> 匹配。</p>
         <div class="toolbar">
@@ -726,7 +726,7 @@ app.get("/", (req, res) => {
           <tbody id="userBody"></tbody>
         </table>
       </section>
-      <section id="panelProxies" class="panel active">
+      <section id="panelProxies" class="panel">
         <h1>代理列表</h1>
         <div class="toolbar">
           <button id="openAddModalBtn" class="add-btn">新增代理</button>
@@ -1284,6 +1284,7 @@ app.get("/", (req, res) => {
     navProxies.addEventListener("click", () => showPanel("proxies"));
     refreshUsersBtn.addEventListener("click", loadSingboxUsers);
     loadLocationCodes();
+    loadSingboxUsers();
     loadProxyList();
   </script>
 </body>
