@@ -120,6 +120,56 @@ async function testProxy(proxy) {
     }
 }
 
+function normalizeBindingKey(addr) {
+    return String(addr || "").replace(/\s+/g, "").toLowerCase();
+}
+
+function getSocksBindingToUserMap() {
+    const map = Object.create(null);
+    try {
+        if (!fs.existsSync(CONFIG_PATH)) {
+            return map;
+        }
+        const config = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
+        const outbounds = config?.outbounds;
+        if (!Array.isArray(outbounds)) {
+            return map;
+        }
+        for (let i = 0; i < outbounds.length; i += 1) {
+            const ob = outbounds[i];
+            if (
+                ob
+                && ob.type === "socks"
+                && typeof ob.tag === "string"
+                && ob.server
+                && ob.server_port != null
+            ) {
+                const key = normalizeBindingKey(`${ob.server}:${ob.server_port}`);
+                if (key) {
+                    map[key] = ob.tag;
+                }
+            }
+        }
+    } catch {
+        // ignore
+    }
+    return map;
+}
+
+function attachBoundUserToProxyList(list, bindingMap) {
+    if (!Array.isArray(list)) {
+        return list;
+    }
+    return list.map((item) => {
+        const key = normalizeBindingKey(item?.binding);
+        const bound_user = key && bindingMap[key] ? bindingMap[key] : "";
+        return {
+            ...item,
+            bound_user
+        };
+    });
+}
+
 function socksAddressForOutboundTag(config, tag) {
     const outbounds = config?.outbounds;
     if (!Array.isArray(outbounds) || typeof tag !== "string") {
@@ -229,16 +279,23 @@ app.get("/change-ip", async (req, res) => {
 
 app.get("/api/proxy-list", async (req, res) => {
     try {
+        const bindingMap = getSocksBindingToUserMap();
         const result = await getProxy();
         if (Array.isArray(result?.data)) {
-            const enrichedData = await enrichProxyState(result.data);
+            const enrichedData = attachBoundUserToProxyList(
+                await enrichProxyState(result.data),
+                bindingMap
+            );
             return res.json({
                 ...result,
                 data: enrichedData
             });
         }
         if (Array.isArray(result?.proxy?.data)) {
-            const enrichedData = await enrichProxyState(result.proxy.data);
+            const enrichedData = attachBoundUserToProxyList(
+                await enrichProxyState(result.proxy.data),
+                bindingMap
+            );
             return res.json({
                 ...result,
                 proxy: {
@@ -710,6 +767,7 @@ app.get("/", (req, res) => {
               </th>
               <th>在线状态</th>
               <th>绑定地址</th>
+              <th>绑定用户</th>
               <th>当前使用</th>
               <th>操作</th>
             </tr>
@@ -942,7 +1000,7 @@ app.get("/", (req, res) => {
 
     function renderRows(list) {
       if (!Array.isArray(list) || list.length === 0) {
-        proxyBody.innerHTML = '<tr><td colspan="9">暂无数据</td></tr>';
+        proxyBody.innerHTML = '<tr><td colspan="10">暂无数据</td></tr>';
         return;
       }
 
@@ -962,6 +1020,7 @@ app.get("/", (req, res) => {
             <td>\${item.state || "-"}</td>
             <td class="\${onlineClass}">\${onlineText}</td>
             <td>\${item.binding || "-"}</td>
+            <td>\${item.bound_user || "-"}</td>
             <td class="\${usingClass}">\${usingText}</td>
             <td>
               <button
