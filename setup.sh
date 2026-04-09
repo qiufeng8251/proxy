@@ -77,7 +77,12 @@ npm install
 
 echo "========== Step 6: 启动项目 =========="
 
-pm2 start server.js --name proxy-server
+if pm2 describe proxy-server >/dev/null 2>&1; then
+    echo "proxy-server 已在 PM2 中，执行重启..."
+    pm2 restart proxy-server
+else
+    pm2 start server.js --name proxy-server
+fi
 pm2 save
 pm2 startup systemd -u $USER --hp $HOME || true
 
@@ -86,12 +91,15 @@ echo "========== Step 7: 修改 sing-box 配置 =========="
 CONFIG_FILE="/etc/v2ray-agent/sing-box/conf/config.json"
 
 if [ -f "$CONFIG_FILE" ]; then
-    echo "备份原配置..."
-    sudo cp "$CONFIG_FILE" "${CONFIG_FILE}.bak"
+    if sudo jq -e '(.outbounds // []) | any(.tag == "socks-proxy")' "$CONFIG_FILE" >/dev/null 2>&1; then
+        echo "已存在 tag 为 socks-proxy 的 outbound，跳过 sing-box 修改"
+    else
+        echo "备份原配置..."
+        sudo cp "$CONFIG_FILE" "${CONFIG_FILE}.bak"
 
-    echo "更新 outbound 配置..."
+        echo "更新 outbound 配置..."
 
-    sudo bash -c "jq '.outbounds += [
+        sudo bash -c "jq '.outbounds += [
         {
             \"type\": \"socks\",
             \"tag\": \"socks-proxy\",
@@ -100,7 +108,8 @@ if [ -f "$CONFIG_FILE" ]; then
         }
     ]' $CONFIG_FILE > ${CONFIG_FILE}.tmp && mv ${CONFIG_FILE}.tmp $CONFIG_FILE"
 
-    echo "配置更新完成"
+        echo "配置更新完成"
+    fi
 else
     echo "未找到 config.json，请确认路径: $CONFIG_FILE"
 fi
