@@ -477,16 +477,11 @@ app.get("/", (req, res) => {
       margin-bottom: 12px;
       line-height: 1.5;
     }
-    .auth-list {
-      margin: 0;
-      padding-left: 18px;
+    .auth-inline {
+      display: block;
       font-size: 13px;
       color: #374151;
-      max-height: 200px;
-      overflow-y: auto;
-    }
-    .auth-list li {
-      margin: 2px 0;
+      line-height: 1.5;
       word-break: break-all;
     }
     .user-table {
@@ -810,8 +805,8 @@ app.get("/", (req, res) => {
           ? '<div class="muted-cell">' + escapeHtml(row.socks_address) + "</div>"
           : "";
         const names = Array.isArray(row.auth_user) ? row.auth_user : [];
-        const listHtml = names.length
-          ? '<ul class="auth-list">' + names.map((n) => '<li>' + escapeHtml(n) + '</li>').join("") + "</ul>"
+        const authCell = names.length
+          ? '<span class="auth-inline">' + names.map((n) => escapeHtml(n)).join("、") + "</span>"
           : "-";
         return (
           "<tr>" +
@@ -821,7 +816,7 @@ app.get("/", (req, res) => {
           "<td>" + (reg || '<span class="muted-cell">-</span>') + "</td>" +
           "<td>" + (city || '<span class="muted-cell">-</span>') + "</td>" +
           "<td>" + onlineCell + "</td>" +
-          "<td>" + listHtml + "</td>" +
+          "<td>" + authCell + "</td>" +
           "</tr>"
         );
       }).join("");
