@@ -8,6 +8,7 @@ const { STATE_CODE_ROWS } = require("./stateCodes");
 const app = express();
 const PORT = 3000;
 const CONFIG_PATH = "/etc/v2ray-agent/sing-box/conf/config.json";
+const USER_META_PATH = "/etc/v2ray-agent/sing-box/conf/proxy-user-meta.json";
 const IPINFO_CACHE = new Map();
 const IP_GEO_CACHE = new Map();
 
@@ -158,22 +159,20 @@ function getSocksBindingToUserMap() {
 function getOutboundWifiNameMap() {
     const map = Object.create(null);
     try {
-        if (!fs.existsSync(CONFIG_PATH)) {
+        if (!fs.existsSync(USER_META_PATH)) {
             return map;
         }
-        const config = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
-        const rules = config?.route?.rules;
-        if (!Array.isArray(rules)) {
+        const data = JSON.parse(fs.readFileSync(USER_META_PATH, "utf8"));
+        const w = data?.wifi_by_outbound;
+        if (!w || typeof w !== "object" || Array.isArray(w)) {
             return map;
         }
-        for (let i = 0; i < rules.length; i += 1) {
-            const rule = rules[i];
-            if (!rule || typeof rule.outbound !== "string") {
-                continue;
-            }
-            const w = rule.wifi_name;
-            if (typeof w === "string" && w.trim() !== "") {
-                map[rule.outbound] = w.trim();
+        const keys = Object.keys(w);
+        for (let i = 0; i < keys.length; i += 1) {
+            const k = keys[i];
+            const v = w[k];
+            if (typeof v === "string" && v.trim() !== "") {
+                map[k] = v.trim();
             }
         }
     } catch {
@@ -234,6 +233,7 @@ function getSingboxRouteUsers() {
         if (!Array.isArray(rules)) {
             return { ok: true, users: [] };
         }
+        const wifiMap = getOutboundWifiNameMap();
         const users = [];
         for (let i = 0; i < rules.length; i += 1) {
             const rule = rules[i];
@@ -244,13 +244,13 @@ function getSingboxRouteUsers() {
             if (!Array.isArray(auth)) {
                 continue;
             }
-            const wn = rule.wifi_name;
+            const tag = rule.outbound;
+            const wn = wifiMap[tag];
             users.push({
-                outbound: rule.outbound,
+                outbound: tag,
                 auth_user: auth.map((x) => String(x)),
-                socks_address: socksAddressForOutboundTag(config, rule.outbound),
-                wifi_name:
-                    typeof wn === "string" && wn.trim() !== "" ? wn.trim() : ""
+                socks_address: socksAddressForOutboundTag(config, tag),
+                wifi_name: typeof wn === "string" && wn.trim() !== "" ? wn.trim() : ""
             });
         }
         return { ok: true, users };
@@ -740,7 +740,7 @@ app.get("/", (req, res) => {
     <main class="main-content">
       <section id="panelUsers" class="panel active">
         <h1>用户管理</h1>
-        <p class="user-hint">用户与 <code>route.rules</code> / SOCKS 出站对应；出口 IP、国家、州/省、城市由 <code>/api/port_status</code>（转发 9proxy 8080）与公网 IP 地理信息共同补齐。绑定地址 <code>socks_address</code> 与接口里的 <code>address</code> 匹配。</p>
+        <p class="user-hint">用户与 <code>route.rules</code> / SOCKS 出站对应；WiFi 名称仅用于界面展示，来自 <code>proxy-user-meta.json</code>（由 setup 脚本写入，勿写入 sing-box 路由）。出口 IP、国家、州/省、城市由 <code>/api/port_status</code>（转发 9proxy 8080）与公网 IP 地理信息共同补齐。</p>
         <div class="toolbar">
           <button type="button" id="refreshUsersBtn">刷新用户</button>
           <span class="status" id="userStatusText">加载中...</span>

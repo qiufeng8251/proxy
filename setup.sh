@@ -136,13 +136,17 @@ sudo cp "$CONFIG_FILE" "${CONFIG_FILE}.bak" || die "备份 sing-box 配置失败
 
 echo "按入站 UUID 用户生成 SOCKS 出站：tag=用户ID（UUID 首段 8 位），端口 60000 起递增，并写入 auth_user 路由..."
 
-read -r -p "WiFi 名称前缀（写入 route.rules[].wifi_name，如 OB → OB-1、OB-2…；留空则不添加该字段）: " WIFI_NAME_PREFIX
+read -r -p "WiFi 名称前缀（写入 conf/proxy-user-meta.json，供控制台显示，如 OB → OB-1、OB-2…；留空则清空映射）: " WIFI_NAME_PREFIX
 WIFI_NAME_PREFIX="${WIFI_NAME_PREFIX//$'\r'/}"
 
-TMP_JSON="$(mktemp)"
-trap 'rm -f "$TMP_JSON"' EXIT
+CONFIG_DIR="$(dirname "$CONFIG_FILE")"
+META_FILE="${CONFIG_DIR}/proxy-user-meta.json"
 
-sudo jq --arg wifi_prefix "$WIFI_NAME_PREFIX" '
+TMP_JSON="$(mktemp)"
+TMP_META="$(mktemp)"
+trap 'rm -f "$TMP_JSON" "$TMP_META"' EXIT
+
+sudo jq '
 def uuid_re: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$";
 
 def account_key(u):
@@ -194,8 +198,7 @@ def should_remove_socks(o; r):
       [ $all[] | select(account_key(.) == $e.value) | auth_strings(.) ] | add // [] | unique
     ),
     outbound: ($e.value | split("-")[0] | ascii_downcase)
-  }
-  | if ($wifi_prefix | length) > 0 then . + {wifi_name: "\($wifi_prefix)-\($e.key + 1)"} else . end)) as $rules
+  })) as $rules
 | $root
 | .outbounds = ($ob1 + $new_socks)
 | .route |= (.rules = $rules | .final = "direct")
@@ -207,8 +210,28 @@ sudo cp "$TMP_JSON" "$CONFIG_FILE" || die "写入 $CONFIG_FILE 失败"
 
 sudo jq empty "$CONFIG_FILE" || die "写入后的 sing-box 配置 JSON 无效"
 
+RULES_JSON="$(sudo jq -c '.route.rules // []' "$CONFIG_FILE")" || die "读取 route.rules 失败"
+
+jq -n \
+  --arg prefix "$WIFI_NAME_PREFIX" \
+  --argjson rules "$RULES_JSON" \
+  '
+  if ($prefix | length) == 0 then {wifi_by_outbound: {}}
+  else
+    [ $rules[] | select(type == "object" and (.outbound | type) == "string" and .outbound != "") ]
+    | to_entries
+    | map({key: .value.outbound, value: "\($prefix)-\(.key + 1)"})
+    | from_entries
+    | {wifi_by_outbound: .}
+  end
+  ' >"$TMP_META" || die "生成 proxy-user-meta.json 失败"
+
+jq empty "$TMP_META" || die "proxy-user-meta.json 内容无效"
+
+sudo cp "$TMP_META" "$META_FILE" || die "写入 $META_FILE 失败"
+
 USER_RULES="$(sudo jq -r '(.route.rules // []) | length' "$CONFIG_FILE")"
-echo "sing-box 配置已更新（路由用户数: $USER_RULES）"
+echo "sing-box 配置已更新（路由用户数: $USER_RULES）；WiFi 显示映射: $META_FILE"
 
 echo "重启 sing-box..."
 sudo systemctl restart sing-box || die "systemctl restart sing-box 失败"
