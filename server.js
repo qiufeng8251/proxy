@@ -768,7 +768,7 @@ app.get("/", (req, res) => {
               <th>在线状态</th>
               <th>绑定地址</th>
               <th>绑定用户</th>
-              <th>当前使用</th>
+              <th>使用状态</th>
               <th>操作</th>
             </tr>
           </thead>
@@ -1007,10 +1007,13 @@ app.get("/", (req, res) => {
       proxyBody.innerHTML = list.map((item) => {
         const onlineText = item.is_online ? "在线" : "离线";
         const onlineClass = item.is_online ? "online" : "offline";
-        const isUsing = item.binding === activeBinding;
-        const usingText = isUsing ? "正在使用" : "-";
-        const usingClass = isUsing ? "using" : "";
-        const rowClass = isUsing ? "row-using" : "";
+        const bindingStr = item.binding != null ? String(item.binding).trim() : "";
+        const hasBinding = bindingStr !== "";
+        const useStatusText = hasBinding ? "正在使用" : "-";
+        const useStatusClass = hasBinding ? "using" : "";
+        const activeTrim = String(activeBinding || "").trim();
+        const isCurrentForward = hasBinding && bindingStr === activeTrim;
+        const rowClass = hasBinding ? "row-using" : "";
         return \`
           <tr class="\${rowClass}">
             <td>\${item.id || "-"}</td>
@@ -1021,14 +1024,14 @@ app.get("/", (req, res) => {
             <td class="\${onlineClass}">\${onlineText}</td>
             <td>\${item.binding || "-"}</td>
             <td>\${item.bound_user || "-"}</td>
-            <td class="\${usingClass}">\${usingText}</td>
+            <td class="\${useStatusClass}">\${useStatusText}</td>
             <td>
               <button
                 class="switch-btn"
                 onclick="switchProxy('\${item.id || ""}')"
-                \${isUsing ? "disabled" : ""}
+                \${isCurrentForward ? "disabled" : ""}
               >
-                \${isUsing ? "当前代理" : "切换到此代理"}
+                \${isCurrentForward ? "当前代理" : "切换到此代理"}
               </button>
             </td>
           </tr>
