@@ -136,10 +136,13 @@ sudo cp "$CONFIG_FILE" "${CONFIG_FILE}.bak" || die "备份 sing-box 配置失败
 
 echo "按入站 UUID 用户生成 SOCKS 出站：tag=用户ID（UUID 首段 8 位），端口 60000 起递增，并写入 auth_user 路由..."
 
+read -r -p "WiFi 名称前缀（写入 route.rules[].wifi_name，如 OB → OB-1、OB-2…；留空则不添加该字段）: " WIFI_NAME_PREFIX
+WIFI_NAME_PREFIX="${WIFI_NAME_PREFIX//$'\r'/}"
+
 TMP_JSON="$(mktemp)"
 trap 'rm -f "$TMP_JSON"' EXIT
 
-sudo jq '
+sudo jq --arg wifi_prefix "$WIFI_NAME_PREFIX" '
 def uuid_re: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$";
 
 def account_key(u):
@@ -180,7 +183,8 @@ def should_remove_socks(o; r):
       [ $all[] | select(account_key(.) == $e.value) | auth_strings(.) ] | add // [] | unique
     ),
     outbound: ($e.value | split("-")[0] | ascii_downcase)
-  })) as $rules
+  }
+  | if ($wifi_prefix | length) > 0 then . + {wifi_name: "\($wifi_prefix)-\($e.key + 1)"} else . end)) as $rules
 | $root
 | .outbounds = ($ob1 + $new_socks)
 | .route |= (.rules = $rules | .final = "direct")

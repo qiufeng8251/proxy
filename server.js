@@ -155,16 +155,47 @@ function getSocksBindingToUserMap() {
     return map;
 }
 
+function getOutboundWifiNameMap() {
+    const map = Object.create(null);
+    try {
+        if (!fs.existsSync(CONFIG_PATH)) {
+            return map;
+        }
+        const config = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
+        const rules = config?.route?.rules;
+        if (!Array.isArray(rules)) {
+            return map;
+        }
+        for (let i = 0; i < rules.length; i += 1) {
+            const rule = rules[i];
+            if (!rule || typeof rule.outbound !== "string") {
+                continue;
+            }
+            const w = rule.wifi_name;
+            if (typeof w === "string" && w.trim() !== "") {
+                map[rule.outbound] = w.trim();
+            }
+        }
+    } catch {
+        // ignore
+    }
+    return map;
+}
+
 function attachBoundUserToProxyList(list, bindingMap) {
     if (!Array.isArray(list)) {
         return list;
     }
+    const wifiByTag = getOutboundWifiNameMap();
     return list.map((item) => {
         const key = normalizeBindingKey(item?.binding);
         const bound_user = key && bindingMap[key] ? bindingMap[key] : "";
+        const bound_wifi_name =
+            bound_user && wifiByTag[bound_user] ? wifiByTag[bound_user] : "";
         return {
             ...item,
-            bound_user
+            bound_user,
+            bound_wifi_name
         };
     });
 }
@@ -213,10 +244,13 @@ function getSingboxRouteUsers() {
             if (!Array.isArray(auth)) {
                 continue;
             }
+            const wn = rule.wifi_name;
             users.push({
                 outbound: rule.outbound,
                 auth_user: auth.map((x) => String(x)),
-                socks_address: socksAddressForOutboundTag(config, rule.outbound)
+                socks_address: socksAddressForOutboundTag(config, rule.outbound),
+                wifi_name:
+                    typeof wn === "string" && wn.trim() !== "" ? wn.trim() : ""
             });
         }
         return { ok: true, users };
@@ -720,6 +754,7 @@ app.get("/", (req, res) => {
               <th style="width:120px;">IP 州/省</th>
               <th style="width:120px;">城市</th>
               <th style="width:72px;">在线</th>
+              <th style="width:110px;">WiFi 名称</th>
               <th>认证用户名（auth_user）</th>
             </tr>
           </thead>
@@ -791,6 +826,7 @@ app.get("/", (req, res) => {
               <th>在线状态</th>
               <th>绑定地址</th>
               <th>绑定用户</th>
+              <th>WiFi 名称</th>
               <th>使用状态</th>
               <th>操作</th>
             </tr>
@@ -887,7 +923,7 @@ app.get("/", (req, res) => {
     function renderUserRows(users, portRows) {
       portRows = Array.isArray(portRows) ? portRows : [];
       if (!Array.isArray(users) || users.length === 0) {
-        userBody.innerHTML = '<tr><td colspan="7">暂无规则或未读取到带 auth_user 的条目</td></tr>';
+        userBody.innerHTML = '<tr><td colspan="8">暂无规则或未读取到带 auth_user 的条目</td></tr>';
         return;
       }
       userBody.innerHTML = users.map((row) => {
@@ -909,6 +945,10 @@ app.get("/", (req, res) => {
         const authCell = names.length
           ? '<span class="auth-inline">' + names.map((n) => escapeHtml(n)).join("、") + "</span>"
           : "-";
+        const wifiCell =
+          row.wifi_name && String(row.wifi_name).trim() !== ""
+            ? "<strong>" + escapeHtml(String(row.wifi_name).trim()) + "</strong>"
+            : '<span class="muted-cell">-</span>';
         return (
           "<tr>" +
           "<td><strong>" + escapeHtml(row.outbound || "-") + "</strong>" + bindHint + "</td>" +
@@ -917,6 +957,7 @@ app.get("/", (req, res) => {
           "<td>" + (reg || '<span class="muted-cell">-</span>') + "</td>" +
           "<td>" + (city || '<span class="muted-cell">-</span>') + "</td>" +
           "<td>" + onlineCell + "</td>" +
+          "<td>" + wifiCell + "</td>" +
           "<td>" + authCell + "</td>" +
           "</tr>"
         );
@@ -1043,7 +1084,7 @@ app.get("/", (req, res) => {
 
     function renderRows(list) {
       if (!Array.isArray(list) || list.length === 0) {
-        proxyBody.innerHTML = '<tr><td colspan="10">暂无数据</td></tr>';
+        proxyBody.innerHTML = '<tr><td colspan="11">暂无数据</td></tr>';
         return;
       }
 
@@ -1055,6 +1096,10 @@ app.get("/", (req, res) => {
         const useStatusText = hasBinding ? "正在使用" : "-";
         const useStatusClass = hasBinding ? "using" : "";
         const rowClass = hasBinding ? "row-using" : "";
+        const boundWifiCell =
+          item.bound_wifi_name && String(item.bound_wifi_name).trim() !== ""
+            ? escapeHtml(String(item.bound_wifi_name).trim())
+            : "-";
         return \`
           <tr class="\${rowClass}">
             <td>\${item.id || "-"}</td>
@@ -1065,6 +1110,7 @@ app.get("/", (req, res) => {
             <td class="\${onlineClass}">\${onlineText}</td>
             <td>\${item.binding || "-"}</td>
             <td>\${item.bound_user || "-"}</td>
+            <td>\${boundWifiCell}</td>
             <td class="\${useStatusClass}">\${useStatusText}</td>
             <td>
               <button
@@ -1107,7 +1153,18 @@ app.get("/", (req, res) => {
             continue;
           }
           const addr = String(u.socks_address || "").trim();
-          const label = (u.outbound || "用户") + "（" + addr + "，端口 " + port + "）";
+          const wifiPrefix =
+            u.wifi_name && String(u.wifi_name).trim() !== ""
+              ? escapeHtml(String(u.wifi_name).trim()) + " · "
+              : "";
+          const label =
+            wifiPrefix +
+            (u.outbound || "用户") +
+            "（" +
+            addr +
+            "，端口 " +
+            port +
+            "）";
           parts.push(
             '<option value="' +
               port +
