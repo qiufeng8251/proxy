@@ -48,12 +48,15 @@ fi
 echo "启动 9proxy 服务..."
 sudo systemctl start 9proxyd.service || die "启动 9proxyd.service 失败"
 
-echo "请手动输入 9proxy 账号密码进行登录："
-read -p "Username: " USERNAME
-read -s -p "Password: " PASSWORD
-echo
-
-9proxy auth -u "$USERNAME" -p "$PASSWORD" || die "9proxy 登录失败"
+if 9proxy api -d >/dev/null 2>&1; then
+    echo "9proxy 已登录，跳过账号密码与 auth"
+else
+    echo "请手动输入 9proxy 账号密码进行登录："
+    read -r -p "Username: " USERNAME
+    read -r -s -p "Password: " PASSWORD
+    echo
+    9proxy auth -u "$USERNAME" -p "$PASSWORD" || die "9proxy 登录失败"
+fi
 
 echo "配置 9proxy API 端口 8080..."
 9proxy api -p 8080 || die "9proxy 设置 API 端口失败"
