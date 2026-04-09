@@ -10,6 +10,7 @@ const PORT = 3000;
 const CONFIG_PATH = "/etc/v2ray-agent/sing-box/conf/config.json";
 const ACTIVE_BINDING = "127.0.0.1:60000";
 const IPINFO_CACHE = new Map();
+const IP_GEO_CACHE = new Map();
 
 async function getProxy() {
     const res = await axios.get("http://127.0.0.1:8080/api/today_list?t=2&limit=200");
@@ -46,23 +47,44 @@ function getLocationCodes() {
         };
 }
 
+async function getIpGeo(ip) {
+    if (!ip) {
+        return { country: "", region: "", city: "" };
+    }
+    const key = String(ip).trim();
+    if (!key) {
+        return { country: "", region: "", city: "" };
+    }
+    if (IP_GEO_CACHE.has(key)) {
+        return IP_GEO_CACHE.get(key);
+    }
+    try {
+        const res = await axios.get(`https://ipinfo.io/${key}/json`, {
+            timeout: 5000
+        });
+        const geo = {
+            country: (res.data?.country || "").trim(),
+            region: (res.data?.region || "").trim(),
+            city: (res.data?.city || "").trim()
+        };
+        IP_GEO_CACHE.set(key, geo);
+        IPINFO_CACHE.set(key, geo.region);
+        return geo;
+    } catch {
+        const empty = { country: "", region: "", city: "" };
+        IP_GEO_CACHE.set(key, empty);
+        IPINFO_CACHE.set(key, "");
+        return empty;
+    }
+}
+
 async function getStateByIp(ip) {
     if (!ip) return "";
     if (IPINFO_CACHE.has(ip)) {
         return IPINFO_CACHE.get(ip);
     }
-
-    try {
-        const res = await axios.get(`https://ipinfo.io/${ip}/json`, {
-            timeout: 5000
-        });
-        const state = (res.data?.region || "").trim();
-        IPINFO_CACHE.set(ip, state);
-        return state;
-    } catch {
-        IPINFO_CACHE.set(ip, "");
-        return "";
-    }
+    const geo = await getIpGeo(ip);
+    return geo.region;
 }
 
 async function enrichProxyState(list) {
@@ -98,6 +120,26 @@ async function testProxy(proxy) {
     }
 }
 
+function socksAddressForOutboundTag(config, tag) {
+    const outbounds = config?.outbounds;
+    if (!Array.isArray(outbounds) || typeof tag !== "string") {
+        return "";
+    }
+    for (let i = 0; i < outbounds.length; i += 1) {
+        const ob = outbounds[i];
+        if (
+            ob
+            && ob.type === "socks"
+            && ob.tag === tag
+            && ob.server
+            && ob.server_port != null
+        ) {
+            return `${ob.server}:${ob.server_port}`;
+        }
+    }
+    return "";
+}
+
 function getSingboxRouteUsers() {
     try {
         if (!fs.existsSync(CONFIG_PATH)) {
@@ -124,7 +166,8 @@ function getSingboxRouteUsers() {
             }
             users.push({
                 outbound: rule.outbound,
-                auth_user: auth.map((x) => String(x))
+                auth_user: auth.map((x) => String(x)),
+                socks_address: socksAddressForOutboundTag(config, rule.outbound)
             });
         }
         return { ok: true, users };
@@ -261,6 +304,48 @@ app.get("/api/singbox-users", (req, res) => {
         msg: ok ? "ok" : error || "读取失败",
         users
     });
+});
+
+app.get("/api/port_status", async (req, res) => {
+    try {
+        const r = await axios.get("http://127.0.0.1:8080/api/port_status", {
+            timeout: 15000
+        });
+        const body = r.data;
+        const list = Array.isArray(body?.data) ? body.data : [];
+        const enriched = await Promise.all(
+            list.map(async (row) => {
+                if (!row || typeof row !== "object") {
+                    return row;
+                }
+                const ip = String(row.public_ip || "").trim();
+                const geo = ip ? await getIpGeo(ip) : { country: "", region: "", city: "" };
+                const city = String(row.city || row.ip_city || "").trim() || geo.city;
+                const country = String(
+                    row.ip_country || row.country_code || row.country || ""
+                ).trim() || geo.country;
+                const region = String(
+                    row.ip_region || row.state || row.region || ""
+                ).trim() || geo.region;
+                return {
+                    ...row,
+                    ip_country: country,
+                    ip_region: region,
+                    ip_city: city
+                };
+            })
+        );
+        res.json({
+            ...body,
+            data: enriched
+        });
+    } catch (e) {
+        res.status(502).json({
+            error: true,
+            message: e.message || "port_status 请求失败",
+            data: []
+        });
+    }
 });
 
 app.get("/api/add-proxy", async (req, res) => {
@@ -403,6 +488,17 @@ app.get("/", (req, res) => {
     .auth-list li {
       margin: 2px 0;
       word-break: break-all;
+    }
+    .user-table {
+      font-size: 13px;
+    }
+    .user-table th,
+    .user-table td {
+      vertical-align: top;
+    }
+    .muted-cell {
+      color: #9ca3af;
+      font-size: 12px;
     }
     .toolbar {
       display: flex;
@@ -550,15 +646,20 @@ app.get("/", (req, res) => {
     <main class="main-content">
       <section id="panelUsers" class="panel">
         <h1>用户管理</h1>
-        <p class="user-hint">数据来自 <code>${CONFIG_PATH}</code> 的 <code>route.rules</code>：每条规则对应一个用户，<strong>outbound</strong> 为用户 ID（与 SOCKS 出站 tag 一致），<strong>auth_user</strong> 为该用户在各入站协议下的认证名（可多条）。</p>
+        <p class="user-hint">用户与 <code>route.rules</code> / SOCKS 出站对应；出口 IP、国家、州/省、城市由 <code>/api/port_status</code>（转发 9proxy 8080）与公网 IP 地理信息共同补齐。绑定地址 <code>socks_address</code> 与接口里的 <code>address</code> 匹配。</p>
         <div class="toolbar">
           <button type="button" id="refreshUsersBtn">刷新用户</button>
           <span class="status" id="userStatusText">加载中...</span>
         </div>
-        <table>
+        <table class="user-table">
           <thead>
             <tr>
-              <th style="width:140px;">用户 ID（outbound）</th>
+              <th style="width:120px;">用户 ID</th>
+              <th style="width:130px;">出口 IP</th>
+              <th style="width:100px;">IP 国家</th>
+              <th style="width:120px;">IP 州/省</th>
+              <th style="width:120px;">城市</th>
+              <th style="width:72px;">在线</th>
               <th>认证用户名（auth_user）</th>
             </tr>
           </thead>
@@ -669,33 +770,96 @@ app.get("/", (req, res) => {
       userStatusText.textContent = text;
     }
 
-    function renderUserRows(users) {
+    function normAddr(s) {
+      return String(s || "").replace(/\s+/g, "").toLowerCase();
+    }
+
+    function matchPortRow(portRows, socksAddr) {
+      const target = normAddr(socksAddr);
+      if (!target) {
+        return null;
+      }
+      for (let i = 0; i < portRows.length; i += 1) {
+        const pr = portRows[i];
+        if (pr && normAddr(pr.address) === target) {
+          return pr;
+        }
+      }
+      return null;
+    }
+
+    function renderUserRows(users, portRows) {
+      portRows = Array.isArray(portRows) ? portRows : [];
       if (!Array.isArray(users) || users.length === 0) {
-        userBody.innerHTML = '<tr><td colspan="2">暂无规则或未读取到带 auth_user 的条目</td></tr>';
+        userBody.innerHTML = '<tr><td colspan="7">暂无规则或未读取到带 auth_user 的条目</td></tr>';
         return;
       }
       userBody.innerHTML = users.map((row) => {
+        const ps = matchPortRow(portRows, row.socks_address);
+        const pub = ps && ps.public_ip != null ? escapeHtml(String(ps.public_ip)) : "";
+        const cc = ps && ps.ip_country ? String(ps.ip_country) : "";
+        const reg = ps && ps.ip_region ? escapeHtml(String(ps.ip_region)) : "";
+        const city = ps && ps.ip_city != null ? escapeHtml(String(ps.ip_city)) : "";
+        let onlineCell = "-";
+        if (ps && typeof ps.online === "boolean") {
+          onlineCell = ps.online
+            ? '<span class="online">在线</span>'
+            : '<span class="offline">离线</span>';
+        }
+        const bindHint = row.socks_address
+          ? '<div class="muted-cell">' + escapeHtml(row.socks_address) + "</div>"
+          : "";
         const names = Array.isArray(row.auth_user) ? row.auth_user : [];
         const listHtml = names.length
           ? '<ul class="auth-list">' + names.map((n) => '<li>' + escapeHtml(n) + '</li>').join("") + "</ul>"
           : "-";
-        return '<tr><td><strong>' + escapeHtml(row.outbound || "-") + "</strong></td><td>" + listHtml + "</td></tr>";
+        return (
+          "<tr>" +
+          "<td><strong>" + escapeHtml(row.outbound || "-") + "</strong>" + bindHint + "</td>" +
+          "<td>" + (pub || '<span class="muted-cell">-</span>') + "</td>" +
+          "<td>" + (cc ? countryFlag(cc) + " " + escapeHtml(cc) : '<span class="muted-cell">-</span>') + "</td>" +
+          "<td>" + (reg || '<span class="muted-cell">-</span>') + "</td>" +
+          "<td>" + (city || '<span class="muted-cell">-</span>') + "</td>" +
+          "<td>" + onlineCell + "</td>" +
+          "<td>" + listHtml + "</td>" +
+          "</tr>"
+        );
       }).join("");
     }
 
     async function loadSingboxUsers() {
       try {
         setUserStatus("正在加载...");
-        const resp = await fetch("/api/singbox-users");
-        const data = await resp.json();
-        if (!resp.ok || data.success === false) {
-          throw new Error(data.msg || data.error || "读取失败");
+        const [userResp, portResp] = await Promise.all([
+          fetch("/api/singbox-users"),
+          fetch("/api/port_status")
+        ]);
+        const userData = await userResp.json();
+        if (!userResp.ok || userData.success === false) {
+          throw new Error(userData.msg || userData.error || "读取用户失败");
         }
-        const users = Array.isArray(data.users) ? data.users : [];
-        renderUserRows(users);
-        setUserStatus("共 " + users.length + " 个用户（route 规则）");
+        const portJson = await portResp.json().catch(() => ({}));
+        let portRows = [];
+        let portNote = "";
+        if (portResp.ok && Array.isArray(portJson.data)) {
+          portRows = portJson.data;
+          if (portJson.error === true && portJson.message) {
+            portNote = String(portJson.message);
+          }
+        } else {
+          portNote = portJson.message
+            ? String(portJson.message)
+            : "port_status 不可用（HTTP " + portResp.status + "）";
+        }
+        const users = Array.isArray(userData.users) ? userData.users : [];
+        renderUserRows(users, portRows);
+        let msg = "共 " + users.length + " 个用户；port_status " + portRows.length + " 条";
+        if (portNote) {
+          msg += " · " + portNote;
+        }
+        setUserStatus(msg);
       } catch (err) {
-        renderUserRows([]);
+        renderUserRows([], []);
         setUserStatus("加载失败: " + err.message);
       }
     }
