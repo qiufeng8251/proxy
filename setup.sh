@@ -157,21 +157,32 @@ def auth_strings(u):
   | map(select(type == "string" and . != ""));
 
 def should_remove_socks(o; r):
-  (o.type == "socks") and (
+  (o | type == "object") and (o.type == "socks") and (
     (o.tag == "socks-proxy" and (o.server == "127.0.0.1")) or
     ((o.tag // "") | test("^socks-proxy-[0-9]+$")) or
     (
-      (o.server == "127.0.0.1") and
-      ((r | index((o.tag // "") | ascii_downcase)) != null)
+      (o.server == "127.0.0.1") and (
+        ((o.tag // "") | ascii_downcase) as $needle
+        | r
+        | index($needle)
+      ) != null
     )
   );
 
 . as $root
-| ([ $root.inbounds[] | .users[]? | select(type == "object") ] | map(select(account_key(.) != null))) as $all
+| ([ $root.inbounds[]? | select(type == "object") | .users[]? | select(type == "object") ]
+    | map(select(account_key(.) != null))) as $all
 | ($all | map(account_key(.)) | unique | sort) as $keys
 | ($keys | map(split("-")[0] | ascii_downcase) | unique) as $rid_tags
-| (($root.outbounds // []) | map(select(should_remove_socks(.; $rid_tags) | not))) as $kept
-| (if ($kept | any(.tag == "direct")) then $kept else ([{type:"direct",tag:"direct"}] + $kept) end) as $ob1
+| (($root.outbounds // [])
+    | [
+        .[]
+        | if (type == "object") and should_remove_socks(.; $rid_tags) then empty else . end
+      ]) as $kept
+| (if any($kept[]; type == "object" and .tag == "direct")
+   then $kept
+   else ([{type:"direct",tag:"direct"}] + $kept)
+   end) as $ob1
 | ($keys | to_entries | map(. as $e | {
     type: "socks",
     tag: ($e.value | split("-")[0] | ascii_downcase),
