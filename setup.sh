@@ -80,19 +80,27 @@ else
     login_9proxy
 fi
 
-echo "配置 9proxy API 端口 8080..."
-if ! 9proxy api -p 8080; then
-    echo "设置 API 端口失败，可能登录状态已失效；清理本地登录状态并重新登录后重试..."
-    clear_auth_state
-    login_9proxy
-    9proxy api -p 8080 || die "9proxy 设置 API 端口失败（重试后仍失败）"
+echo "检查 API 状态..."
+API_STATUS_OUTPUT="$(9proxy api -d 2>&1 || true)"
+echo "$API_STATUS_OUTPUT"
+
+API_STATUS="$(echo "$API_STATUS_OUTPUT" | awk -F: '/API Status/{print $2}' | xargs | tr '[:upper:]' '[:lower:]')"
+API_PORT="$(echo "$API_STATUS_OUTPUT" | awk -F: '/API Port/{print $2}' | xargs)"
+
+if [ -z "$API_STATUS" ] || [ -z "$API_PORT" ]; then
+    die "无法从 9proxy api -d 输出中解析 API Status/API Port"
 fi
 
-echo "检查 API 状态..."
-9proxy api -d || die "9proxy API 状态检查失败"
-
-echo "启动 9proxy API..."
-9proxy api -s || die "9proxy 启动 API 失败"
+if [ "$API_PORT" != "8080" ]; then
+    echo "API 端口为 $API_PORT，按要求改为 8080 并启动 API..."
+    9proxy api -p 8080 || die "9proxy 设置 API 端口失败"
+    9proxy api -s || die "9proxy 启动 API 失败"
+elif [[ "$API_STATUS" == "stopped" || "$API_STATUS" == "stop" ]]; then
+    echo "API 端口为 8080 且状态为停止，启动 API..."
+    9proxy api -s || die "9proxy 启动 API 失败"
+else
+    echo "不满足启动条件（端口=$API_PORT, 状态=$API_STATUS），跳过 API 处理"
+fi
 
 echo "========== Step 1 完成 =========="
 
