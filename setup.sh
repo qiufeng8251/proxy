@@ -48,18 +48,45 @@ fi
 echo "启动 9proxy 服务..."
 sudo systemctl start 9proxyd.service || die "启动 9proxyd.service 失败"
 
-if 9proxy api -d >/dev/null 2>&1; then
-    echo "9proxy 已登录，跳过账号密码与 auth"
-else
+AUTH_STATE_FILE="${HOME}/.9proxy_auth_state"
+
+mark_auth_state() {
+    local username="$1"
+    cat >"$AUTH_STATE_FILE" <<EOF
+authenticated=1
+username=$username
+updated_at=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+EOF
+}
+
+clear_auth_state() {
+    rm -f "$AUTH_STATE_FILE"
+}
+
+login_9proxy() {
+    local username
+    local password
     echo "请手动输入 9proxy 账号密码进行登录："
-    read -r -p "Username: " USERNAME
-    read -r -s -p "Password: " PASSWORD
+    read -r -p "Username: " username
+    read -r -s -p "Password: " password
     echo
-    9proxy auth -u "$USERNAME" -p "$PASSWORD" || die "9proxy 登录失败"
+    9proxy auth -u "$username" -p "$password" || die "9proxy 登录失败"
+    mark_auth_state "$username"
+}
+
+if [ -f "$AUTH_STATE_FILE" ]; then
+    echo "检测到本地登录状态文件，先按已登录处理: $AUTH_STATE_FILE"
+else
+    login_9proxy
 fi
 
 echo "配置 9proxy API 端口 8080..."
-9proxy api -p 8080 || die "9proxy 设置 API 端口失败"
+if ! 9proxy api -p 8080; then
+    echo "设置 API 端口失败，可能登录状态已失效；清理本地登录状态并重新登录后重试..."
+    clear_auth_state
+    login_9proxy
+    9proxy api -p 8080 || die "9proxy 设置 API 端口失败（重试后仍失败）"
+fi
 
 echo "检查 API 状态..."
 9proxy api -d || die "9proxy API 状态检查失败"
