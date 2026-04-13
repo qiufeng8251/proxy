@@ -411,29 +411,114 @@ function attachBoundUserToProxyList(list, bindingMap) {
 }
 
 /**
+ * 在配置中查找指定 tag 的 SOCKS 出站对象。
+ * @param {object} config 已解析的 sing-box JSON
+ * @param {string} tag 出站 tag
+ * @returns {object|null}
+ */
+function getSocksOutboundObForTag(config, tag) {
+    const outbounds = config?.outbounds;
+    if (!Array.isArray(outbounds) || typeof tag !== "string") {
+        return null;
+    }
+    for (let i = 0; i < outbounds.length; i += 1) {
+        const ob = outbounds[i];
+        if (ob && ob.type === "socks" && ob.tag === tag) {
+            return ob;
+        }
+    }
+    return null;
+}
+
+/**
  * 在配置中查找指定 tag 的 SOCKS 出站，返回 `server:port` 字符串。
  * @param {object} config 已解析的 sing-box JSON
  * @param {string} tag 出站 tag
  * @returns {string}
  */
 function socksAddressForOutboundTag(config, tag) {
-    const outbounds = config?.outbounds;
-    if (!Array.isArray(outbounds) || typeof tag !== "string") {
+    const ob = getSocksOutboundObForTag(config, tag);
+    if (!ob || !ob.server || ob.server_port == null) {
         return "";
     }
-    for (let i = 0; i < outbounds.length; i += 1) {
-        const ob = outbounds[i];
-        if (
-            ob
-            && ob.type === "socks"
-            && ob.tag === tag
-            && ob.server
-            && ob.server_port != null
-        ) {
-            return `${ob.server}:${ob.server_port}`;
-        }
+    return `${ob.server}:${ob.server_port}`;
+}
+
+/**
+ * 对「用户管理」行：若 SOCKS 出站指向非本机地址，则经 SOCKS 探测出口 IP 与地理信息（与自定义代理列表同源逻辑）。
+ * @param {object[]} users `getSingboxRouteUsers().users`
+ * @param {object} config 已解析的 sing-box JSON
+ */
+async function enrichSingboxUsersWithSocksGeo(users, config) {
+    if (!Array.isArray(users) || users.length === 0) {
+        return users;
     }
-    return "";
+    return Promise.all(
+        users.map(async (u) => {
+            try {
+                const tag = String(u.outbound || "").trim();
+                if (!tag) {
+                    return u;
+                }
+                const ob = getSocksOutboundObForTag(config, tag);
+                if (
+                    !ob
+                    || ob.type !== "socks"
+                    || ob.server == null
+                    || ob.server_port == null
+                ) {
+                    return u;
+                }
+                const server = String(ob.server).trim();
+                const port = Number(ob.server_port);
+                if (!server || !Number.isFinite(port) || port <= 0) {
+                    return u;
+                }
+                const isLocal =
+                    server === "127.0.0.1"
+                    || server === "localhost"
+                    || server === "::1";
+                if (isLocal) {
+                    return u;
+                }
+                const entry = {
+                    host: server,
+                    port,
+                    username: ob.username != null ? String(ob.username) : "",
+                    password: ob.password != null ? String(ob.password) : ""
+                };
+                const apiRow = {
+                    id: "",
+                    ip: "",
+                    city: "—",
+                    country_code: "",
+                    state: "",
+                    is_online: false,
+                    binding: `${server}:${port}`,
+                    is_custom: true
+                };
+                const enriched = await enrichCustomProxyFromEntry(apiRow, entry);
+                return {
+                    ...u,
+                    port_status_overlay: {
+                        public_ip:
+                            enriched.ip && enriched.ip !== "-"
+                                ? String(enriched.ip).trim()
+                                : "",
+                        ip_country: enriched.country_code || "",
+                        ip_region: enriched.state || "",
+                        ip_city:
+                            enriched.city && enriched.city !== "—"
+                                ? String(enriched.city).trim()
+                                : "",
+                        online: enriched.is_online === true
+                    }
+                };
+            } catch {
+                return u;
+            }
+        })
+    );
 }
 
 /**
@@ -1153,14 +1238,39 @@ app.get("/api/location-codes", (req, res) => {
 /**
  * GET /api/singbox-users
  * 读取 CONFIG_PATH 中 route.rules 的 outbound 与对应 SOCKS 地址、WiFi 名，供「用户管理」页表格。
+ * 若某用户 SOCKS 出站为远端（非 127.0.0.1），则经 SOCKS 探测出口 IP / 国家 / 州省 / 城市 / 在线，置于 `port_status_overlay`（与 port_status 字段对齐供前端复用）。
  */
-app.get("/api/singbox-users", (req, res) => {
+app.get("/api/singbox-users", async (req, res) => {
     const { ok, error, users } = getSingboxRouteUsers();
-    res.json({
-        success: ok,
-        msg: ok ? "ok" : error || "读取失败",
-        users
-    });
+    if (!ok) {
+        return res.json({
+            success: ok,
+            msg: error || "读取失败",
+            users
+        });
+    }
+    try {
+        if (!fs.existsSync(CONFIG_PATH)) {
+            return res.json({
+                success: true,
+                msg: "ok",
+                users
+            });
+        }
+        const config = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
+        const enriched = await enrichSingboxUsersWithSocksGeo(users, config);
+        return res.json({
+            success: true,
+            msg: "ok",
+            users: enriched
+        });
+    } catch {
+        return res.json({
+            success: true,
+            msg: "ok",
+            users
+        });
+    }
 });
 
 /**
@@ -1702,7 +1812,7 @@ app.get("/", (req, res) => {
     <main class="main-content">
       <section id="panelUsers" class="panel active">
         <h1>用户管理</h1>
-        <p class="user-hint">用户行来自 <code>route.rules</code> 的 <code>outbound</code>，与 SOCKS 出站一一对应；右侧<strong>操作 · 切换</strong>可弹出列表选择今日代理并完成切换（与代理列表「使用」同源接口）。WiFi 名称写入 <code>proxy-user-meta.json</code> 的 <code>wifi_by_outbound</code>；点击<strong>铅笔</strong>展开编辑，<strong>关闭</strong>图标收起不保存。出口 IP、国家、州/省、城市由 <code>/api/port_status</code> 与公网 IP 地理信息补齐。</p>
+        <p class="user-hint">用户行来自 <code>route.rules</code> 的 <code>outbound</code>，与 SOCKS 出站一一对应；右侧<strong>操作 · 切换</strong>可弹出列表选择今日代理并完成切换（与代理列表「使用」同源接口）。WiFi 名称写入 <code>proxy-user-meta.json</code> 的 <code>wifi_by_outbound</code>；点击<strong>铅笔</strong>展开编辑，<strong>关闭</strong>图标收起不保存。本机 <code>127.0.0.1</code> 类 SOCKS 的出口 IP、国家、州/省、城市由 <code>/api/port_status</code> 与地址匹配补齐；<strong>远端 SOCKS</strong>（自定义代理等）由服务端经 SOCKS 探测出口 IP 与 ipinfo 地理信息并显示在同一列。</p>
         <div class="toolbar">
           <button type="button" id="refreshUsersBtn">刷新用户</button>
           <span class="status" id="userStatusText">加载中...</span>
@@ -1944,8 +2054,15 @@ app.get("/", (req, res) => {
         return;
       }
       userBody.innerHTML = users.map((row) => {
-        const ps = matchPortRow(portRows, row.socks_address);
-        const pub = ps && ps.public_ip != null ? escapeHtml(String(ps.public_ip)) : "";
+        const overlay =
+          row.port_status_overlay && typeof row.port_status_overlay === "object"
+            ? row.port_status_overlay
+            : null;
+        const ps = overlay || matchPortRow(portRows, row.socks_address);
+        const pub =
+          ps && ps.public_ip != null && String(ps.public_ip).trim() !== ""
+            ? escapeHtml(String(ps.public_ip).trim())
+            : "";
         const cc = ps && ps.ip_country ? String(ps.ip_country) : "";
         const reg = ps && ps.ip_region ? escapeHtml(String(ps.ip_region)) : "";
         const city = ps && ps.ip_city != null ? escapeHtml(String(ps.ip_city)) : "";
