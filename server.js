@@ -182,6 +182,63 @@ async function testProxy(proxy) {
 }
 
 /**
+ * 将 host 格式化为 socks URL 中的 server 段（IPv6 需方括号）。
+ * @param {string} host
+ * @returns {string}
+ */
+function formatSocksHostForUrl(host) {
+    const h = String(host || "").trim();
+    if (!h) {
+        return h;
+    }
+    if (h.includes(":") && !/^\d{1,3}(\.\d{1,3}){3}$/.test(h)) {
+        return `[${h}]`;
+    }
+    return h;
+}
+
+/**
+ * 从自定义 SOCKS 账密构造 Agent（用户名密码做 URL 编码，避免特殊字符破坏 URL）。
+ * @param {{ host: string, port: number, username?: string, password?: string }} entry
+ */
+function buildSocksAgentFromEntry(entry) {
+    const host = formatSocksHostForUrl(entry.host);
+    const port = Number(entry.port);
+    const u = encodeURIComponent(String(entry.username ?? ""));
+    const p = encodeURIComponent(String(entry.password ?? ""));
+    const url = `socks5://${u}:${p}@${host}:${port}`;
+    return new SocksProxyAgent(url);
+}
+
+/**
+ * 经 SOCKS5 访问 ipify 获取出口公网 IP。
+ * @param {{ host: string, port: number, username?: string, password?: string }} entry
+ * @param {number} [timeoutMs]
+ * @returns {Promise<{ ok: true, exitIp: string }|{ ok: false }>}
+ */
+async function fetchExitIpViaSocksEntry(entry, timeoutMs = 8000) {
+    try {
+        const agent = buildSocksAgentFromEntry(entry);
+        const r = await axios.get("https://api.ipify.org?format=json", {
+            httpAgent: agent,
+            httpsAgent: agent,
+            timeout: timeoutMs,
+            validateStatus: () => true
+        });
+        if (r.status !== 200) {
+            return { ok: false };
+        }
+        const ip = typeof r.data?.ip === "string" ? r.data.ip.trim() : "";
+        if (ip) {
+            return { ok: true, exitIp: ip };
+        }
+        return { ok: false };
+    } catch {
+        return { ok: false };
+    }
+}
+
+/**
  * 将 `host:port` 类绑定串规范化成比对键（去空白、小写）。
  * @param {string|null|undefined} addr
  * @returns {string}
@@ -538,14 +595,74 @@ function customProxyToApiRow(c) {
     const bind = `${c.host}:${c.port}`;
     return {
         id: c.id,
-        ip: c.host,
-        city: "自定义",
+        ip: "",
+        city: "—",
         country_code: "",
         state: "",
-        is_online: true,
+        is_online: false,
         binding: bind,
         is_custom: true
     };
+}
+
+/**
+ * 用磁盘中的账密经 SOCKS 探测出口 IP、在线状态，并写回 ipinfo 地理字段（与 9proxy 列表列对齐）。
+ * @param {object} apiRow `customProxyToApiRow` 结果
+ * @param {{ host: string, port: number, username?: string, password?: string }} entry
+ */
+async function enrichCustomProxyFromEntry(apiRow, entry) {
+    const probe = await fetchExitIpViaSocksEntry(entry);
+    if (!probe.ok || !probe.exitIp) {
+        return {
+            ...apiRow,
+            ip: "-",
+            city: "—",
+            country_code: "",
+            state: "",
+            is_online: false
+        };
+    }
+    const exitIp = probe.exitIp;
+    const geo = await getIpGeo(exitIp);
+    return {
+        ...apiRow,
+        ip: exitIp,
+        city: geo.city || "—",
+        country_code: geo.country || "",
+        state: geo.region || "",
+        is_online: true
+    };
+}
+
+/**
+ * 对列表中的 `is_custom` 行并行做 SOCKS 探测与地理补全（仅自定义，不影响 9proxy 体量）。
+ * @param {object[]|null|undefined} list
+ */
+async function enrichCustomRowsInList(list) {
+    if (!Array.isArray(list) || list.length === 0) {
+        return list;
+    }
+    const file = readCustomProxiesFile();
+    const byId = new Map(file.map((e) => [String(e.id), e]));
+    return Promise.all(
+        list.map(async (item) => {
+            if (!item || !item.is_custom) {
+                return item;
+            }
+            const entry = byId.get(String(item.id));
+            if (!entry) {
+                return {
+                    ...item,
+                    ip: "-",
+                    city: "—",
+                    country_code: "",
+                    state: "",
+                    is_online: false
+                };
+            }
+            return enrichCustomProxyFromEntry(item, entry);
+        })
+    );
 }
 
 function mergeCustomProxiesIntoList(arr) {
@@ -811,7 +928,7 @@ app.get("/change-ip", async (req, res) => {
 /**
  * GET /api/proxy-list
  * 转发 today_list，为每条代理补充绑定出站 tag 与 WiFi 展示名后返回 JSON。
- * 查询参数：`lite=1` 时跳过对每条 IP 的 ipinfo 州/省补全（`enrichProxyState`），用于弹窗选代理等场景，避免列表过大时长时间阻塞。
+ * 查询参数：`lite=1` 时跳过对 9proxy 条目的州/省 ipinfo 补全（`enrichProxyState`）；自定义 SOCKS 仍会经 SOCKS 探测出口 IP 与在线状态（通常条数很少）。
  */
 app.get("/api/proxy-list", async (req, res) => {
     try {
@@ -823,7 +940,8 @@ app.get("/api/proxy-list", async (req, res) => {
         const result = await getProxy();
         if (Array.isArray(result?.data)) {
             const merged = mergeCustomProxiesIntoList(result.data);
-            const base = lite ? merged : await enrichProxyState(merged);
+            const probed = await enrichCustomRowsInList(merged);
+            const base = lite ? probed : await enrichProxyState(probed);
             const enrichedData = attachBoundUserToProxyList(base, bindingMap);
             return res.json({
                 ...result,
@@ -832,7 +950,8 @@ app.get("/api/proxy-list", async (req, res) => {
         }
         if (Array.isArray(result?.proxy?.data)) {
             const merged = mergeCustomProxiesIntoList(result.proxy.data);
-            const base = lite ? merged : await enrichProxyState(merged);
+            const probed = await enrichCustomRowsInList(merged);
+            const base = lite ? probed : await enrichProxyState(probed);
             const enrichedData = attachBoundUserToProxyList(base, bindingMap);
             return res.json({
                 ...result,
@@ -1076,7 +1195,7 @@ app.get("/api/user-wifi", (req, res) => {
 /**
  * 添加自定义 SOCKS5（格式 host:port:username:password），持久化到 custom-proxies.json。
  */
-app.post("/api/custom-proxies", (req, res) => {
+app.post("/api/custom-proxies", async (req, res) => {
     try {
         const line =
             typeof req.body?.line === "string"
@@ -1103,10 +1222,12 @@ app.post("/api/custom-proxies", (req, res) => {
         };
         list.push(entry);
         writeCustomProxiesFile(list);
+        const apiRow = customProxyToApiRow(entry);
+        const data = await enrichCustomProxyFromEntry(apiRow, entry);
         return res.json({
             success: true,
             msg: "已保存自定义代理",
-            data: customProxyToApiRow(entry)
+            data
         });
     } catch (e) {
         return res.status(500).json({
@@ -1614,7 +1735,7 @@ app.get("/", (req, res) => {
             <tr>
               <th>ID</th>
               <th>城市</th>
-              <th>IP</th>
+              <th>出口 IP</th>
               <th>
                 国家
                 <select id="filterCountrySelect">
