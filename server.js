@@ -2,6 +2,7 @@ const express = require("express");
 const axios = require("axios");
 const fs = require("fs");
 const { exec } = require("child_process");
+const { promisify } = require("util");
 const { SocksProxyAgent } = require("socks-proxy-agent");
 const { STATE_CODE_ROWS } = require("./stateCodes");
 
@@ -10,6 +11,9 @@ const PORT = 3000;
 const CONFIG_PATH = "/etc/v2ray-agent/sing-box/conf/config.json";
 const USER_META_PATH = "/etc/v2ray-agent/sing-box/conf/proxy-user-meta.json";
 const NINE_PROXY_API = "http://127.0.0.1:8080";
+/** 列出本地 9proxy 端口表，可用环境变量覆盖，例如 NINEPROXY_PORT_CLI="bash -lc '9proxy port -s'" */
+const NINEPROXY_PORT_CLI = process.env.NINEPROXY_PORT_CLI || "9proxy port -s";
+const execAsync = promisify(exec);
 const IPINFO_CACHE = new Map();
 const IP_GEO_CACHE = new Map();
 
@@ -259,7 +263,7 @@ function parsePortFromBindingAddress(addr) {
     return Number.isFinite(p) && p > 0 ? p : null;
 }
 
-/** 从 9proxy port_status 等行里解析本地监听端口（字段名因版本而异） */
+/** 从 9proxy CLI / HTTP 行对象里解析本地监听端口（字段名因版本而异） */
 function extractLocalListenPort(row) {
     if (!row || typeof row !== "object") {
         return null;
@@ -374,16 +378,74 @@ async function getTodayProxyById(id) {
     return null;
 }
 
+function parseOnlineCell(s) {
+    const t = String(s || "").trim().toLowerCase();
+    if (t === "online") {
+        return true;
+    }
+    if (t === "offline") {
+        return false;
+    }
+    return null;
+}
+
+/**
+ * 解析 `9proxy port -s` 表格输出为与原先 port_status 相近的对象列表。
+ * 列：BINDING | CITY | PUBLIC IP | ONLINE | STATUS
+ */
+function parse9proxyPortCliTable(stdout) {
+    const rows = [];
+    const lines = String(stdout || "").split(/\r?\n/);
+    for (let i = 0; i < lines.length; i += 1) {
+        const line = lines[i];
+        const trimmed = line.trim();
+        if (!trimmed.includes("|") || trimmed.startsWith("+")) {
+            continue;
+        }
+        const cells = line.split("|").map((c) => String(c).trim());
+        if (cells.length < 6) {
+            continue;
+        }
+        const binding = cells[1];
+        const city = cells[2];
+        const publicIp = cells[3];
+        const onlineCell = cells[4];
+        const status = cells[5];
+        if (/^BINDING$/i.test(binding)) {
+            continue;
+        }
+        if (!binding || !binding.includes(":")) {
+            continue;
+        }
+        const port = parsePortFromBindingAddress(binding);
+        if (port == null) {
+            continue;
+        }
+        const online = parseOnlineCell(onlineCell);
+        rows.push({
+            address: binding,
+            binding,
+            city,
+            public_ip: publicIp,
+            online,
+            status,
+            ip_city: city
+        });
+    }
+    return rows;
+}
+
 async function fetchNinePortStatusRows() {
-    const r = await axios.get(`${NINE_PROXY_API}/api/port_status`, {
-        params: { t: 2 },
-        timeout: 15000,
-        validateStatus: () => true
-    });
-    if (r.status < 200 || r.status >= 300) {
+    try {
+        const { stdout } = await execAsync(NINEPROXY_PORT_CLI, {
+            timeout: 20000,
+            maxBuffer: 10 * 1024 * 1024,
+            env: process.env
+        });
+        return parse9proxyPortCliTable(stdout);
+    } catch {
         return [];
     }
-    return Array.isArray(r.data?.data) ? r.data.data : [];
 }
 
 function pickPortMatchingPublicIp(rows, targetIp, exclude) {
@@ -408,48 +470,31 @@ function pickPortMatchingPublicIp(rows, targetIp, exclude) {
             }
             return {
                 port,
-                via: requireOnline ? "port_status_public_ip" : "port_status_public_ip_relaxed_online"
+                via: requireOnline ? "9proxy_cli_public_ip" : "9proxy_cli_public_ip_relaxed_online"
             };
         }
     }
     return null;
 }
 
-/** 从 port_status 列表里选端口（避免 port_check?ports=all 在部分 9proxy 版本返回 406） */
-function pickPortFromPortStatusRows(rows, exclude) {
+/** 选 STATUS=Free 且未被其它出站占用的端口 */
+function pickFirstFreePortFromCliRows(rows, exclude) {
     if (!Array.isArray(rows)) {
         return null;
     }
-    for (let pass = 0; pass < 2; pass += 1) {
-        const wantOnline = pass === 0;
-        for (let i = 0; i < rows.length; i += 1) {
-            const row = rows[i];
-            const port = extractLocalListenPort(row);
-            if (port == null || exclude.has(port)) {
-                continue;
-            }
-            if (wantOnline && row.online !== true) {
-                continue;
-            }
-            return {
-                port,
-                via: wantOnline ? "port_status_list_online" : "port_status_list_any"
-            };
+    for (let i = 0; i < rows.length; i += 1) {
+        const row = rows[i];
+        const st = String(row.status || "").trim().toLowerCase();
+        if (st !== "free") {
+            continue;
         }
+        const port = extractLocalListenPort(row);
+        if (port == null || exclude.has(port)) {
+            continue;
+        }
+        return { port, via: "9proxy_cli_free" };
     }
     return null;
-}
-
-async function portCheckPortsCsv(portsCsv) {
-    const r = await axios.get(`${NINE_PROXY_API}/api/port_check`, {
-        params: { ports: portsCsv, t: 2 },
-        timeout: 15000,
-        validateStatus: (s) => s >= 200 && s < 500
-    });
-    if (r.status === 406 || r.data?.error === true) {
-        return [];
-    }
-    return Array.isArray(r.data?.data) ? r.data.data : [];
 }
 
 async function resolveForwardPortForProxy(publicIp, otherOccupiedPorts) {
@@ -468,115 +513,11 @@ async function resolveForwardPortForProxy(publicIp, otherOccupiedPorts) {
         return byIp;
     }
 
-    const fromList = pickPortFromPortStatusRows(statusRows, exclude);
-    if (fromList) {
-        return fromList;
+    const fromFree = pickFirstFreePortFromCliRows(statusRows, exclude);
+    if (fromFree) {
+        return fromFree;
     }
 
-    const tryPortFreeCandidates = async () => {
-        const candidates = [];
-        for (let p = 60000; p <= 60255; p += 1) {
-            if (!exclude.has(p)) {
-                candidates.push(p);
-            }
-        }
-        const chunkSize = 8;
-        for (let i = 0; i < candidates.length; i += chunkSize) {
-            const chunk = candidates.slice(i, i + chunkSize);
-            if (chunk.length === 0) {
-                break;
-            }
-            const csv = chunk.join(",");
-            try {
-                await axios.get(`${NINE_PROXY_API}/api/port_free`, {
-                    params: { ports: csv, t: 2 },
-                    timeout: 12000,
-                    validateStatus: (s) => s >= 200 && s < 500
-                });
-            } catch {
-                // ignore
-            }
-            try {
-                const stats = await portCheckPortsCsv(csv);
-                for (let wantOn = 0; wantOn < 2; wantOn += 1) {
-                    const needOnline = wantOn === 0;
-                    for (let j = 0; j < stats.length; j += 1) {
-                        const st = stats[j];
-                        const port = Number(st?.port);
-                        if (!Number.isFinite(port) || exclude.has(port)) {
-                            continue;
-                        }
-                        if (needOnline && st.online !== true) {
-                            continue;
-                        }
-                        return {
-                            port,
-                            via: needOnline
-                                ? "port_check_small_batch_online"
-                                : "port_check_small_batch_any"
-                        };
-                    }
-                }
-            } catch {
-                // ignore
-            }
-        }
-        for (let k = 0; k < candidates.length; k += 1) {
-            const p = candidates[k];
-            try {
-                const stats = await portCheckPortsCsv(String(p));
-                for (let wantOn = 0; wantOn < 2; wantOn += 1) {
-                    const needOnline = wantOn === 0;
-                    for (let j = 0; j < stats.length; j += 1) {
-                        const st = stats[j];
-                        const port = Number(st?.port);
-                        if (!Number.isFinite(port) || exclude.has(port)) {
-                            continue;
-                        }
-                        if (needOnline && st.online !== true) {
-                            continue;
-                        }
-                        return {
-                            port,
-                            via: needOnline ? "port_check_single_online" : "port_check_single_any"
-                        };
-                    }
-                }
-            } catch {
-                // ignore
-            }
-        }
-        return null;
-    };
-
-    try {
-        const b = await tryPortFreeCandidates();
-        if (b) {
-            return b;
-        }
-    } catch {
-        // ignore
-    }
-
-    try {
-        await axios.get(`${NINE_PROXY_API}/api/set_port_range`, {
-            params: { start_port: "60000", port_num: "120", t: 2 },
-            timeout: 15000,
-            validateStatus: (s) => s >= 200 && s < 500
-        });
-    } catch {
-        // ignore
-    }
-
-    try {
-        statusRows = await fetchNinePortStatusRows();
-    } catch {
-        statusRows = [];
-    }
-    const again = pickPortFromPortStatusRows(statusRows, exclude);
-    if (again) {
-        return again;
-    }
     return pickFirstPortInRangeNotExcluded(exclude, 60000, 65535);
 }
 
@@ -834,12 +775,7 @@ app.get("/api/singbox-users", (req, res) => {
 
 app.get("/api/port_status", async (req, res) => {
     try {
-        const r = await axios.get(`${NINE_PROXY_API}/api/port_status`, {
-            params: { t: 2 },
-            timeout: 15000
-        });
-        const body = r.data;
-        const list = Array.isArray(body?.data) ? body.data : [];
+        const list = await fetchNinePortStatusRows();
         const enriched = await Promise.all(
             list.map(async (row) => {
                 if (!row || typeof row !== "object") {
@@ -863,13 +799,14 @@ app.get("/api/port_status", async (req, res) => {
             })
         );
         res.json({
-            ...body,
+            error: false,
+            message: "ok",
             data: enriched
         });
     } catch (e) {
         res.status(502).json({
             error: true,
-            message: e.message || "port_status 请求失败",
+            message: e.message || "9proxy port 命令执行或解析失败",
             data: []
         });
     }
@@ -1168,7 +1105,7 @@ app.get("/", (req, res) => {
     <main class="main-content">
       <section id="panelUsers" class="panel active">
         <h1>用户管理</h1>
-        <p class="user-hint">用户列表来自 <code>config.json</code> 的 SOCKS 出站；WiFi 名称仅用于界面展示，来自 <code>proxy-user-meta.json</code>。出口 IP、国家、州/省、城市由 <code>/api/port_status</code>（转发 9proxy 8080）与公网 IP 地理信息共同补齐。</p>
+        <p class="user-hint">用户列表来自 <code>config.json</code> 的 SOCKS 出站；WiFi 名称仅用于界面展示，来自 <code>proxy-user-meta.json</code>。端口与出口 IP 等由本机命令 <code>9proxy port -s</code>（环境变量 <code>NINEPROXY_PORT_CLI</code> 可覆盖）经 <code>/api/port_status</code> 解析，并与公网 IP 地理信息共同补齐。</p>
         <div class="toolbar">
           <button type="button" id="refreshUsersBtn">刷新用户</button>
           <span class="status" id="userStatusText">加载中...</span>
