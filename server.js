@@ -259,6 +259,55 @@ function parsePortFromBindingAddress(addr) {
     return Number.isFinite(p) && p > 0 ? p : null;
 }
 
+/** 从 9proxy port_status 等行里解析本地监听端口（字段名因版本而异） */
+function extractLocalListenPort(row) {
+    if (!row || typeof row !== "object") {
+        return null;
+    }
+    const keys = [
+        "port",
+        "local_port",
+        "listen_port",
+        "socks_port",
+        "server_port",
+        "bind_port"
+    ];
+    for (let i = 0; i < keys.length; i += 1) {
+        const v = row[keys[i]];
+        if (v != null && v !== "") {
+            const n = Number(v);
+            if (Number.isFinite(n) && n > 0 && n <= 65535) {
+                return n;
+            }
+        }
+    }
+    let p = parsePortFromBindingAddress(row.address);
+    if (p != null) {
+        return p;
+    }
+    p = parsePortFromBindingAddress(row.binding);
+    if (p != null) {
+        return p;
+    }
+    const plain = String(row.address || row.binding || "").trim();
+    if (/^\d{2,5}$/.test(plain)) {
+        const n = Number(plain);
+        if (n > 0 && n <= 65535) {
+            return n;
+        }
+    }
+    return null;
+}
+
+function pickFirstPortInRangeNotExcluded(exclude, lo, hi) {
+    for (let p = lo; p <= hi; p += 1) {
+        if (!exclude.has(p)) {
+            return { port: p, via: "fallback_range_first_free" };
+        }
+    }
+    return null;
+}
+
 function getPortsUsedByOtherSocksOutbounds(config, exceptTag) {
     const set = new Set();
     const outbounds = config?.outbounds;
@@ -328,8 +377,12 @@ async function getTodayProxyById(id) {
 async function fetchNinePortStatusRows() {
     const r = await axios.get(`${NINE_PROXY_API}/api/port_status`, {
         params: { t: 2 },
-        timeout: 15000
+        timeout: 15000,
+        validateStatus: () => true
     });
+    if (r.status < 200 || r.status >= 300) {
+        return [];
+    }
     return Array.isArray(r.data?.data) ? r.data.data : [];
 }
 
@@ -338,17 +391,26 @@ function pickPortMatchingPublicIp(rows, targetIp, exclude) {
     if (!ip || !Array.isArray(rows)) {
         return null;
     }
-    for (let i = 0; i < rows.length; i += 1) {
-        const row = rows[i];
-        const pip = String(row?.public_ip || "").trim();
-        if (pip !== ip || row.online !== true) {
-            continue;
+    for (let onlineOnly = 0; onlineOnly < 2; onlineOnly += 1) {
+        const requireOnline = onlineOnly === 0;
+        for (let i = 0; i < rows.length; i += 1) {
+            const row = rows[i];
+            const pip = String(row?.public_ip || "").trim();
+            if (pip !== ip) {
+                continue;
+            }
+            if (requireOnline && row.online !== true) {
+                continue;
+            }
+            const port = extractLocalListenPort(row);
+            if (port == null || exclude.has(port)) {
+                continue;
+            }
+            return {
+                port,
+                via: requireOnline ? "port_status_public_ip" : "port_status_public_ip_relaxed_online"
+            };
         }
-        const port = parsePortFromBindingAddress(row.address);
-        if (port == null || exclude.has(port)) {
-            continue;
-        }
-        return { port, via: "port_status_public_ip" };
     }
     return null;
 }
@@ -362,7 +424,7 @@ function pickPortFromPortStatusRows(rows, exclude) {
         const wantOnline = pass === 0;
         for (let i = 0; i < rows.length; i += 1) {
             const row = rows[i];
-            const port = parsePortFromBindingAddress(row?.address);
+            const port = extractLocalListenPort(row);
             if (port == null || exclude.has(port)) {
                 continue;
             }
@@ -436,14 +498,23 @@ async function resolveForwardPortForProxy(publicIp, otherOccupiedPorts) {
             }
             try {
                 const stats = await portCheckPortsCsv(csv);
-                for (let j = 0; j < stats.length; j += 1) {
-                    const st = stats[j];
-                    const port = Number(st?.port);
-                    if (!Number.isFinite(port) || exclude.has(port)) {
-                        continue;
-                    }
-                    if (st.online === true) {
-                        return { port, via: "port_check_small_batch" };
+                for (let wantOn = 0; wantOn < 2; wantOn += 1) {
+                    const needOnline = wantOn === 0;
+                    for (let j = 0; j < stats.length; j += 1) {
+                        const st = stats[j];
+                        const port = Number(st?.port);
+                        if (!Number.isFinite(port) || exclude.has(port)) {
+                            continue;
+                        }
+                        if (needOnline && st.online !== true) {
+                            continue;
+                        }
+                        return {
+                            port,
+                            via: needOnline
+                                ? "port_check_small_batch_online"
+                                : "port_check_small_batch_any"
+                        };
                     }
                 }
             } catch {
@@ -454,14 +525,21 @@ async function resolveForwardPortForProxy(publicIp, otherOccupiedPorts) {
             const p = candidates[k];
             try {
                 const stats = await portCheckPortsCsv(String(p));
-                for (let j = 0; j < stats.length; j += 1) {
-                    const st = stats[j];
-                    const port = Number(st?.port);
-                    if (!Number.isFinite(port) || exclude.has(port)) {
-                        continue;
-                    }
-                    if (st.online === true) {
-                        return { port, via: "port_check_single" };
+                for (let wantOn = 0; wantOn < 2; wantOn += 1) {
+                    const needOnline = wantOn === 0;
+                    for (let j = 0; j < stats.length; j += 1) {
+                        const st = stats[j];
+                        const port = Number(st?.port);
+                        if (!Number.isFinite(port) || exclude.has(port)) {
+                            continue;
+                        }
+                        if (needOnline && st.online !== true) {
+                            continue;
+                        }
+                        return {
+                            port,
+                            via: needOnline ? "port_check_single_online" : "port_check_single_any"
+                        };
                     }
                 }
             } catch {
@@ -495,7 +573,11 @@ async function resolveForwardPortForProxy(publicIp, otherOccupiedPorts) {
     } catch {
         statusRows = [];
     }
-    return pickPortFromPortStatusRows(statusRows, exclude);
+    const again = pickPortFromPortStatusRows(statusRows, exclude);
+    if (again) {
+        return again;
+    }
+    return pickFirstPortInRangeNotExcluded(exclude, 60000, 65535);
 }
 
 function getSingboxRouteUsers() {
@@ -687,7 +769,7 @@ app.get("/api/switch-proxy", async (req, res) => {
         if (!picked) {
             return res.status(502).json({
                 success: false,
-                msg: "未找到可用本地端口（已尝试 port_status / 小批量 port_check / set_port_range 后重试）",
+                msg: "未找到可用本地端口（60000–65535 均被其它 SOCKS 出站占用，请检查 config）",
                 error: "no_port"
             });
         }
