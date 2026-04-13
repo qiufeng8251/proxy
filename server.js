@@ -671,27 +671,30 @@ app.get("/change-ip", async (req, res) => {
 
 /**
  * GET /api/proxy-list
- * 转发 today_list，为每条代理补充州/地区（ipinfo）、绑定出站 tag 与 WiFi 展示名后返回 JSON。
+ * 转发 today_list，为每条代理补充绑定出站 tag 与 WiFi 展示名后返回 JSON。
+ * 查询参数：`lite=1` 时跳过对每条 IP 的 ipinfo 州/省补全（`enrichProxyState`），用于弹窗选代理等场景，避免列表过大时长时间阻塞。
  */
 app.get("/api/proxy-list", async (req, res) => {
     try {
+        const lite =
+            req.query.lite === "1"
+            || req.query.lite === "true"
+            || String(req.query.lite || "").toLowerCase() === "yes";
         const bindingMap = getSocksBindingToUsersMap();
         const result = await getProxy();
         if (Array.isArray(result?.data)) {
-            const enrichedData = attachBoundUserToProxyList(
-                await enrichProxyState(result.data),
-                bindingMap
-            );
+            const base = lite ? result.data : await enrichProxyState(result.data);
+            const enrichedData = attachBoundUserToProxyList(base, bindingMap);
             return res.json({
                 ...result,
                 data: enrichedData
             });
         }
         if (Array.isArray(result?.proxy?.data)) {
-            const enrichedData = attachBoundUserToProxyList(
-                await enrichProxyState(result.proxy.data),
-                bindingMap
-            );
+            const base = lite
+                ? result.proxy.data
+                : await enrichProxyState(result.proxy.data);
+            const enrichedData = attachBoundUserToProxyList(base, bindingMap);
             return res.json({
                 ...result,
                 proxy: {
@@ -1608,8 +1611,10 @@ app.get("/", (req, res) => {
       useProxyFromUserStatus.textContent = text;
     }
 
-    async function fetchProxyListData() {
-      const resp = await fetch(endpoint);
+    async function fetchProxyListData(options) {
+      const lite = options && options.lite === true;
+      const url = lite ? endpoint + "?lite=1" : endpoint;
+      const resp = await fetch(url);
       if (!resp.ok) {
         throw new Error("请求失败，HTTP " + resp.status);
       }
@@ -1629,9 +1634,12 @@ app.get("/", (req, res) => {
       if (!pendingUserOutboundTag) {
         return;
       }
-      setUseProxyFromUserStatus("");
       useProxyFromUserMeta.textContent =
         "出站 " + pendingUserOutboundTag + " · 请在下表选择要切换到的代理";
+      useProxySelectFromUser.innerHTML =
+        '<option value="">加载中…</option>';
+      setUseProxyFromUserStatus("正在拉取列表…");
+      useProxyFromUserDialog.showModal();
       try {
         const uresp = await fetch("/api/singbox-users");
         const udata = await uresp.json();
@@ -1642,7 +1650,7 @@ app.get("/", (req, res) => {
         const u = users.find((x) => String(x.outbound) === String(pendingUserOutboundTag));
         const addr = u && u.socks_address ? String(u.socks_address).trim() : "";
         pendingUserSocksNorm = addr ? normAddr(addr) : "";
-        const list = await fetchProxyListData();
+        const list = await fetchProxyListData({ lite: true });
         if (!list.length) {
           useProxySelectFromUser.innerHTML = '<option value="">暂无代理</option>';
         } else {
@@ -1673,8 +1681,10 @@ app.get("/", (req, res) => {
             useProxySelectFromUser.selectedIndex = 0;
           }
         }
-        useProxyFromUserDialog.showModal();
+        setUseProxyFromUserStatus("");
       } catch (e) {
+        useProxySelectFromUser.innerHTML = '<option value="">加载失败</option>';
+        setUseProxyFromUserStatus(e.message || String(e));
         setUserStatus("打开切换代理窗口失败: " + e.message);
       }
     }
@@ -1693,7 +1703,7 @@ app.get("/", (req, res) => {
       const proxyId = opt.value;
       let list;
       try {
-        list = await fetchProxyListData();
+        list = await fetchProxyListData({ lite: true });
       } catch (e) {
         setUseProxyFromUserStatus("刷新代理列表失败: " + e.message);
         return;
