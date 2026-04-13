@@ -157,13 +157,16 @@ echo "========== Step 5: 安装依赖 =========="
 
 npm install || die "npm install 失败"
 
-echo "========== Step 6: 启动项目 =========="
+echo "========== Step 6: 启动项目（PM2 ecosystem）=========="
+
+ECOSYSTEM_FILE="ecosystem.config.cjs"
+[ -f "$ECOSYSTEM_FILE" ] || die "未找到 $ECOSYSTEM_FILE（请与 server.js 同目录提交到仓库）"
 
 if pm2 describe proxy-server >/dev/null 2>&1; then
-    echo "proxy-server 已在 PM2 中，执行重启..."
-    pm2 restart proxy-server || die "pm2 restart proxy-server 失败"
+    echo "proxy-server 已在 PM2 中，按 $ECOSYSTEM_FILE 重启..."
+    pm2 restart "$ECOSYSTEM_FILE" || die "pm2 restart $ECOSYSTEM_FILE 失败"
 else
-    pm2 start server.js --name proxy-server || die "pm2 start proxy-server 失败"
+    pm2 start "$ECOSYSTEM_FILE" || die "pm2 start $ECOSYSTEM_FILE 失败"
 fi
 pm2 save || die "pm2 save 失败"
 pm2 startup systemd -u "$USER" --hp "$HOME" || die "pm2 startup 配置失败（若已配置过 systemd，请检查 pm2 文档后重试）"
