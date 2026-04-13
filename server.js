@@ -1327,7 +1327,7 @@ app.get("/", (req, res) => {
     <main class="main-content">
       <section id="panelUsers" class="panel active">
         <h1>用户管理</h1>
-        <p class="user-hint">用户行来自 <code>route.rules</code> 的 <code>outbound</code>，与 SOCKS 出站一一对应；WiFi 名称写入 <code>proxy-user-meta.json</code> 的 <code>wifi_by_outbound</code>。点击该行右侧<strong>铅笔</strong>展开输入框与「保存」，<strong>关闭</strong>图标可收起不保存；留空后保存可清除备注。出口 IP、国家、州/省、城市由 <code>/api/port_status</code> 与公网 IP 地理信息补齐。</p>
+        <p class="user-hint">用户行来自 <code>route.rules</code> 的 <code>outbound</code>，与 SOCKS 出站一一对应；右侧<strong>操作 · 使用</strong>可为该出站选择今日代理（与代理列表相同逻辑）。WiFi 名称写入 <code>proxy-user-meta.json</code> 的 <code>wifi_by_outbound</code>；点击<strong>铅笔</strong>展开编辑，<strong>关闭</strong>图标收起不保存。出口 IP、国家、州/省、城市由 <code>/api/port_status</code> 与公网 IP 地理信息补齐。</p>
         <div class="toolbar">
           <button type="button" id="refreshUsersBtn">刷新用户</button>
           <span class="status" id="userStatusText">加载中...</span>
@@ -1342,6 +1342,7 @@ app.get("/", (req, res) => {
               <th style="width:120px;">IP 州/省</th>
               <th style="width:120px;">城市</th>
               <th style="width:72px;">在线</th>
+              <th style="width:88px;">操作</th>
             </tr>
           </thead>
           <tbody id="userBody"></tbody>
@@ -1378,7 +1379,7 @@ app.get("/", (req, res) => {
         </dialog>
         <dialog id="switchProxyDialog">
           <div class="modal-inner">
-            <h3 style="margin-top:0;">切换代理</h3>
+            <h3 style="margin-top:0;">使用代理</h3>
             <p class="status" id="switchProxyMeta" style="margin:0 0 10px;font-size:13px;color:#374151;"></p>
             <div class="modal-row">
               <label for="switchUserSelect">绑定出站（sing-box SOCKS tag）</label>
@@ -1387,7 +1388,22 @@ app.get("/", (req, res) => {
             <div class="status" id="switchStatusText"></div>
             <div class="modal-actions">
               <button type="button" id="cancelSwitchBtn" class="cancel-btn">取消</button>
-              <button type="button" id="confirmSwitchBtn" class="switch-btn">确认切换</button>
+              <button type="button" id="confirmSwitchBtn" class="switch-btn">确认使用</button>
+            </div>
+          </div>
+        </dialog>
+        <dialog id="useProxyFromUserDialog">
+          <div class="modal-inner">
+            <h3 style="margin-top:0;">使用代理</h3>
+            <p class="status" id="useProxyFromUserMeta" style="margin:0 0 10px;font-size:13px;color:#374151;"></p>
+            <div class="modal-row">
+              <label for="useProxySelectFromUser">今日代理</label>
+              <select id="useProxySelectFromUser" size="8" style="width:100%;min-height:140px;"></select>
+            </div>
+            <div class="status" id="useProxyFromUserStatus"></div>
+            <div class="modal-actions">
+              <button type="button" id="cancelUseProxyFromUserBtn" class="cancel-btn">取消</button>
+              <button type="button" id="confirmUseProxyFromUserBtn" class="switch-btn">确认使用</button>
             </div>
           </div>
         </dialog>
@@ -1449,10 +1465,18 @@ app.get("/", (req, res) => {
     const switchStatusText = document.getElementById("switchStatusText");
     const cancelSwitchBtn = document.getElementById("cancelSwitchBtn");
     const confirmSwitchBtn = document.getElementById("confirmSwitchBtn");
+    const useProxyFromUserDialog = document.getElementById("useProxyFromUserDialog");
+    const useProxySelectFromUser = document.getElementById("useProxySelectFromUser");
+    const useProxyFromUserMeta = document.getElementById("useProxyFromUserMeta");
+    const useProxyFromUserStatus = document.getElementById("useProxyFromUserStatus");
+    const cancelUseProxyFromUserBtn = document.getElementById("cancelUseProxyFromUserBtn");
+    const confirmUseProxyFromUserBtn = document.getElementById("confirmUseProxyFromUserBtn");
     const endpoint = "/api/proxy-list";
     let statesByCountry = {};
     let allProxyList = [];
     let pendingSwitchProxyId = "";
+    let pendingUserOutboundTag = "";
+    let pendingUserSocksNorm = "";
 
     function setStatus(text) {
       statusText.textContent = text;
@@ -1509,7 +1533,7 @@ app.get("/", (req, res) => {
     function renderUserRows(users, portRows) {
       portRows = Array.isArray(portRows) ? portRows : [];
       if (!Array.isArray(users) || users.length === 0) {
-        userBody.innerHTML = '<tr><td colspan="7">暂无路由规则或未读取到用户条目</td></tr>';
+        userBody.innerHTML = '<tr><td colspan="8">暂无路由规则或未读取到用户条目</td></tr>';
         return;
       }
       userBody.innerHTML = users.map((row) => {
@@ -1572,9 +1596,172 @@ app.get("/", (req, res) => {
           "<td>" + (reg || '<span class="muted-cell">-</span>') + "</td>" +
           "<td>" + (city || '<span class="muted-cell">-</span>') + "</td>" +
           "<td>" + onlineCell + "</td>" +
+          '<td><button type="button" class="switch-btn use-from-user-btn" data-outbound="' +
+          tagAttr +
+          '">使用</button></td>' +
           "</tr>"
         );
       }).join("");
+    }
+
+    function setUseProxyFromUserStatus(text) {
+      useProxyFromUserStatus.textContent = text;
+    }
+
+    async function fetchProxyListData() {
+      const resp = await fetch(endpoint);
+      if (!resp.ok) {
+        throw new Error("请求失败，HTTP " + resp.status);
+      }
+      const data = await resp.json();
+      if (Array.isArray(data?.data)) {
+        return data.data;
+      }
+      if (Array.isArray(data?.proxy?.data)) {
+        return data.proxy.data;
+      }
+      return [];
+    }
+
+    async function openUseProxyForOutbound(tag) {
+      pendingUserOutboundTag = String(tag || "").trim();
+      pendingUserSocksNorm = "";
+      if (!pendingUserOutboundTag) {
+        return;
+      }
+      setUseProxyFromUserStatus("");
+      useProxyFromUserMeta.textContent =
+        "出站 " + pendingUserOutboundTag + " · 请选择要使用的代理";
+      try {
+        const uresp = await fetch("/api/singbox-users");
+        const udata = await uresp.json();
+        if (!uresp.ok || udata.success === false) {
+          throw new Error(udata.msg || udata.error || "读取用户失败");
+        }
+        const users = Array.isArray(udata.users) ? udata.users : [];
+        const u = users.find((x) => String(x.outbound) === String(pendingUserOutboundTag));
+        const addr = u && u.socks_address ? String(u.socks_address).trim() : "";
+        pendingUserSocksNorm = addr ? normAddr(addr) : "";
+        const list = await fetchProxyListData();
+        if (!list.length) {
+          useProxySelectFromUser.innerHTML = '<option value="">暂无代理</option>';
+        } else {
+          const parts = [];
+          for (let i = 0; i < list.length; i += 1) {
+            const p = list[i];
+            const id = p.id != null ? String(p.id) : "";
+            if (!id) {
+              continue;
+            }
+            const ip = p.ip != null ? String(p.ip).trim() : "";
+            const city = p.city != null ? String(p.city) : "";
+            const label = (city ? city + " · " : "") + (ip || "-") + " · ID " + id;
+            parts.push(
+              '<option value="' +
+                escapeHtml(id) +
+                '" data-ip="' +
+                escapeHtml(ip) +
+                '">' +
+                escapeHtml(label) +
+                "</option>"
+            );
+          }
+          useProxySelectFromUser.innerHTML = parts.length
+            ? parts.join("")
+            : '<option value="">暂无有效代理</option>';
+          if (parts.length) {
+            useProxySelectFromUser.selectedIndex = 0;
+          }
+        }
+        useProxyFromUserDialog.showModal();
+      } catch (e) {
+        setUserStatus("打开使用代理窗口失败: " + e.message);
+      }
+    }
+
+    async function confirmUseProxyFromUser() {
+      const tag = pendingUserOutboundTag;
+      if (!tag) {
+        setUseProxyFromUserStatus("缺少出站");
+        return;
+      }
+      const opt = useProxySelectFromUser.selectedOptions[0];
+      if (!opt || !opt.value) {
+        setUseProxyFromUserStatus("请选择代理");
+        return;
+      }
+      const proxyId = opt.value;
+      let list;
+      try {
+        list = await fetchProxyListData();
+      } catch (e) {
+        setUseProxyFromUserStatus("刷新代理列表失败: " + e.message);
+        return;
+      }
+      const selfRow = list.find((p) => String(p.id) === String(proxyId));
+      const others = list.filter((item) => {
+        if (String(item.id) === String(proxyId)) {
+          return false;
+        }
+        if (!item.binding) {
+          return false;
+        }
+        return pendingUserSocksNorm && normAddr(item.binding) === pendingUserSocksNorm;
+      });
+      const hints = [];
+      if (others.length > 0) {
+        const o = others[0];
+        hints.push(
+          "所选出站对应本地地址已被其他代理占用（ID: " +
+            (o.id || "-") +
+            " · " +
+            (o.binding || "") +
+            "）。"
+        );
+      }
+      if (selfRow && selfRow.binding && String(selfRow.binding).trim() !== "") {
+        hints.push(
+          "当前代理已有绑定（" +
+            selfRow.binding +
+            "），将改绑到出站 " +
+            tag +
+            "。"
+        );
+      }
+      if (hints.length > 0) {
+        hints.push("确定要继续使用吗？");
+        if (!window.confirm(hints.join("\n\n"))) {
+          return;
+        }
+      }
+      try {
+        setUseProxyFromUserStatus("正在生效…");
+        const ipParam =
+          selfRow && selfRow.ip && String(selfRow.ip).trim() !== ""
+            ? "&ip=" + encodeURIComponent(String(selfRow.ip).trim())
+            : "";
+        const resp = await fetch(
+          "/api/switch-proxy?id=" +
+            encodeURIComponent(proxyId) +
+            "&tag=" +
+            encodeURIComponent(tag) +
+            ipParam
+        );
+        const data = await resp.json();
+        const forwardOk =
+          data?.data?.error === false || data?.data?.error == null;
+        if (!resp.ok || data.success === false || !forwardOk) {
+          throw new Error(data.msg || data.error || "使用失败");
+        }
+        const portHint =
+          data.port != null ? "，本地端口 " + String(data.port) : "";
+        const detailMsg = data?.data?.message ? "（" + data.data.message + "）" : "";
+        setUserStatus("使用成功" + portHint + detailMsg);
+        useProxyFromUserDialog.close();
+        await Promise.all([loadSingboxUsers(), loadProxyList()]);
+      } catch (err) {
+        setUseProxyFromUserStatus(err.message || String(err));
+      }
     }
 
     async function saveUserWifi(tag, inputEl, btnEl) {
@@ -1732,11 +1919,12 @@ app.get("/", (req, res) => {
       proxyBody.innerHTML = list.map((item) => {
         const onlineText = item.is_online ? "在线" : "离线";
         const onlineClass = item.is_online ? "online" : "offline";
-        const bindingStr = item.binding != null ? String(item.binding).trim() : "";
-        const hasBinding = bindingStr !== "";
-        const useStatusText = hasBinding ? "正在使用" : "-";
-        const useStatusClass = hasBinding ? "using" : "";
-        const rowClass = hasBinding ? "row-using" : "";
+        const boundUserStr =
+          item.bound_user != null ? String(item.bound_user).trim() : "";
+        const hasUserUse = boundUserStr !== "";
+        const useStatusText = hasUserUse ? "正在使用" : "-";
+        const useStatusClass = hasUserUse ? "using" : "";
+        const rowClass = hasUserUse ? "row-using" : "";
         const boundUserCell =
           item.bound_user && String(item.bound_user).trim() !== ""
             ? escapeHtml(String(item.bound_user).trim())
@@ -1763,7 +1951,7 @@ app.get("/", (req, res) => {
                 class="switch-btn"
                 onclick="openSwitchModal('\${item.id || ""}')"
               >
-                切换
+                使用
               </button>
             </td>
           </tr>
@@ -1840,7 +2028,7 @@ app.get("/", (req, res) => {
         }
         switchProxyDialog.showModal();
       } catch (err) {
-        setStatus("打开切换窗口失败: " + err.message);
+        setStatus("打开使用代理窗口失败: " + err.message);
       }
     }
 
@@ -1886,14 +2074,14 @@ app.get("/", (req, res) => {
         );
       }
       if (hints.length > 0) {
-        hints.push("确定要继续切换吗？");
+        hints.push("确定要继续使用吗？");
         if (!window.confirm(hints.join("\\n\\n"))) {
           return;
         }
       }
 
       try {
-        setSwitchStatus("正在切换...");
+        setSwitchStatus("正在使用…");
         const ipParam =
           selfRow && selfRow.ip && String(selfRow.ip).trim() !== ""
             ? "&ip=" + encodeURIComponent(String(selfRow.ip).trim())
@@ -1909,32 +2097,23 @@ app.get("/", (req, res) => {
         const forwardOk =
           data?.data?.error === false || data?.data?.error == null;
         if (!resp.ok || data.success === false || !forwardOk) {
-          throw new Error(data.msg || data.error || "切换失败");
+          throw new Error(data.msg || data.error || "使用失败");
         }
         const portHint =
           data.port != null ? "，本地端口 " + String(data.port) : "";
         const detailMsg = data?.data?.message ? "（" + data.data.message + "）" : "";
-        setStatus("切换成功" + portHint + detailMsg);
+        setStatus("使用成功" + portHint + detailMsg);
         switchProxyDialog.close();
-        await loadProxyList();
+        await Promise.all([loadProxyList(), loadSingboxUsers()]);
       } catch (err) {
-        setSwitchStatus("切换失败: " + err.message);
+        setSwitchStatus("使用失败: " + err.message);
       }
     }
 
     async function loadProxyList() {
       try {
         setStatus("正在加载...");
-        const resp = await fetch(endpoint);
-        if (!resp.ok) {
-          throw new Error("请求失败，HTTP " + resp.status);
-        }
-        const data = await resp.json();
-        const list = Array.isArray(data?.data)
-          ? data.data
-          : Array.isArray(data?.proxy?.data)
-            ? data.proxy.data
-            : [];
+        const list = await fetchProxyListData();
         allProxyList = list;
         populateFilterOptions(allProxyList);
         applyFilters();
@@ -1991,7 +2170,21 @@ app.get("/", (req, res) => {
     navUsers.addEventListener("click", () => showPanel("users"));
     navProxies.addEventListener("click", () => showPanel("proxies"));
     refreshUsersBtn.addEventListener("click", loadSingboxUsers);
+    cancelUseProxyFromUserBtn.addEventListener("click", () => {
+      useProxyFromUserDialog.close();
+    });
+    confirmUseProxyFromUserBtn.addEventListener("click", () => {
+      void confirmUseProxyFromUser();
+    });
     userBody.addEventListener("click", async (ev) => {
+      const useFromUser = ev.target.closest(".use-from-user-btn");
+      if (useFromUser) {
+        const tag = useFromUser.getAttribute("data-outbound");
+        if (tag) {
+          await openUseProxyForOutbound(tag);
+        }
+        return;
+      }
       const toggle = ev.target.closest(".wifi-toggle");
       if (toggle) {
         const inner = toggle.closest(".wifi-cell-inner");
