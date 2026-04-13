@@ -663,6 +663,43 @@ function readCustomProxiesFile() {
     }
 }
 
+/**
+ * 查找与待保存项相同的自定义代理（host 不区分大小写、端口、用户名、密码均一致）。
+ * @param {object[]} list `readCustomProxiesFile()` 结果
+ * @param {{ host: string, port: number, username: string, password: string }} parsed
+ * @returns {object|null}
+ */
+function findDuplicateCustomEntry(list, parsed) {
+    if (!Array.isArray(list) || !parsed) {
+        return null;
+    }
+    const h = String(parsed.host || "").trim().toLowerCase();
+    const port = Number(parsed.port);
+    const u = String(parsed.username ?? "");
+    const p = String(parsed.password ?? "");
+    for (let i = 0; i < list.length; i += 1) {
+        const e = list[i];
+        if (!e || typeof e !== "object") {
+            continue;
+        }
+        const eh = String(e.host || "").trim().toLowerCase();
+        if (eh !== h) {
+            continue;
+        }
+        if (Number(e.port) !== port) {
+            continue;
+        }
+        if (String(e.username ?? "") !== u) {
+            continue;
+        }
+        if (String(e.password ?? "") !== p) {
+            continue;
+        }
+        return e;
+    }
+    return null;
+}
+
 function writeCustomProxiesFile(proxies) {
     fs.mkdirSync(path.dirname(CUSTOM_PROXIES_PATH), { recursive: true });
     fs.writeFileSync(
@@ -1321,6 +1358,14 @@ app.post("/api/custom-proxies", async (req, res) => {
             });
         }
         const list = readCustomProxiesFile();
+        const dup = findDuplicateCustomEntry(list, parsed);
+        if (dup) {
+            return res.status(409).json({
+                success: false,
+                msg: "已存在相同的自定义代理（host、端口、用户名、密码一致），请勿重复保存",
+                duplicate_id: dup.id
+            });
+        }
         const id = "custom-" + crypto.randomUUID();
         const entry = {
             id,
