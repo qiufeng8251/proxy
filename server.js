@@ -2,6 +2,8 @@ const express = require("express");
 const axios = require("axios");
 const crypto = require("crypto");
 const fs = require("fs");
+const http = require("http");
+const https = require("https");
 const path = require("path");
 const { exec } = require("child_process");
 const { SocksProxyAgent } = require("socks-proxy-agent");
@@ -239,27 +241,78 @@ async function fetchExitIpViaSocksEntry(entry, timeoutMs = 8000) {
 }
 
 /**
- * 本机不经代理访问 ipify，得到当前服务器出口公网 IP（用于「直连」出站与用户管理展示）。
+ * 使用 Node 原生 HTTP(S) 拉取本机出口公网 IP（不经过 axios，避免受 HTTP(S)_PROXY 影响）。
+ * @param {string} url
+ * @param {number} timeoutMs
+ * @returns {Promise<string>}
+ */
+function httpGetBodyNoProxy(url, timeoutMs) {
+    return new Promise((resolve) => {
+        const lib = String(url).startsWith("https:") ? https : http;
+        const req = lib.get(
+            url,
+            {
+                timeout: timeoutMs,
+                headers: { "User-Agent": "sing-box-proxy-console/1.0" }
+            },
+            (res) => {
+                let buf = "";
+                res.setEncoding("utf8");
+                res.on("data", (c) => {
+                    buf += c;
+                });
+                res.on("end", () => {
+                    if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+                        resolve(buf.trim());
+                    } else {
+                        resolve("");
+                    }
+                });
+            }
+        );
+        req.on("error", () => resolve(""));
+        req.on("timeout", () => {
+            req.destroy();
+            resolve("");
+        });
+    });
+}
+
+/**
+ * 本机出口公网 IP（直连用户管理展示）；多 URL 回退。
  * @param {number} [timeoutMs]
  * @returns {Promise<{ ok: true, exitIp: string }|{ ok: false }>}
  */
 async function fetchMachinePublicIp(timeoutMs = 8000) {
-    try {
-        const r = await axios.get("https://api.ipify.org?format=json", {
-            timeout: timeoutMs,
-            validateStatus: () => true
-        });
-        if (r.status !== 200) {
-            return { ok: false };
+    const urls = [
+        "https://api.ipify.org?format=json",
+        "https://api64.ipify.org?format=json",
+        "https://ifconfig.me/ip",
+        "http://checkip.amazonaws.com/"
+    ];
+    for (let u = 0; u < urls.length; u += 1) {
+        try {
+            const raw = await httpGetBodyNoProxy(urls[u], timeoutMs);
+            if (!raw) {
+                continue;
+            }
+            if (raw.startsWith("{")) {
+                const j = JSON.parse(raw);
+                const ip = typeof j.ip === "string" ? j.ip.trim() : "";
+                if (ip) {
+                    return { ok: true, exitIp: ip };
+                }
+            } else {
+                const ip = raw.split(/\n/)[0].trim();
+                if (ip.length >= 3 && ip.length <= 128 && !/\s/.test(ip)) {
+                    return { ok: true, exitIp: ip };
+                }
+            }
+        } catch {
+            // try next URL
         }
-        const ip = typeof r.data?.ip === "string" ? r.data.ip.trim() : "";
-        if (ip) {
-            return { ok: true, exitIp: ip };
-        }
-        return { ok: false };
-    } catch {
-        return { ok: false };
     }
+    return { ok: false };
 }
 
 /**
@@ -442,17 +495,28 @@ function attachBoundUserToProxyList(list, bindingMap) {
  */
 function getOutboundObForTag(config, tag) {
     const outbounds = config?.outbounds;
-    if (!Array.isArray(outbounds) || typeof tag !== "string") {
+    if (!Array.isArray(outbounds)) {
         return null;
     }
-    const t = String(tag).trim();
+    const t = String(tag ?? "").trim();
+    if (!t) {
+        return null;
+    }
     for (let i = 0; i < outbounds.length; i += 1) {
         const ob = outbounds[i];
-        if (ob && ob.tag === t) {
+        if (ob && String(ob.tag ?? "").trim() === t) {
             return ob;
         }
     }
     return null;
+}
+
+/**
+ * @param {object|null|undefined} ob
+ * @returns {boolean}
+ */
+function isOutboundTypeDirect(ob) {
+    return String(ob?.type ?? "").toLowerCase() === "direct";
 }
 
 /**
@@ -477,7 +541,7 @@ function socksAddressForOutboundTag(config, tag) {
     if (!ob) {
         return "";
     }
-    if (ob.type === "direct") {
+    if (isOutboundTypeDirect(ob)) {
         return "直连";
     }
     if (ob.type === "socks" && ob.server != null && ob.server_port != null) {
@@ -528,12 +592,21 @@ async function enrichSingboxUsersWithSocksGeo(users, config) {
                 if (!tag) {
                     return u;
                 }
-                const anyOb = getOutboundObForTag(config, tag);
-                if (anyOb && anyOb.type === "direct") {
+                if (String(u.socks_address || "").trim() === "直连") {
                     const ovl = await getMachineEgressOverlay();
                     return {
                         ...u,
-                        port_status_overlay: ovl
+                        port_status_overlay: ovl,
+                        outbound_egress: "direct"
+                    };
+                }
+                const anyOb = getOutboundObForTag(config, tag);
+                if (anyOb && isOutboundTypeDirect(anyOb)) {
+                    const ovl = await getMachineEgressOverlay();
+                    return {
+                        ...u,
+                        port_status_overlay: ovl,
+                        outbound_egress: "direct"
                     };
                 }
                 const ob = getSocksOutboundObForTag(config, tag);
@@ -956,13 +1029,13 @@ function ensureOutboundIsSocksShellForTag(config, tag) {
     const t = String(tag || "").trim();
     for (let i = 0; i < outbounds.length; i += 1) {
         const ob = outbounds[i];
-        if (!ob || ob.tag !== t) {
+        if (!ob || String(ob.tag ?? "").trim() !== t) {
             continue;
         }
         if (ob.type === "socks") {
             return;
         }
-        if (ob.type === "direct") {
+        if (isOutboundTypeDirect(ob)) {
             outbounds[i] = {
                 type: "socks",
                 tag: t,
@@ -1448,7 +1521,7 @@ app.get("/api/switch-proxy-direct", async (req, res) => {
                 msg: "未找到出站: " + tag
             });
         }
-        if (ob.type === "direct") {
+        if (isOutboundTypeDirect(ob)) {
             return res.json({
                 success: true,
                 msg: "该出站已是直连，无需变更",
@@ -2329,10 +2402,12 @@ app.get("/", (req, res) => {
           row.port_status_overlay && typeof row.port_status_overlay === "object"
             ? row.port_status_overlay
             : null;
-        const isDirectUser = String(row.socks_address || "").trim() === "直连";
-        const ps = isDirectUser
-          ? overlay
-          : overlay || matchPortRow(portRows, row.socks_address);
+        const isDirectUser =
+          String(row.outbound_egress || "") === "direct" ||
+          String(row.socks_address || "").trim() === "直连";
+        const ps =
+          overlay ||
+          (!isDirectUser ? matchPortRow(portRows, row.socks_address) : null);
         const pub =
           ps && ps.public_ip != null && String(ps.public_ip).trim() !== ""
             ? escapeHtml(String(ps.public_ip).trim())
