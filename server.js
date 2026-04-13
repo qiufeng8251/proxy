@@ -37,6 +37,17 @@ const NINE_PROXY_BASE = "http://127.0.0.1:8080";
  * 导致访问本机 9proxy(127.0.0.1) 或 ipinfo 失败，而交互式 `node server.js` 无代理则正常。
  */
 const AXIOS_OPTS_NO_PROXY = { proxy: false };
+/** 未安装或未启动 9proxy 时各接口降级提示（仍可用用户管理、直连、自定义 SOCKS5） */
+const NINE_PROXY_UNAVAILABLE_HINT =
+    "9proxy 未安装或未启动（本机端口无响应），今日代理与端口转发不可用；仍可使用用户管理、直连与自定义 SOCKS5。";
+/** 供 today_list 降级：与 mergeCustomProxiesIntoList 兼容的空列表体 */
+function emptyNineProxyTodayListBody() {
+    return {
+        data: [],
+        nine_proxy_available: false,
+        nine_proxy_message: NINE_PROXY_UNAVAILABLE_HINT
+    };
+}
 /** 本地 SOCKS 端口扫描下界（与 port_free 扫描配合） */
 const LOCAL_SOCKS_SCAN_MIN = 60000;
 /** 本地 SOCKS 端口扫描上界 */
@@ -44,14 +55,31 @@ const LOCAL_SOCKS_SCAN_MAX = 60255;
 
 /**
  * 请求 9proxy `today_list`，获取今日可用代理列表原始 JSON。
+ * 若 9proxy 未安装或未启动，返回空 `data` 并带 `nine_proxy_available: false`，不抛错（仅自定义代理时仍可正常使用控制台）。
  * @returns {Promise<object>} 9proxy 返回体（含 data 或 proxy.data 等形态）
  */
 async function getProxy() {
-    const res = await axios.get(`${NINE_PROXY_BASE}/api/today_list?t=2&limit=200`, {
-        ...AXIOS_OPTS_NO_PROXY,
-        timeout: 25000
-    });
-    return res.data;
+    try {
+        const res = await axios.get(`${NINE_PROXY_BASE}/api/today_list?t=2&limit=200`, {
+            ...AXIOS_OPTS_NO_PROXY,
+            timeout: 25000
+        });
+        const body = res.data;
+        if (body && typeof body === "object" && !Array.isArray(body)) {
+            return { ...body, nine_proxy_available: true };
+        }
+        console.warn("[9proxy] today_list: 响应非对象，已降级为空列表");
+        return {
+            ...emptyNineProxyTodayListBody(),
+            nine_proxy_error: "today_list 响应格式异常"
+        };
+    } catch (e) {
+        console.warn("[9proxy] today_list:", e.message || e);
+        return {
+            ...emptyNineProxyTodayListBody(),
+            nine_proxy_error: e.message || String(e)
+        };
+    }
 }
 
 /**
@@ -1226,12 +1254,17 @@ function ensureOutboundIsSocksShellForTag(config, tag) {
  * @returns {Promise<object[]>}
  */
 async function nineProxyPortStatusRows() {
-    const r = await axios.get(`${NINE_PROXY_BASE}/api/port_status`, {
-        ...AXIOS_OPTS_NO_PROXY,
-        params: { t: 2 },
-        timeout: 15000
-    });
-    return Array.isArray(r.data?.data) ? r.data.data : [];
+    try {
+        const r = await axios.get(`${NINE_PROXY_BASE}/api/port_status`, {
+            ...AXIOS_OPTS_NO_PROXY,
+            params: { t: 2 },
+            timeout: 15000
+        });
+        return Array.isArray(r.data?.data) ? r.data.data : [];
+    } catch (e) {
+        console.warn("[9proxy] port_status:", e.message || e);
+        return [];
+    }
 }
 
 /**
@@ -1239,16 +1272,21 @@ async function nineProxyPortStatusRows() {
  * @returns {Promise<object[]>}
  */
 async function nineProxyPortCheckAllRows() {
-    const r = await axios.get(`${NINE_PROXY_BASE}/api/port_check`, {
-        ...AXIOS_OPTS_NO_PROXY,
-        params:
-            {
-                t: 2,
-                ports: "all"
-            },
-        timeout: 20000
-    });
-    return Array.isArray(r.data?.data) ? r.data.data : [];
+    try {
+        const r = await axios.get(`${NINE_PROXY_BASE}/api/port_check`, {
+            ...AXIOS_OPTS_NO_PROXY,
+            params:
+                {
+                    t: 2,
+                    ports: "all"
+                },
+            timeout: 20000
+        });
+        return Array.isArray(r.data?.data) ? r.data.data : [];
+    } catch (e) {
+        console.warn("[9proxy] port_check:", e.message || e);
+        return [];
+    }
 }
 
 /**
@@ -1257,12 +1295,16 @@ async function nineProxyPortCheckAllRows() {
  * @returns {Promise<boolean>}
  */
 async function nineProxyPortFreeOk(port) {
-    const r = await axios.get(`${NINE_PROXY_BASE}/api/port_free`, {
-        ...AXIOS_OPTS_NO_PROXY,
-        params: { t: 2, ports: String(port) },
-        timeout: 8000
-    });
-    return r.data && r.data.error === false;
+    try {
+        const r = await axios.get(`${NINE_PROXY_BASE}/api/port_free`, {
+            ...AXIOS_OPTS_NO_PROXY,
+            params: { t: 2, ports: String(port) },
+            timeout: 8000
+        });
+        return r.data && r.data.error === false;
+    } catch {
+        return false;
+    }
 }
 
 /**
@@ -1347,19 +1389,24 @@ async function resolveProxyIpForId(id, explicitIp) {
     if (ip) {
         return ip;
     }
-    const res = await axios.get(`${NINE_PROXY_BASE}/api/today_list`, {
-        ...AXIOS_OPTS_NO_PROXY,
-        params: { t: 2, limit: 500 },
-        timeout: 15000
-    });
-    const body = res.data;
-    const arr = Array.isArray(body?.data)
-        ? body.data
-        : Array.isArray(body?.proxy?.data)
-          ? body.proxy.data
-          : [];
-    const hit = arr.find((p) => String(p?.id) === String(id));
-    return hit?.ip ? String(hit.ip).trim() : "";
+    try {
+        const res = await axios.get(`${NINE_PROXY_BASE}/api/today_list`, {
+            ...AXIOS_OPTS_NO_PROXY,
+            params: { t: 2, limit: 500 },
+            timeout: 15000
+        });
+        const body = res.data;
+        const arr = Array.isArray(body?.data)
+            ? body.data
+            : Array.isArray(body?.proxy?.data)
+              ? body.proxy.data
+              : [];
+        const hit = arr.find((p) => String(p?.id) === String(id));
+        return hit?.ip ? String(hit.ip).trim() : "";
+    } catch (e) {
+        console.warn("[9proxy] today_list (resolve ip):", e.message || e);
+        return "";
+    }
 }
 
 /**
@@ -1426,9 +1473,14 @@ function restartSingBox() {
  */
 app.get("/change-ip", async (req, res) => {
     try {
-
         const proxy = await getProxy();
-
+        if (proxy && proxy.nine_proxy_available === false) {
+            return res.json({
+                success: false,
+                msg: NINE_PROXY_UNAVAILABLE_HINT,
+                proxy
+            });
+        }
         res.json({
             success: true,
             msg: "IP 已切换（SOCKS5）",
@@ -1460,6 +1512,7 @@ app.get("/api/runtime-meta", (req, res) => {
         configExists,
         userMetaPath: USER_META_PATH,
         nineProxyBase: NINE_PROXY_BASE,
+        nineProxyOptionalHint: NINE_PROXY_UNAVAILABLE_HINT,
         httpProxy: pick("HTTP_PROXY"),
         httpsProxy: pick("HTTPS_PROXY"),
         allProxy: pick("ALL_PROXY"),
@@ -1608,7 +1661,8 @@ app.get("/api/switch-proxy", async (req, res) => {
         if (!proxyIp) {
             return res.status(400).json({
                 success: false,
-                msg: "无法解析代理 IP，请在列表中刷新后重试或显式传入 ip 参数"
+                msg:
+                    "无法解析代理公网 IP。未安装或未运行 9proxy 时不能按「今日代理 id」切换；请改用自定义 SOCKS（id 以 custom- 开头），或在请求中附带 ip= 公网 IP 参数。"
             });
         }
 
@@ -1643,21 +1697,31 @@ app.get("/api/switch-proxy", async (req, res) => {
             chosen = pickPortFromPortCheckAll(checkRows);
         }
         if (chosen == null) {
-            return res.status(500).json({
+            return res.status(503).json({
                 success: false,
-                msg: "无可用本地端口（port_status / port_free / port_check 均未找到）"
+                msg:
+                    "无可用本地转发端口（依赖 9proxy 的 port_status / port_free / port_check）。未安装 9proxy 时请使用「自定义 SOCKS」切换出站。"
             });
         }
 
-        const result = await axios.get(`${NINE_PROXY_BASE}/api/forward`, {
-            ...AXIOS_OPTS_NO_PROXY,
-            params: {
-                t: 2,
-                port: chosen,
-                id
-            },
-            timeout: 20000
-        });
+        let result;
+        try {
+            result = await axios.get(`${NINE_PROXY_BASE}/api/forward`, {
+                ...AXIOS_OPTS_NO_PROXY,
+                params: {
+                    t: 2,
+                    port: chosen,
+                    id
+                },
+                timeout: 20000
+            });
+        } catch (e) {
+            return res.status(503).json({
+                success: false,
+                msg: NINE_PROXY_UNAVAILABLE_HINT,
+                error: e.message || String(e)
+            });
+        }
 
         if (result.data?.error === true) {
             return res.status(502).json({
@@ -1952,10 +2016,12 @@ app.get("/api/port_status", async (req, res) => {
             data: enriched
         });
     } catch (e) {
-        res.status(502).json({
+        console.warn("[9proxy] /api/port_status route:", e.message || e);
+        res.json({
             error: true,
-            message: e.message || "port_status 请求失败",
-            data: []
+            message: NINE_PROXY_UNAVAILABLE_HINT,
+            data: [],
+            nine_proxy_available: false
         });
     }
 });
@@ -2000,10 +2066,10 @@ app.get("/api/add-proxy", async (req, res) => {
             data: result.data
         });
     } catch (e) {
-        res.status(500).json({
+        res.json({
             success: false,
-            msg: "新增代理失败",
-            error: e.message
+            msg: NINE_PROXY_UNAVAILABLE_HINT,
+            error: e.message || String(e)
         });
     }
 });
@@ -2571,6 +2637,8 @@ app.get("/", (req, res) => {
     const endpoint = "/api/proxy-list";
     let statesByCountry = {};
     let allProxyList = [];
+    /** 最近一次拉取代理列表时 9proxy 不可用提示（仅用于状态栏） */
+    let lastNineProxyListNote = "";
     let pendingSwitchProxyId = "";
     let pendingUserOutboundTag = "";
     let pendingUserSocksNorm = "";
@@ -2867,13 +2935,17 @@ app.get("/", (req, res) => {
         throw new Error("请求失败，HTTP " + resp.status);
       }
       const data = await resp.json();
+      let list = [];
       if (Array.isArray(data?.data)) {
-        return data.data;
+        list = data.data;
+      } else if (Array.isArray(data?.proxy?.data)) {
+        list = data.proxy.data;
       }
-      if (Array.isArray(data?.proxy?.data)) {
-        return data.proxy.data;
-      }
-      return [];
+      const nineNote =
+        data.nine_proxy_available === false && data.nine_proxy_message
+          ? String(data.nine_proxy_message)
+          : "";
+      return { list, nineNote };
     }
 
     async function openUseProxyForOutbound(tag) {
@@ -2903,7 +2975,7 @@ app.get("/", (req, res) => {
         const u = users.find((x) => String(x.outbound) === String(pendingUserOutboundTag));
         const addr = u && u.socks_address ? String(u.socks_address).trim() : "";
         pendingUserSocksNorm = addr ? normAddr(addr) : "";
-        const list = await fetchProxyListData();
+        const { list } = await fetchProxyListData();
         if (!list.length) {
           useProxySelectFromUser.innerHTML =
             '<option value="">暂无今日代理</option>';
@@ -2953,7 +3025,7 @@ app.get("/", (req, res) => {
       }
       let list;
       try {
-        list = await fetchProxyListData();
+        list = (await fetchProxyListData()).list;
       } catch (e) {
         setUseProxyFromUserStatus("刷新代理列表失败: " + e.message);
         return;
@@ -3163,7 +3235,12 @@ app.get("/", (req, res) => {
         return countryMatch && stateMatch;
       });
       renderRows(filtered);
-      setStatus("已加载 " + allProxyList.length + " 条，筛选后 " + filtered.length + " 条");
+      let statusMsg =
+        "已加载 " + allProxyList.length + " 条，筛选后 " + filtered.length + " 条";
+      if (lastNineProxyListNote) {
+        statusMsg += " · " + lastNineProxyListNote;
+      }
+      setStatus(statusMsg);
     }
 
     async function loadLocationCodes() {
@@ -3401,12 +3478,14 @@ app.get("/", (req, res) => {
     async function loadProxyList() {
       try {
         setStatus("正在加载...");
-        const list = await fetchProxyListData();
+        const { list, nineNote } = await fetchProxyListData();
         allProxyList = list;
+        lastNineProxyListNote = nineNote || "";
         populateFilterOptions(allProxyList);
         applyFilters();
       } catch (err) {
         renderRows([]);
+        lastNineProxyListNote = "";
         setStatus("加载失败: " + err.message);
       }
     }
@@ -3486,7 +3565,7 @@ app.get("/", (req, res) => {
         setUseProxyFromUserStatus("正在保存…");
         const row = await addCustomSocksLine(userCustomSocksLine.value);
         userCustomSocksLine.value = "";
-        const list = await fetchProxyListData();
+        const { list } = await fetchProxyListData();
         if (!list.length) {
           useProxySelectFromUser.innerHTML =
             '<option value="">暂无今日代理</option>';
