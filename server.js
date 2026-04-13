@@ -1358,58 +1358,6 @@ app.get("/", (req, res) => {
           <button id="refreshBtn">刷新列表</button>
           <span class="status" id="statusText">加载中...</span>
         </div>
-        <dialog id="addProxyDialog">
-          <div class="modal-inner">
-            <h3 style="margin-top:0;">新增代理</h3>
-            <div class="modal-row">
-              <label for="countryInput">country（默认 US）</label>
-              <select id="countryInput">
-                <option value="US">US</option>
-              </select>
-            </div>
-            <div class="modal-row">
-              <label for="stateInput">state</label>
-              <select id="stateInput">
-                <option value="">请选择 state</option>
-              </select>
-            </div>
-            <div class="status" id="addStatusText"></div>
-            <div class="modal-actions">
-              <button id="cancelAddModalBtn" class="cancel-btn" type="button">取消</button>
-              <button id="addProxyBtn" class="add-btn" type="button">确认新增</button>
-            </div>
-          </div>
-        </dialog>
-        <dialog id="switchProxyDialog">
-          <div class="modal-inner">
-            <h3 style="margin-top:0;">使用代理</h3>
-            <p class="status" id="switchProxyMeta" style="margin:0 0 10px;font-size:13px;color:#374151;"></p>
-            <div class="modal-row">
-              <label for="switchUserSelect">绑定出站（sing-box SOCKS tag）</label>
-              <select id="switchUserSelect"></select>
-            </div>
-            <div class="status" id="switchStatusText"></div>
-            <div class="modal-actions">
-              <button type="button" id="cancelSwitchBtn" class="cancel-btn">取消</button>
-              <button type="button" id="confirmSwitchBtn" class="switch-btn">确认使用</button>
-            </div>
-          </div>
-        </dialog>
-        <dialog id="useProxyFromUserDialog">
-          <div class="modal-inner">
-            <h3 style="margin-top:0;">切换代理</h3>
-            <p class="status" id="useProxyFromUserMeta" style="margin:0 0 10px;font-size:13px;color:#374151;"></p>
-            <div class="modal-row">
-              <label for="useProxySelectFromUser">选择今日代理</label>
-              <select id="useProxySelectFromUser" size="8" style="width:100%;min-height:140px;"></select>
-            </div>
-            <div class="status" id="useProxyFromUserStatus"></div>
-            <div class="modal-actions">
-              <button type="button" id="cancelUseProxyFromUserBtn" class="cancel-btn">取消</button>
-              <button type="button" id="confirmUseProxyFromUserBtn" class="switch-btn">确认切换</button>
-            </div>
-          </div>
-        </dialog>
         <table>
           <thead>
             <tr>
@@ -1439,6 +1387,58 @@ app.get("/", (req, res) => {
           <tbody id="proxyBody"></tbody>
         </table>
       </section>
+      <dialog id="addProxyDialog">
+        <div class="modal-inner">
+          <h3 style="margin-top:0;">新增代理</h3>
+          <div class="modal-row">
+            <label for="countryInput">country（默认 US）</label>
+            <select id="countryInput">
+              <option value="US">US</option>
+            </select>
+          </div>
+          <div class="modal-row">
+            <label for="stateInput">state</label>
+            <select id="stateInput">
+              <option value="">请选择 state</option>
+            </select>
+          </div>
+          <div class="status" id="addStatusText"></div>
+          <div class="modal-actions">
+            <button id="cancelAddModalBtn" class="cancel-btn" type="button">取消</button>
+            <button id="addProxyBtn" class="add-btn" type="button">确认新增</button>
+          </div>
+        </div>
+      </dialog>
+      <dialog id="switchProxyDialog">
+        <div class="modal-inner">
+          <h3 style="margin-top:0;">使用代理</h3>
+          <p class="status" id="switchProxyMeta" style="margin:0 0 10px;font-size:13px;color:#374151;"></p>
+          <div class="modal-row">
+            <label for="switchUserSelect">绑定出站（sing-box SOCKS tag）</label>
+            <select id="switchUserSelect"></select>
+          </div>
+          <div class="status" id="switchStatusText"></div>
+          <div class="modal-actions">
+            <button type="button" id="cancelSwitchBtn" class="cancel-btn">取消</button>
+            <button type="button" id="confirmSwitchBtn" class="switch-btn">确认使用</button>
+          </div>
+        </div>
+      </dialog>
+      <dialog id="useProxyFromUserDialog">
+        <div class="modal-inner">
+          <h3 style="margin-top:0;">切换代理</h3>
+          <p class="status" id="useProxyFromUserMeta" style="margin:0 0 10px;font-size:13px;color:#374151;"></p>
+          <div class="modal-row">
+            <label for="useProxySelectFromUser">选择今日代理</label>
+            <select id="useProxySelectFromUser" size="8" style="width:100%;min-height:140px;"></select>
+          </div>
+          <div class="status" id="useProxyFromUserStatus"></div>
+          <div class="modal-actions">
+            <button type="button" id="cancelUseProxyFromUserBtn" class="cancel-btn">取消</button>
+            <button type="button" id="confirmUseProxyFromUserBtn" class="switch-btn">确认切换</button>
+          </div>
+        </div>
+      </dialog>
     </main>
   </div>
 
@@ -1639,6 +1639,9 @@ app.get("/", (req, res) => {
       useProxySelectFromUser.innerHTML =
         '<option value="">加载中…</option>';
       setUseProxyFromUserStatus("正在拉取列表…");
+      if (useProxyFromUserDialog.open) {
+        useProxyFromUserDialog.close();
+      }
       useProxyFromUserDialog.showModal();
       try {
         const uresp = await fetch("/api/singbox-users");
