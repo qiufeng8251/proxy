@@ -352,7 +352,7 @@ async function resolveForwardPortForProxy(publicIp, otherOccupiedPorts) {
 
     const tryPortCheckAll = async () => {
         const ck = await axios.get(`${NINE_PROXY_API}/api/port_check`, {
-            params: { ports: "all", t: 2 },
+            /*params: { ports: "all", t: 2 },*/
             timeout: 20000
         });
         const stats = Array.isArray(ck.data?.data) ? ck.data.data : [];
