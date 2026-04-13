@@ -270,25 +270,6 @@ function parsePortFromBindingAddress(addr) {
     return Number.isFinite(p) && p > 0 ? p : null;
 }
 
-function getConflictingSocksPorts(config, exceptTag) {
-    const used = new Set();
-    const outbounds = config?.outbounds;
-    if (!Array.isArray(outbounds)) {
-        return used;
-    }
-    for (let i = 0; i < outbounds.length; i += 1) {
-        const ob = outbounds[i];
-        if (!ob || ob.type !== "socks" || ob.server_port == null) {
-            continue;
-        }
-        if (exceptTag != null && ob.tag === exceptTag) {
-            continue;
-        }
-        used.add(Number(ob.server_port));
-    }
-    return used;
-}
-
 function applySocksPortToConfig(config, tag, port) {
     const outbounds = config?.outbounds;
     if (!Array.isArray(outbounds)) {
@@ -341,12 +322,7 @@ async function nineProxyPortFreeOk(port) {
     return r.data && r.data.error === false;
 }
 
-function pickPortFromPortStatus(
-    rows,
-    targetPublicIp,
-    conflictingPorts,
-    currentPort
-) {
+function pickPortFromPortStatus(rows, targetPublicIp) {
     const tip = String(targetPublicIp || "").trim();
     if (!tip || !Array.isArray(rows)) {
         return null;
@@ -364,18 +340,13 @@ function pickPortFromPortStatus(
         if (port == null) {
             continue;
         }
-        if (!conflictingPorts.has(port) || port === currentPort) {
-            return port;
-        }
+        return port;
     }
     return null;
 }
 
-async function pickPortViaPortFreeScan(conflictingPorts) {
+async function pickPortViaPortFreeScan() {
     for (let p = LOCAL_SOCKS_SCAN_MIN; p <= LOCAL_SOCKS_SCAN_MAX; p += 1) {
-        if (conflictingPorts.has(p)) {
-            continue;
-        }
         try {
             if (await nineProxyPortFreeOk(p)) {
                 return p;
@@ -387,7 +358,7 @@ async function pickPortViaPortFreeScan(conflictingPorts) {
     return null;
 }
 
-function pickPortFromPortCheckAll(rows, conflictingPorts) {
+function pickPortFromPortCheckAll(rows) {
     if (!Array.isArray(rows)) {
         return null;
     }
@@ -398,7 +369,7 @@ function pickPortFromPortCheckAll(rows, conflictingPorts) {
             continue;
         }
         const p = Number(row.port);
-        if (!Number.isFinite(p) || p <= 0 || conflictingPorts.has(p)) {
+        if (!Number.isFinite(p) || p <= 0) {
             continue;
         }
         candidates.push(p);
@@ -542,14 +513,9 @@ app.get("/api/switch-proxy", async (req, res) => {
 
         const raw = fs.readFileSync(CONFIG_PATH, "utf8");
         const config = JSON.parse(raw);
-        const conflicting = getConflictingSocksPorts(config, tag);
         const currentRow = Array.isArray(config.outbounds)
             ? config.outbounds.find((o) => o && o.type === "socks" && o.tag === tag)
             : null;
-        const currentPort =
-            currentRow && currentRow.server_port != null
-                ? Number(currentRow.server_port)
-                : null;
         if (!currentRow) {
             return res.status(400).json({
                 success: false,
@@ -558,19 +524,14 @@ app.get("/api/switch-proxy", async (req, res) => {
         }
 
         const statusRows = await nineProxyPortStatusRows();
-        let chosen = pickPortFromPortStatus(
-            statusRows,
-            proxyIp,
-            conflicting,
-            currentPort
-        );
+        let chosen = pickPortFromPortStatus(statusRows, proxyIp);
 
         if (chosen == null) {
-            chosen = await pickPortViaPortFreeScan(conflicting);
+            chosen = await pickPortViaPortFreeScan();
         }
         if (chosen == null) {
             const checkRows = await nineProxyPortCheckAllRows();
-            chosen = pickPortFromPortCheckAll(checkRows, conflicting);
+            chosen = pickPortFromPortCheckAll(checkRows);
         }
         if (chosen == null) {
             return res.status(500).json({
