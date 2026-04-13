@@ -411,19 +411,20 @@ function attachBoundUserToProxyList(list, bindingMap) {
 }
 
 /**
- * 在配置中查找指定 tag 的 SOCKS 出站对象。
+ * 在配置中查找指定 tag 的出站对象（任意 type）。
  * @param {object} config 已解析的 sing-box JSON
  * @param {string} tag 出站 tag
  * @returns {object|null}
  */
-function getSocksOutboundObForTag(config, tag) {
+function getOutboundObForTag(config, tag) {
     const outbounds = config?.outbounds;
     if (!Array.isArray(outbounds) || typeof tag !== "string") {
         return null;
     }
+    const t = String(tag).trim();
     for (let i = 0; i < outbounds.length; i += 1) {
         const ob = outbounds[i];
-        if (ob && ob.type === "socks" && ob.tag === tag) {
+        if (ob && ob.tag === t) {
             return ob;
         }
     }
@@ -431,17 +432,34 @@ function getSocksOutboundObForTag(config, tag) {
 }
 
 /**
- * 在配置中查找指定 tag 的 SOCKS 出站，返回 `server:port` 字符串。
+ * 在配置中查找指定 tag 的 SOCKS 出站对象。
+ * @param {object} config 已解析的 sing-box JSON
+ * @param {string} tag 出站 tag
+ * @returns {object|null}
+ */
+function getSocksOutboundObForTag(config, tag) {
+    const ob = getOutboundObForTag(config, tag);
+    return ob && ob.type === "socks" ? ob : null;
+}
+
+/**
+ * 用户管理展示用：SOCKS 为 `server:port`；`type: direct` 且 tag 与路由一致时显示「直连」。
  * @param {object} config 已解析的 sing-box JSON
  * @param {string} tag 出站 tag
  * @returns {string}
  */
 function socksAddressForOutboundTag(config, tag) {
-    const ob = getSocksOutboundObForTag(config, tag);
-    if (!ob || !ob.server || ob.server_port == null) {
+    const ob = getOutboundObForTag(config, tag);
+    if (!ob) {
         return "";
     }
-    return `${ob.server}:${ob.server_port}`;
+    if (ob.type === "direct") {
+        return "直连";
+    }
+    if (ob.type === "socks" && ob.server != null && ob.server_port != null) {
+        return `${ob.server}:${ob.server_port}`;
+    }
+    return "";
 }
 
 /**
@@ -524,7 +542,7 @@ async function enrichSingboxUsersWithSocksGeo(users, config) {
 /**
  * 从 `route.rules` 收集带 `outbound` 的规则，与 SOCKS 出站地址、WiFi 展示名组合成「用户管理」行数据
  *（不要求 auth_user）。
- * @returns {{ ok: boolean, error?: string, users: Array<{ outbound: string, socks_address: string, wifi_name: string }> }}
+ * @returns {{ ok: boolean, error?: string, users: Array<{ outbound: string, socks_address: string, wifi_name: string }> }} `socks_address` 为 `host:port`、`直连`（`type:direct`）或空。
  */
 function getSingboxRouteUsers() {
     try {
@@ -834,6 +852,73 @@ function applyRemoteSocksToConfig(config, tag, entry) {
 }
 
 /**
+ * 将指定 tag 的出站改为 sing-box `direct`（与路由中 `outbound` 同名 tag 对应）。
+ * @param {object} config
+ * @param {string} tag
+ */
+function applyDirectOutboundToConfig(config, tag) {
+    const outbounds = config?.outbounds;
+    if (!Array.isArray(outbounds)) {
+        throw new Error("配置缺少 outbounds");
+    }
+    const t = String(tag || "").trim();
+    if (!t) {
+        throw new Error("缺少 tag");
+    }
+    if (t === "direct") {
+        throw new Error("不能使用保留 tag「direct」，请使用用户路由对应的出站 tag（如 cb357692）");
+    }
+    let found = false;
+    for (let i = 0; i < outbounds.length; i += 1) {
+        const ob = outbounds[i];
+        if (ob && ob.tag === t) {
+            outbounds[i] = {
+                type: "direct",
+                tag: t
+            };
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        throw new Error("未找到出站: " + t);
+    }
+}
+
+/**
+ * 在切换为 9proxy / 自定义 SOCKS 前，若当前出站为 `direct`，先写回最小 SOCKS 壳以便后续改写端口。
+ * @param {object} config
+ * @param {string} tag
+ */
+function ensureOutboundIsSocksShellForTag(config, tag) {
+    const outbounds = config?.outbounds;
+    if (!Array.isArray(outbounds)) {
+        throw new Error("配置缺少 outbounds");
+    }
+    const t = String(tag || "").trim();
+    for (let i = 0; i < outbounds.length; i += 1) {
+        const ob = outbounds[i];
+        if (!ob || ob.tag !== t) {
+            continue;
+        }
+        if (ob.type === "socks") {
+            return;
+        }
+        if (ob.type === "direct") {
+            outbounds[i] = {
+                type: "socks",
+                tag: t,
+                server: "127.0.0.1",
+                server_port: LOCAL_SOCKS_SCAN_MIN
+            };
+            return;
+        }
+        throw new Error("出站 " + t + " 当前类型为 " + ob.type + "，仅支持从 SOCKS 或 direct 切换");
+    }
+    throw new Error("未找到出站: " + t);
+}
+
+/**
  * 转发请求 9proxy `GET /api/port_status`，返回端口状态行数组（含 address、public_ip、online 等）。
  * @returns {Promise<object[]>}
  */
@@ -1133,6 +1218,14 @@ app.get("/api/switch-proxy", async (req, res) => {
             }
             const raw = fs.readFileSync(CONFIG_PATH, "utf8");
             const config = JSON.parse(raw);
+            try {
+                ensureOutboundIsSocksShellForTag(config, tag);
+            } catch (e) {
+                return res.status(400).json({
+                    success: false,
+                    msg: e.message || String(e)
+                });
+            }
             const currentRow = Array.isArray(config.outbounds)
                 ? config.outbounds.find((o) => o && o.type === "socks" && o.tag === tag)
                 : null;
@@ -1184,6 +1277,14 @@ app.get("/api/switch-proxy", async (req, res) => {
 
         const raw = fs.readFileSync(CONFIG_PATH, "utf8");
         const config = JSON.parse(raw);
+        try {
+            ensureOutboundIsSocksShellForTag(config, tag);
+        } catch (e) {
+            return res.status(400).json({
+                success: false,
+                msg: e.message || String(e)
+            });
+        }
         const currentRow = Array.isArray(config.outbounds)
             ? config.outbounds.find((o) => o && o.type === "socks" && o.tag === tag)
             : null;
@@ -1255,6 +1356,73 @@ app.get("/api/switch-proxy", async (req, res) => {
         res.status(500).json({
             success: false,
             msg: "切换失败",
+            error: e.message
+        });
+    }
+});
+
+/**
+ * GET /api/switch-proxy-direct
+ * 将指定 tag 的出站改为 sing-box `direct`（与 `route.rules[].outbound` 同名，不经 SOCKS）。
+ * 查询参数：`tag`（必填，勿使用保留名 `direct`）。
+ */
+app.get("/api/switch-proxy-direct", async (req, res) => {
+    const tag = req.query.tag != null ? String(req.query.tag).trim() : "";
+    if (!tag) {
+        return res.status(400).json({
+            success: false,
+            msg: "缺少出站 tag"
+        });
+    }
+    if (tag === "direct") {
+        return res.status(400).json({
+            success: false,
+            msg: "不能使用保留 tag「direct」，请使用用户路由对应的出站 tag（如 cb357692）"
+        });
+    }
+    try {
+        const raw = fs.readFileSync(CONFIG_PATH, "utf8");
+        const config = JSON.parse(raw);
+        const ob = getOutboundObForTag(config, tag);
+        if (!ob) {
+            return res.status(404).json({
+                success: false,
+                msg: "未找到出站: " + tag
+            });
+        }
+        if (ob.type === "direct") {
+            return res.json({
+                success: true,
+                msg: "该出站已是直连，无需变更",
+                tag,
+                direct: true,
+                data: { error: false, message: "direct" }
+            });
+        }
+        applyDirectOutboundToConfig(config, tag);
+        fs.writeFileSync(CONFIG_PATH, `${JSON.stringify(config, null, 2)}\n`);
+        try {
+            await restartSingBox();
+        } catch (restartErr) {
+            return res.status(500).json({
+                success: false,
+                msg: "配置已写入，但 systemctl restart sing-box 失败",
+                error: restartErr.message || String(restartErr),
+                tag,
+                direct: true
+            });
+        }
+        return res.json({
+            success: true,
+            msg: "已切换为直连出站（已重启 sing-box）",
+            tag,
+            direct: true,
+            data: { error: false, message: "direct" }
+        });
+    } catch (e) {
+        return res.status(500).json({
+            success: false,
+            msg: e.message || "切换直连失败",
             error: e.message
         });
     }
@@ -1857,7 +2025,7 @@ app.get("/", (req, res) => {
     <main class="main-content">
       <section id="panelUsers" class="panel active">
         <h1>用户管理</h1>
-        <p class="user-hint">用户行来自 <code>route.rules</code> 的 <code>outbound</code>，与 SOCKS 出站一一对应；右侧<strong>操作 · 切换</strong>可弹出列表选择今日代理并完成切换（与代理列表「使用」同源接口）。WiFi 名称写入 <code>proxy-user-meta.json</code> 的 <code>wifi_by_outbound</code>；点击<strong>铅笔</strong>展开编辑，<strong>关闭</strong>图标收起不保存。本机 <code>127.0.0.1</code> 类 SOCKS 的出口 IP、国家、州/省、城市由 <code>/api/port_status</code> 与地址匹配补齐；<strong>远端 SOCKS</strong>（自定义代理等）由服务端经 SOCKS 探测出口 IP 与 ipinfo 地理信息并显示在同一列。</p>
+        <p class="user-hint">用户行来自 <code>route.rules</code> 的 <code>outbound</code>，与 <code>outbounds</code> 中<strong>同名 tag</strong> 的出站一一对应；右侧<strong>操作 · 切换</strong>可弹出列表选择今日代理或列表底部的<strong>直连</strong>（将该 tag 出站改为 <code>type: direct</code>，不经 SOCKS）。WiFi 名称写入 <code>proxy-user-meta.json</code> 的 <code>wifi_by_outbound</code>；点击<strong>铅笔</strong>展开编辑，<strong>关闭</strong>图标收起不保存。本机 <code>127.0.0.1</code> 类 SOCKS 的出口 IP、国家、州/省、城市由 <code>/api/port_status</code> 与地址匹配补齐；<strong>远端 SOCKS</strong>由服务端经 SOCKS 探测；出站为 <strong>直连</strong> 时出口等列显示为「—」，在线列显示「直连」。</p>
         <div class="toolbar">
           <button type="button" id="refreshUsersBtn">刷新用户</button>
           <span class="status" id="userStatusText">加载中...</span>
@@ -2103,16 +2271,25 @@ app.get("/", (req, res) => {
           row.port_status_overlay && typeof row.port_status_overlay === "object"
             ? row.port_status_overlay
             : null;
-        const ps = overlay || matchPortRow(portRows, row.socks_address);
-        const pub =
+        const isDirectUser = String(row.socks_address || "").trim() === "直连";
+        const ps = isDirectUser
+          ? null
+          : overlay || matchPortRow(portRows, row.socks_address);
+        let pub =
           ps && ps.public_ip != null && String(ps.public_ip).trim() !== ""
             ? escapeHtml(String(ps.public_ip).trim())
             : "";
-        const cc = ps && ps.ip_country ? String(ps.ip_country) : "";
-        const reg = ps && ps.ip_region ? escapeHtml(String(ps.ip_region)) : "";
-        const city = ps && ps.ip_city != null ? escapeHtml(String(ps.ip_city)) : "";
+        let cc = ps && ps.ip_country ? String(ps.ip_country) : "";
+        let reg = ps && ps.ip_region ? escapeHtml(String(ps.ip_region)) : "";
+        let city = ps && ps.ip_city != null ? escapeHtml(String(ps.ip_city)) : "";
         let onlineCell = "-";
-        if (ps && typeof ps.online === "boolean") {
+        if (isDirectUser) {
+          pub = '<span class="muted-cell">\u2014</span>';
+          cc = "";
+          reg = '<span class="muted-cell">\u2014</span>';
+          city = '<span class="muted-cell">\u2014</span>';
+          onlineCell = '<span class="online">直连</span>';
+        } else if (ps && typeof ps.online === "boolean") {
           onlineCell = ps.online
             ? '<span class="online">在线</span>'
             : '<span class="offline">离线</span>';
@@ -2223,6 +2400,21 @@ app.get("/", (req, res) => {
       }
     }
 
+    /** 切换代理弹窗底部固定一项：直连（与 __direct__ 配套） */
+    function appendDirectProxyOptionToUserSelect() {
+      const sel = useProxySelectFromUser;
+      for (let i = sel.options.length - 1; i >= 0; i -= 1) {
+        if (sel.options[i].value === "__direct__") {
+          sel.remove(i);
+        }
+      }
+      const dirOpt = document.createElement("option");
+      dirOpt.value = "__direct__";
+      dirOpt.setAttribute("data-ip", "");
+      dirOpt.textContent = "直连（本机出站，不经过 SOCKS）";
+      sel.appendChild(dirOpt);
+    }
+
     async function addCustomSocksLine(line) {
       const t = String(line || "").trim();
       if (!t) {
@@ -2264,7 +2456,9 @@ app.get("/", (req, res) => {
         return;
       }
       useProxyFromUserMeta.textContent =
-        "出站 " + pendingUserOutboundTag + " · 请在下表选择要切换到的代理";
+        "出站 " +
+        pendingUserOutboundTag +
+        " · 请选择代理，或列表底部「直连」（本机出站，不经过 SOCKS）";
       useProxySelectFromUser.innerHTML =
         '<option value="">加载中…</option>';
       setUseProxyFromUserStatus("正在拉取列表…");
@@ -2283,7 +2477,13 @@ app.get("/", (req, res) => {
         const addr = u && u.socks_address ? String(u.socks_address).trim() : "";
         pendingUserSocksNorm = addr ? normAddr(addr) : "";
         const list = await fetchProxyListData();
-        setTodayProxySelectFromList(useProxySelectFromUser, list);
+        if (!list.length) {
+          useProxySelectFromUser.innerHTML =
+            '<option value="">暂无今日代理</option>';
+        } else {
+          setTodayProxySelectFromList(useProxySelectFromUser, list);
+        }
+        appendDirectProxyOptionToUserSelect();
         setUseProxyFromUserStatus("");
       } catch (e) {
         useProxySelectFromUser.innerHTML = '<option value="">加载失败</option>';
@@ -2304,6 +2504,26 @@ app.get("/", (req, res) => {
         return;
       }
       const proxyId = opt.value;
+      if (proxyId === "__direct__") {
+        try {
+          setUseProxyFromUserStatus("正在切换为直连…");
+          const resp = await fetch(
+            "/api/switch-proxy-direct?tag=" + encodeURIComponent(tag)
+          );
+          const data = await resp.json();
+          const forwardOk =
+            data?.data?.error === false || data?.data?.error == null;
+          if (!resp.ok || data.success === false || !forwardOk) {
+            throw new Error(data.msg || data.error || "切换失败");
+          }
+          setUserStatus((data.msg || "已切换为直连") + " · " + tag);
+          useProxyFromUserDialog.close();
+          await Promise.all([loadSingboxUsers(), loadProxyList()]);
+        } catch (err) {
+          setUseProxyFromUserStatus(err.message || String(err));
+        }
+        return;
+      }
       let list;
       try {
         list = await fetchProxyListData();
@@ -2840,7 +3060,13 @@ app.get("/", (req, res) => {
         const row = await addCustomSocksLine(userCustomSocksLine.value);
         userCustomSocksLine.value = "";
         const list = await fetchProxyListData();
-        setTodayProxySelectFromList(useProxySelectFromUser, list);
+        if (!list.length) {
+          useProxySelectFromUser.innerHTML =
+            '<option value="">暂无今日代理</option>';
+        } else {
+          setTodayProxySelectFromList(useProxySelectFromUser, list);
+        }
+        appendDirectProxyOptionToUserSelect();
         if (row && row.id) {
           const sid = String(row.id);
           for (let j = 0; j < useProxySelectFromUser.options.length; j += 1) {
