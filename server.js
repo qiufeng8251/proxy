@@ -2,7 +2,6 @@ const express = require("express");
 const axios = require("axios");
 const fs = require("fs");
 const { exec } = require("child_process");
-const { promisify } = require("util");
 const { SocksProxyAgent } = require("socks-proxy-agent");
 const { STATE_CODE_ROWS } = require("./stateCodes");
 
@@ -10,17 +9,15 @@ const app = express();
 const PORT = 3000;
 const CONFIG_PATH = "/etc/v2ray-agent/sing-box/conf/config.json";
 const USER_META_PATH = "/etc/v2ray-agent/sing-box/conf/proxy-user-meta.json";
-const NINE_PROXY_API = "http://127.0.0.1:8080";
-/** 列出本地 9proxy 端口表，可用环境变量覆盖，例如 NINEPROXY_PORT_CLI="bash -lc '9proxy port -s'" */
-const NINEPROXY_PORT_CLI = process.env.NINEPROXY_PORT_CLI || "9proxy port -s";
-const execAsync = promisify(exec);
 const IPINFO_CACHE = new Map();
 const IP_GEO_CACHE = new Map();
+const NINE_PROXY_BASE = "http://127.0.0.1:8080";
+const LOCAL_SOCKS_SCAN_MIN = 60000;
+const LOCAL_SOCKS_SCAN_MAX = 60255;
 
 async function getProxy() {
-    const res = await axios.get(`${NINE_PROXY_API}/api/today_list?t=2&limit=200`);
+    const res = await axios.get(`${NINE_PROXY_BASE}/api/today_list?t=2&limit=200`);
     return res.data;
-
 }
 
 function getLocationCodes() {
@@ -224,33 +221,43 @@ function socksAddressForOutboundTag(config, tag) {
     return "";
 }
 
-function collectAuthUsersByOutboundTag(config) {
-    const byTag = Object.create(null);
-    const rules = config?.route?.rules;
-    if (!Array.isArray(rules)) {
-        return byTag;
-    }
-    for (let i = 0; i < rules.length; i += 1) {
-        const rule = rules[i];
-        if (!rule || typeof rule.outbound !== "string") {
-            continue;
+function getSingboxRouteUsers() {
+    try {
+        if (!fs.existsSync(CONFIG_PATH)) {
+            return {
+                ok: false,
+                error: "配置文件不存在: " + CONFIG_PATH,
+                users: []
+            };
         }
-        const auth = rule.auth_user;
-        if (!Array.isArray(auth) || auth.length === 0) {
-            continue;
+        const config = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
+        const rules = config?.route?.rules;
+        if (!Array.isArray(rules)) {
+            return { ok: true, users: [] };
         }
-        const tag = rule.outbound;
-        if (!byTag[tag]) {
-            byTag[tag] = [];
-        }
-        for (let j = 0; j < auth.length; j += 1) {
-            const s = String(auth[j]);
-            if (s && !byTag[tag].includes(s)) {
-                byTag[tag].push(s);
+        const wifiMap = getOutboundWifiNameMap();
+        const users = [];
+        for (let i = 0; i < rules.length; i += 1) {
+            const rule = rules[i];
+            if (!rule || typeof rule.outbound !== "string") {
+                continue;
             }
+            const tag = rule.outbound;
+            const wn = wifiMap[tag];
+            users.push({
+                outbound: tag,
+                socks_address: socksAddressForOutboundTag(config, tag),
+                wifi_name: typeof wn === "string" && wn.trim() !== "" ? wn.trim() : ""
+            });
         }
+        return { ok: true, users };
+    } catch (e) {
+        return {
+            ok: false,
+            error: e.message || String(e),
+            users: []
+        };
     }
-    return byTag;
 }
 
 function parsePortFromBindingAddress(addr) {
@@ -263,309 +270,160 @@ function parsePortFromBindingAddress(addr) {
     return Number.isFinite(p) && p > 0 ? p : null;
 }
 
-/** 从 9proxy CLI / HTTP 行对象里解析本地监听端口（字段名因版本而异） */
-function extractLocalListenPort(row) {
-    if (!row || typeof row !== "object") {
-        return null;
-    }
-    const keys = [
-        "port",
-        "local_port",
-        "listen_port",
-        "socks_port",
-        "server_port",
-        "bind_port"
-    ];
-    for (let i = 0; i < keys.length; i += 1) {
-        const v = row[keys[i]];
-        if (v != null && v !== "") {
-            const n = Number(v);
-            if (Number.isFinite(n) && n > 0 && n <= 65535) {
-                return n;
-            }
-        }
-    }
-    let p = parsePortFromBindingAddress(row.address);
-    if (p != null) {
-        return p;
-    }
-    p = parsePortFromBindingAddress(row.binding);
-    if (p != null) {
-        return p;
-    }
-    const plain = String(row.address || row.binding || "").trim();
-    if (/^\d{2,5}$/.test(plain)) {
-        const n = Number(plain);
-        if (n > 0 && n <= 65535) {
-            return n;
-        }
-    }
-    return null;
-}
-
-function pickFirstPortInRangeNotExcluded(exclude, lo, hi) {
-    for (let p = lo; p <= hi; p += 1) {
-        if (!exclude.has(p)) {
-            return { port: p, via: "fallback_range_first_free" };
-        }
-    }
-    return null;
-}
-
-function getPortsUsedByOtherSocksOutbounds(config, exceptTag) {
-    const set = new Set();
+function getConflictingSocksPorts(config, exceptTag) {
+    const used = new Set();
     const outbounds = config?.outbounds;
     if (!Array.isArray(outbounds)) {
-        return set;
+        return used;
     }
     for (let i = 0; i < outbounds.length; i += 1) {
         const ob = outbounds[i];
-        if (
-            ob
-            && ob.type === "socks"
-            && typeof ob.tag === "string"
-            && ob.tag !== exceptTag
-            && ob.server_port != null
-        ) {
-            const p = Number(ob.server_port);
-            if (Number.isFinite(p) && p > 0) {
-                set.add(p);
-            }
+        if (!ob || ob.type !== "socks" || ob.server_port == null) {
+            continue;
         }
+        if (exceptTag != null && ob.tag === exceptTag) {
+            continue;
+        }
+        used.add(Number(ob.server_port));
     }
-    return set;
+    return used;
 }
 
-function writeSocksOutboundLocalPort(tag, serverPort) {
-    const raw = fs.readFileSync(CONFIG_PATH, "utf8");
-    const config = JSON.parse(raw);
-    if (!Array.isArray(config.outbounds)) {
+function applySocksPortToConfig(config, tag, port) {
+    const outbounds = config?.outbounds;
+    if (!Array.isArray(outbounds)) {
         throw new Error("配置缺少 outbounds");
     }
+    const n = Number(port);
+    if (!Number.isFinite(n) || n <= 0) {
+        throw new Error("无效端口: " + port);
+    }
     let found = false;
-    for (let i = 0; i < config.outbounds.length; i += 1) {
-        const ob = config.outbounds[i];
+    for (let i = 0; i < outbounds.length; i += 1) {
+        const ob = outbounds[i];
         if (ob && ob.type === "socks" && ob.tag === tag) {
-            if (typeof ob.server === "string" && ob.server.trim() !== "") {
-                ob.server = ob.server.trim();
-            } else {
-                ob.server = "127.0.0.1";
-            }
-            ob.server_port = Number(serverPort);
+            ob.server = "127.0.0.1";
+            ob.server_port = n;
             found = true;
             break;
         }
     }
     if (!found) {
-        throw new Error("未找到 SOCKS 出站 tag: " + tag);
-    }
-    fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
-}
-
-async function getTodayProxyById(id) {
-    const result = await getProxy();
-    const list = Array.isArray(result?.data)
-        ? result.data
-        : Array.isArray(result?.proxy?.data)
-            ? result.proxy.data
-            : [];
-    const sid = String(id);
-    for (let i = 0; i < list.length; i += 1) {
-        if (String(list[i]?.id) === sid) {
-            return list[i];
-        }
-    }
-    return null;
-}
-
-function parseOnlineCell(s) {
-    const t = String(s || "").trim().toLowerCase();
-    if (t === "online") {
-        return true;
-    }
-    if (t === "offline") {
-        return false;
-    }
-    return null;
-}
-
-/**
- * 解析 `9proxy port -s` 表格输出为与原先 port_status 相近的对象列表。
- * 列：BINDING | CITY | PUBLIC IP | ONLINE | STATUS
- */
-function parse9proxyPortCliTable(stdout) {
-    const rows = [];
-    const lines = String(stdout || "").split(/\r?\n/);
-    for (let i = 0; i < lines.length; i += 1) {
-        const line = lines[i];
-        const trimmed = line.trim();
-        if (!trimmed.includes("|") || trimmed.startsWith("+")) {
-            continue;
-        }
-        const cells = line.split("|").map((c) => String(c).trim());
-        if (cells.length < 6) {
-            continue;
-        }
-        const binding = cells[1];
-        const city = cells[2];
-        const publicIp = cells[3];
-        const onlineCell = cells[4];
-        const status = cells[5];
-        if (/^BINDING$/i.test(binding)) {
-            continue;
-        }
-        if (!binding || !binding.includes(":")) {
-            continue;
-        }
-        const port = parsePortFromBindingAddress(binding);
-        if (port == null) {
-            continue;
-        }
-        const online = parseOnlineCell(onlineCell);
-        rows.push({
-            address: binding,
-            binding,
-            city,
-            public_ip: publicIp,
-            online,
-            status,
-            ip_city: city
-        });
-    }
-    return rows;
-}
-
-async function fetchNinePortStatusRows() {
-    try {
-        const { stdout } = await execAsync(NINEPROXY_PORT_CLI, {
-            timeout: 20000,
-            maxBuffer: 10 * 1024 * 1024,
-            env: process.env
-        });
-        return parse9proxyPortCliTable(stdout);
-    } catch {
-        return [];
+        throw new Error("未找到 SOCKS 出站: " + tag);
     }
 }
 
-function pickPortMatchingPublicIp(rows, targetIp, exclude) {
-    const ip = String(targetIp || "").trim();
-    if (!ip || !Array.isArray(rows)) {
-        return null;
-    }
-    for (let onlineOnly = 0; onlineOnly < 2; onlineOnly += 1) {
-        const requireOnline = onlineOnly === 0;
-        for (let i = 0; i < rows.length; i += 1) {
-            const row = rows[i];
-            const pip = String(row?.public_ip || "").trim();
-            if (pip !== ip) {
-                continue;
-            }
-            if (requireOnline && row.online !== true) {
-                continue;
-            }
-            const port = extractLocalListenPort(row);
-            if (port == null || exclude.has(port)) {
-                continue;
-            }
-            return {
-                port,
-                via: requireOnline ? "9proxy_cli_public_ip" : "9proxy_cli_public_ip_relaxed_online"
-            };
-        }
-    }
-    return null;
+async function nineProxyPortStatusRows() {
+    const r = await axios.get(`${NINE_PROXY_BASE}/api/port_status`, {
+        params: { t: 2 },
+        timeout: 15000
+    });
+    return Array.isArray(r.data?.data) ? r.data.data : [];
 }
 
-/** 选 STATUS=Free 且未被其它出站占用的端口 */
-function pickFirstFreePortFromCliRows(rows, exclude) {
-    if (!Array.isArray(rows)) {
+async function nineProxyPortCheckAllRows() {
+    const r = await axios.get(`${NINE_PROXY_BASE}/api/port_check`, {
+        params:
+            {
+                t: 2,
+                ports: "all"
+            },
+        timeout: 20000
+    });
+    return Array.isArray(r.data?.data) ? r.data.data : [];
+}
+
+async function nineProxyPortFreeOk(port) {
+    const r = await axios.get(`${NINE_PROXY_BASE}/api/port_free`, {
+        params: { t: 2,ports: String(port) },
+        timeout: 8000
+    });
+    return r.data && r.data.error === false;
+}
+
+function pickPortFromPortStatus(
+    rows,
+    targetPublicIp,
+    conflictingPorts,
+    currentPort
+) {
+    const tip = String(targetPublicIp || "").trim();
+    if (!tip || !Array.isArray(rows)) {
         return null;
     }
     for (let i = 0; i < rows.length; i += 1) {
         const row = rows[i];
-        const st = String(row.status || "").trim().toLowerCase();
-        if (st !== "free") {
+        if (!row || row.online === false) {
             continue;
         }
-        const port = extractLocalListenPort(row);
-        if (port == null || exclude.has(port)) {
+        const pub = String(row.public_ip || "").trim();
+        if (pub !== tip) {
             continue;
         }
-        return { port, via: "9proxy_cli_free" };
+        const port = parsePortFromBindingAddress(row.address);
+        if (port == null) {
+            continue;
+        }
+        if (!conflictingPorts.has(port) || port === currentPort) {
+            return port;
+        }
     }
     return null;
 }
 
-async function resolveForwardPortForProxy(publicIp, otherOccupiedPorts) {
-    const exclude = otherOccupiedPorts instanceof Set ? otherOccupiedPorts : new Set(otherOccupiedPorts);
-    const targetIp = String(publicIp || "").trim();
-
-    let statusRows = [];
-    try {
-        statusRows = await fetchNinePortStatusRows();
-    } catch {
-        statusRows = [];
+async function pickPortViaPortFreeScan(conflictingPorts) {
+    for (let p = LOCAL_SOCKS_SCAN_MIN; p <= LOCAL_SOCKS_SCAN_MAX; p += 1) {
+        if (conflictingPorts.has(p)) {
+            continue;
+        }
+        try {
+            if (await nineProxyPortFreeOk(p)) {
+                return p;
+            }
+        } catch {
+            // try next
+        }
     }
-
-    const byIp = pickPortMatchingPublicIp(statusRows, targetIp, exclude);
-    if (byIp) {
-        return byIp;
-    }
-
-    const fromFree = pickFirstFreePortFromCliRows(statusRows, exclude);
-    if (fromFree) {
-        return fromFree;
-    }
-
-    return pickFirstPortInRangeNotExcluded(exclude, 60000, 65535);
+    return null;
 }
 
-function getSingboxRouteUsers() {
-    try {
-        if (!fs.existsSync(CONFIG_PATH)) {
-            return {
-                ok: false,
-                error: "配置文件不存在: " + CONFIG_PATH,
-                users: []
-            };
-        }
-        const config = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
-        const wifiMap = getOutboundWifiNameMap();
-        const authByTag = collectAuthUsersByOutboundTag(config);
-        const outbounds = config?.outbounds;
-        const users = [];
-        if (!Array.isArray(outbounds)) {
-            return { ok: true, users: [] };
-        }
-        for (let i = 0; i < outbounds.length; i += 1) {
-            const ob = outbounds[i];
-            if (
-                ob
-                && ob.type === "socks"
-                && typeof ob.tag === "string"
-                && ob.server
-                && ob.server_port != null
-            ) {
-                const tag = ob.tag;
-                const wn = wifiMap[tag];
-                const authList = authByTag[tag] || [];
-                users.push({
-                    outbound: tag,
-                    auth_user: authList,
-                    socks_address: `${ob.server}:${ob.server_port}`,
-                    wifi_name: typeof wn === "string" && wn.trim() !== "" ? wn.trim() : ""
-                });
-            }
-        }
-        return { ok: true, users };
-    } catch (e) {
-        return {
-            ok: false,
-            error: e.message || String(e),
-            users: []
-        };
+function pickPortFromPortCheckAll(rows, conflictingPorts) {
+    if (!Array.isArray(rows)) {
+        return null;
     }
+    const candidates = [];
+    for (let i = 0; i < rows.length; i += 1) {
+        const row = rows[i];
+        if (!row || row.online !== true || row.port == null) {
+            continue;
+        }
+        const p = Number(row.port);
+        if (!Number.isFinite(p) || p <= 0 || conflictingPorts.has(p)) {
+            continue;
+        }
+        candidates.push(p);
+    }
+    candidates.sort((a, b) => a - b);
+    return candidates.length ? candidates[0] : null;
+}
+
+async function resolveProxyIpForId(id, explicitIp) {
+    const ip = String(explicitIp || "").trim();
+    if (ip) {
+        return ip;
+    }
+    const res = await axios.get(`${NINE_PROXY_BASE}/api/today_list`, {
+        params: { t: 2, limit: 500 },
+        timeout: 15000
+    });
+    const body = res.data;
+    const arr = Array.isArray(body?.data)
+        ? body.data
+        : Array.isArray(body?.proxy?.data)
+          ? body.proxy.data
+          : [];
+    const hit = arr.find((p) => String(p?.id) === String(id));
+    return hit?.ip ? String(hit.ip).trim() : "";
 }
 
 function updateV2Ray(proxy) {
@@ -655,6 +513,11 @@ app.get("/api/proxy-list", async (req, res) => {
 app.get("/api/switch-proxy", async (req, res) => {
     const id = req.query.id;
     const tag = req.query.tag != null ? String(req.query.tag).trim() : "";
+    const explicitIp =
+        req.query.ip != null && String(req.query.ip).trim() !== ""
+            ? String(req.query.ip).trim()
+            : "";
+
     if (!id) {
         return res.status(400).json({
             success: false,
@@ -664,88 +527,84 @@ app.get("/api/switch-proxy", async (req, res) => {
     if (!tag) {
         return res.status(400).json({
             success: false,
-            msg: "缺少出站 tag（请选择要写入 config 的 SOCKS 用户）"
+            msg: "缺少出站 tag（本地 SOCKS 出站）"
         });
     }
 
-    let targetIp = req.query.ip != null ? String(req.query.ip).trim() : "";
-
     try {
-        if (!fs.existsSync(CONFIG_PATH)) {
+        const proxyIp = await resolveProxyIpForId(id, explicitIp);
+        if (!proxyIp) {
+            return res.status(400).json({
+                success: false,
+                msg: "无法解析代理 IP，请在列表中刷新后重试或显式传入 ip 参数"
+            });
+        }
+
+        const raw = fs.readFileSync(CONFIG_PATH, "utf8");
+        const config = JSON.parse(raw);
+        const conflicting = getConflictingSocksPorts(config, tag);
+        const currentRow = Array.isArray(config.outbounds)
+            ? config.outbounds.find((o) => o && o.type === "socks" && o.tag === tag)
+            : null;
+        const currentPort =
+            currentRow && currentRow.server_port != null
+                ? Number(currentRow.server_port)
+                : null;
+        if (!currentRow) {
+            return res.status(400).json({
+                success: false,
+                msg: "未找到 SOCKS 出站: " + tag
+            });
+        }
+
+        const statusRows = await nineProxyPortStatusRows();
+        let chosen = pickPortFromPortStatus(
+            statusRows,
+            proxyIp,
+            conflicting,
+            currentPort
+        );
+
+        if (chosen == null) {
+            chosen = await pickPortViaPortFreeScan(conflicting);
+        }
+        if (chosen == null) {
+            const checkRows = await nineProxyPortCheckAllRows();
+            chosen = pickPortFromPortCheckAll(checkRows, conflicting);
+        }
+        if (chosen == null) {
             return res.status(500).json({
                 success: false,
-                msg: "配置文件不存在: " + CONFIG_PATH
-            });
-        }
-        const config = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
-        const socksTags = new Set();
-        if (Array.isArray(config.outbounds)) {
-            for (let i = 0; i < config.outbounds.length; i += 1) {
-                const ob = config.outbounds[i];
-                if (ob && ob.type === "socks" && typeof ob.tag === "string") {
-                    socksTags.add(ob.tag);
-                }
-            }
-        }
-        if (!socksTags.has(tag)) {
-            return res.status(400).json({
-                success: false,
-                msg: "无效的出站 tag，配置中无对应 SOCKS 出站"
+                msg: "无可用本地端口（port_status / port_free / port_check 均未找到）"
             });
         }
 
-        if (!targetIp) {
-            const row = await getTodayProxyById(id);
-            targetIp = String(row?.ip || "").trim();
-        }
-        if (!targetIp) {
-            return res.status(400).json({
-                success: false,
-                msg: "无法解析代理公网 IP，请从列表切换或附带 ip 参数"
-            });
-        }
-
-        const otherPorts = getPortsUsedByOtherSocksOutbounds(config, tag);
-        const picked = await resolveForwardPortForProxy(targetIp, otherPorts);
-        if (!picked) {
-            return res.status(502).json({
-                success: false,
-                msg: "未找到可用本地端口（60000–65535 均被其它 SOCKS 出站占用，请检查 config）",
-                error: "no_port"
-            });
-        }
-        const port = picked.port;
-
-        const result = await axios.get(`${NINE_PROXY_API}/api/forward`, {
+        const result = await axios.get(`${NINE_PROXY_BASE}/api/forward`, {
             params: {
                 t: 2,
-                port,
+                port: chosen,
                 id
             },
-            timeout: 30000
+            timeout: 20000
         });
 
-        const forwardBody = result.data;
-        const forwardOk = forwardBody && forwardBody.error === false;
-        if (!forwardOk) {
+        if (result.data?.error === true) {
             return res.status(502).json({
                 success: false,
-                msg: forwardBody?.message || "9proxy forward 失败",
-                data: forwardBody,
-                port,
-                via: picked.via
+                msg: result.data?.message || "9proxy forward 失败",
+                data: result.data
             });
         }
 
-        writeSocksOutboundLocalPort(tag, port);
+        applySocksPortToConfig(config, tag, chosen);
+        fs.writeFileSync(CONFIG_PATH, `${JSON.stringify(config, null, 2)}\n`);
 
-        return res.json({
+        res.json({
             success: true,
-            msg: "切换成功（已更新 sing-box 配置中的 SOCKS 端口）",
-            port,
+            msg: "切换成功（已写入 sing-box 配置）",
+            port: chosen,
             tag,
-            via: picked.via,
-            data: forwardBody
+            data: result.data
         });
     } catch (e) {
         res.status(500).json({
@@ -775,7 +634,11 @@ app.get("/api/singbox-users", (req, res) => {
 
 app.get("/api/port_status", async (req, res) => {
     try {
-        const list = await fetchNinePortStatusRows();
+        const r = await axios.get(`${NINE_PROXY_BASE}/api/port_status?t=2`, {
+            timeout: 15000
+        });
+        const body = r.data;
+        const list = Array.isArray(body?.data) ? body.data : [];
         const enriched = await Promise.all(
             list.map(async (row) => {
                 if (!row || typeof row !== "object") {
@@ -799,14 +662,13 @@ app.get("/api/port_status", async (req, res) => {
             })
         );
         res.json({
-            error: false,
-            message: "ok",
+            ...body,
             data: enriched
         });
     } catch (e) {
         res.status(502).json({
             error: true,
-            message: e.message || "9proxy port 命令执行或解析失败",
+            message: e.message || "port_status 请求失败",
             data: []
         });
     }
@@ -838,7 +700,7 @@ app.get("/api/add-proxy", async (req, res) => {
         if (!params.port) params.port = "60000";
         if (!params.t) params.t = "2";
 
-        const result = await axios.get(`${NINE_PROXY_API}/api/proxy`, { params });
+        const result = await axios.get(`${NINE_PROXY_BASE}/api/proxy`, { params });
         res.json({
             success: true,
             msg: "新增代理请求成功",
@@ -1105,7 +967,7 @@ app.get("/", (req, res) => {
     <main class="main-content">
       <section id="panelUsers" class="panel active">
         <h1>用户管理</h1>
-        <p class="user-hint">用户列表来自 <code>config.json</code> 的 SOCKS 出站；WiFi 名称仅用于界面展示，来自 <code>proxy-user-meta.json</code>。端口与出口 IP 等由本机命令 <code>9proxy port -s</code>（环境变量 <code>NINEPROXY_PORT_CLI</code> 可覆盖）经 <code>/api/port_status</code> 解析，并与公网 IP 地理信息共同补齐。</p>
+        <p class="user-hint">用户行来自 <code>route.rules</code> 的 <code>outbound</code>，与 SOCKS 出站一一对应；WiFi 名称仅用于界面展示，来自 <code>proxy-user-meta.json</code>（由 setup 脚本写入，勿写入 sing-box 路由）。出口 IP、国家、州/省、城市由 <code>/api/port_status</code>（转发 9proxy 8080）与公网 IP 地理信息共同补齐。</p>
         <div class="toolbar">
           <button type="button" id="refreshUsersBtn">刷新用户</button>
           <span class="status" id="userStatusText">加载中...</span>
@@ -1159,7 +1021,7 @@ app.get("/", (req, res) => {
             <h3 style="margin-top:0;">切换代理</h3>
             <p class="status" id="switchProxyMeta" style="margin:0 0 10px;font-size:13px;color:#374151;"></p>
             <div class="modal-row">
-              <label for="switchUserSelect">绑定到 sing-box SOCKS 出站（将写入 config 端口）</label>
+              <label for="switchUserSelect">绑定出站（sing-box SOCKS tag）</label>
               <select id="switchUserSelect"></select>
             </div>
             <div class="status" id="switchStatusText"></div>
@@ -1256,6 +1118,16 @@ app.get("/", (req, res) => {
       return String(s || "").replace(/\s+/g, "").toLowerCase();
     }
 
+    function parsePortFromSocks(addr) {
+      const s = String(addr || "").trim();
+      const idx = s.lastIndexOf(":");
+      if (idx < 0) {
+        return null;
+      }
+      const p = Number(s.slice(idx + 1));
+      return Number.isFinite(p) && p > 0 ? p : null;
+    }
+
     function setSwitchStatus(text) {
       switchStatusText.textContent = text;
     }
@@ -1277,7 +1149,7 @@ app.get("/", (req, res) => {
     function renderUserRows(users, portRows) {
       portRows = Array.isArray(portRows) ? portRows : [];
       if (!Array.isArray(users) || users.length === 0) {
-        userBody.innerHTML = '<tr><td colspan="7">未读取到 SOCKS 出站用户</td></tr>';
+        userBody.innerHTML = '<tr><td colspan="7">暂无路由规则或未读取到用户条目</td></tr>';
         return;
       }
       userBody.innerHTML = users.map((row) => {
@@ -1339,7 +1211,7 @@ app.get("/", (req, res) => {
         }
         const users = Array.isArray(userData.users) ? userData.users : [];
         renderUserRows(users, portRows);
-        let msg = "共 " + users.length + " 个 SOCKS 出站；port_status " + portRows.length + " 条";
+        let msg = "共 " + users.length + " 个用户；port_status " + portRows.length + " 条";
         if (portNote) {
           msg += " · " + portNote;
         }
@@ -1502,16 +1374,16 @@ app.get("/", (req, res) => {
             continue;
           }
           const addr = String(u.socks_address || "").trim();
-          const wifiPrefix =
+          const port = parsePortFromSocks(addr);
+          const wifiBit =
             u.wifi_name && String(u.wifi_name).trim() !== ""
-              ? escapeHtml(String(u.wifi_name).trim()) + " · "
+              ? String(u.wifi_name).trim() + " · "
               : "";
-          const label =
-            wifiPrefix +
-            tag +
-            "（" +
-            addr +
-            "）";
+          const tail =
+            addr && port != null
+              ? addr + "，端口 " + port
+              : addr || "无 SOCKS 地址";
+          const label = wifiBit + tag + "（" + tail + "）";
           parts.push(
             '<option value="' +
               escapeHtml(tag) +
@@ -1524,7 +1396,7 @@ app.get("/", (req, res) => {
         }
         switchUserSelect.innerHTML = parts.length
           ? parts.join("")
-          : '<option value="">无可用用户（请检查 sing-box SOCKS 出站）</option>';
+          : '<option value="">无可用出站（请检查 route.rules / SOCKS 出站）</option>';
 
         if (parts.length) {
           const bindNorm = row && row.binding ? normAddr(row.binding) : "";
@@ -1551,7 +1423,7 @@ app.get("/", (req, res) => {
     async function confirmSwitchProxy() {
       const opt = switchUserSelect.selectedOptions[0];
       if (!opt || !opt.value) {
-        setSwitchStatus("请选择要绑定的用户");
+        setSwitchStatus("请选择要绑定的出站");
         return;
       }
       const tag = opt.value;
@@ -1586,7 +1458,7 @@ app.get("/", (req, res) => {
             selfRow.binding +
             "），将改绑到出站 " +
             tag +
-            "（端口由系统自动选择并写入 config）。"
+            "（sing-box 配置中的本地 SOCKS 端口将由服务端自动选择）。"
         );
       }
       if (hints.length > 0) {
@@ -1598,8 +1470,8 @@ app.get("/", (req, res) => {
 
       try {
         setSwitchStatus("正在切换...");
-        const ipQ =
-          selfRow && selfRow.ip != null && String(selfRow.ip).trim() !== ""
+        const ipParam =
+          selfRow && selfRow.ip && String(selfRow.ip).trim() !== ""
             ? "&ip=" + encodeURIComponent(String(selfRow.ip).trim())
             : "";
         const resp = await fetch(
@@ -1607,18 +1479,18 @@ app.get("/", (req, res) => {
             encodeURIComponent(pendingSwitchProxyId) +
             "&tag=" +
             encodeURIComponent(tag) +
-            ipQ
+            ipParam
         );
         const data = await resp.json();
-        const forwardOk = data?.data?.error === false;
+        const forwardOk =
+          data?.data?.error === false || data?.data?.error == null;
         if (!resp.ok || data.success === false || !forwardOk) {
           throw new Error(data.msg || data.error || "切换失败");
         }
-        const detailMsg =
-          (data?.data?.message ? "（" + data.data.message + "）" : "") +
-          (data.port != null ? " 本地端口 " + data.port : "") +
-          (data.via ? " · " + data.via : "");
-        setStatus("切换成功" + detailMsg);
+        const portHint =
+          data.port != null ? "，本地端口 " + String(data.port) : "";
+        const detailMsg = data?.data?.message ? "（" + data.data.message + "）" : "";
+        setStatus("切换成功" + portHint + detailMsg);
         switchProxyDialog.close();
         await loadProxyList();
       } catch (err) {
