@@ -519,6 +519,25 @@ function isOutboundTypeDirect(ob) {
     return String(ob?.type ?? "").toLowerCase() === "direct";
 }
 
+/** 与 `socksAddressForOutboundTag` 写入的「直连」展示串对齐（兼容不可见字符、NFKC） */
+function isDirectSocksAddressLabel(addr) {
+    const s = String(addr ?? "")
+        .replace(/^\uFEFF/, "")
+        .replace(/[\u200B-\u200D\uFEFF]/g, "")
+        .trim();
+    if (s === "直连") {
+        return true;
+    }
+    try {
+        if (s.normalize("NFKC") === "直连") {
+            return true;
+        }
+    } catch {
+        // ignore
+    }
+    return /^direct$/i.test(s);
+}
+
 /**
  * 在配置中查找指定 tag 的 SOCKS 出站对象。
  * @param {object} config 已解析的 sing-box JSON
@@ -563,8 +582,26 @@ async function enrichSingboxUsersWithSocksGeo(users, config) {
     const getMachineEgressOverlay = async () => {
         if (machineEgressOverlayPromise == null) {
             machineEgressOverlayPromise = (async () => {
-                const probe = await fetchMachinePublicIp();
-                if (!probe.ok || !probe.exitIp) {
+                try {
+                    const probe = await fetchMachinePublicIp();
+                    if (!probe.ok || !probe.exitIp) {
+                        return {
+                            public_ip: "",
+                            ip_country: "",
+                            ip_region: "",
+                            ip_city: "",
+                            online: false
+                        };
+                    }
+                    const geo = await getIpGeo(probe.exitIp);
+                    return {
+                        public_ip: probe.exitIp,
+                        ip_country: geo.country || "",
+                        ip_region: geo.region || "",
+                        ip_city: geo.city || "",
+                        online: true
+                    };
+                } catch {
                     return {
                         public_ip: "",
                         ip_country: "",
@@ -573,14 +610,6 @@ async function enrichSingboxUsersWithSocksGeo(users, config) {
                         online: false
                     };
                 }
-                const geo = await getIpGeo(probe.exitIp);
-                return {
-                    public_ip: probe.exitIp,
-                    ip_country: geo.country || "",
-                    ip_region: geo.region || "",
-                    ip_city: geo.city || "",
-                    online: true
-                };
             })();
         }
         return machineEgressOverlayPromise;
@@ -592,17 +621,23 @@ async function enrichSingboxUsersWithSocksGeo(users, config) {
                 if (!tag) {
                     return u;
                 }
-                if (String(u.socks_address || "").trim() === "直连") {
-                    const ovl = await getMachineEgressOverlay();
-                    return {
-                        ...u,
-                        port_status_overlay: ovl,
-                        outbound_egress: "direct"
-                    };
-                }
                 const anyOb = getOutboundObForTag(config, tag);
-                if (anyOb && isOutboundTypeDirect(anyOb)) {
-                    const ovl = await getMachineEgressOverlay();
+                if (
+                    isDirectSocksAddressLabel(u.socks_address)
+                    || (anyOb && isOutboundTypeDirect(anyOb))
+                ) {
+                    let ovl;
+                    try {
+                        ovl = await getMachineEgressOverlay();
+                    } catch {
+                        ovl = {
+                            public_ip: "",
+                            ip_country: "",
+                            ip_region: "",
+                            ip_city: "",
+                            online: false
+                        };
+                    }
                     return {
                         ...u,
                         port_status_overlay: ovl,
@@ -693,10 +728,13 @@ function getSingboxRouteUsers() {
         const users = [];
         for (let i = 0; i < rules.length; i += 1) {
             const rule = rules[i];
-            if (!rule || typeof rule.outbound !== "string") {
+            if (!rule) {
                 continue;
             }
-            const tag = rule.outbound;
+            const tag = String(rule.outbound ?? "").trim();
+            if (!tag) {
+                continue;
+            }
             const wn = wifiMap[tag];
             users.push({
                 outbound: tag,
@@ -2377,6 +2415,20 @@ app.get("/", (req, res) => {
       switchStatusText.textContent = text;
     }
 
+    function isDirectSocksAddressClient(addr) {
+      const s = String(addr ?? "")
+        .replace(/[\u200B-\u200D\uFEFF]/g, "")
+        .trim();
+      if (s === "直连") {
+        return true;
+      }
+      try {
+        return s.normalize("NFKC") === "直连";
+      } catch {
+        return false;
+      }
+    }
+
     function matchPortRow(portRows, socksAddr) {
       const target = normAddr(socksAddr);
       if (!target) {
@@ -2404,7 +2456,7 @@ app.get("/", (req, res) => {
             : null;
         const isDirectUser =
           String(row.outbound_egress || "") === "direct" ||
-          String(row.socks_address || "").trim() === "直连";
+          isDirectSocksAddressClient(row.socks_address);
         const ps =
           overlay ||
           (!isDirectUser ? matchPortRow(portRows, row.socks_address) : null);
