@@ -2130,6 +2130,17 @@ app.get("/", (req, res) => {
       color: #9ca3af;
       font-size: 12px;
     }
+    /* 用户管理：9proxy 本机 SOCKS 与自定义远端 SOCKS5（与 Element Plus 主色/成功色一致） */
+    .user-socks-nine {
+      color: #409eff;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .user-socks-custom {
+      color: #67c23a;
+      font-size: 12px;
+      font-weight: 500;
+    }
     .multi-bind-cell {
       white-space: normal;
       word-break: break-all;
@@ -2618,6 +2629,46 @@ app.get("/", (req, res) => {
       }
     }
 
+    /** 从 host:port（或 IPv6 方括号形式）取出 host（小写），供本机 9proxy 与自定义 SOCKS 着色区分 */
+    function socksDisplayHostLower(addr) {
+      const s = String(addr || "").trim();
+      if (!s) {
+        return "";
+      }
+      const idx = s.lastIndexOf(":");
+      if (idx < 0) {
+        return s.toLowerCase();
+      }
+      let host = s.slice(0, idx);
+      if (host.length >= 2 && host[0] === "[" && host[host.length - 1] === "]") {
+        host = host.slice(1, -1);
+      }
+      return host.trim().toLowerCase();
+    }
+
+    function isLocalNineProxySocksAddress(addr) {
+      if (!addr || isDirectSocksAddressClient(addr)) {
+        return false;
+      }
+      const h = socksDisplayHostLower(addr);
+      return h === "127.0.0.1" || h === "localhost" || h === "::1";
+    }
+
+    /** 用户管理绑定地址行 CSS class */
+    function userBindSocksClass(row) {
+      const addr = String(row.socks_address || "").trim();
+      if (!addr) {
+        return "";
+      }
+      if (isDirectSocksAddressClient(addr) || String(row.outbound_egress || "") === "direct") {
+        return "muted-cell";
+      }
+      if (isLocalNineProxySocksAddress(addr)) {
+        return "user-socks-nine";
+      }
+      return "user-socks-custom";
+    }
+
     function matchPortRow(portRows, socksAddr) {
       const target = normAddr(socksAddr);
       if (!target) {
@@ -2666,8 +2717,9 @@ app.get("/", (req, res) => {
         } else if (isDirectUser) {
           onlineCell = '<span class="muted-cell">—</span>';
         }
-        const bindHint = row.socks_address
-          ? '<div class="muted-cell">' + escapeHtml(row.socks_address) + "</div>"
+        const addrRaw = row.socks_address ? String(row.socks_address).trim() : "";
+        const bindHint = addrRaw
+          ? '<div class="' + userBindSocksClass(row) + '">' + escapeHtml(addrRaw) + "</div>"
           : "";
         const outTag = String(row.outbound || "");
         const tagAttr = escapeHtml(outTag);
@@ -2745,11 +2797,14 @@ app.get("/", (req, res) => {
           (ip || "-") +
           " · ID " +
           id;
+        const optColor = isCustom ? "#67C23A" : "#409EFF";
         parts.push(
           '<option value="' +
             escapeHtml(id) +
             '" data-ip="' +
             escapeHtml(ip) +
+            '" style="color:' +
+            optColor +
             '">' +
             escapeHtml(label) +
             "</option>"
