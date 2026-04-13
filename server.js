@@ -1086,15 +1086,82 @@ app.get("/", (req, res) => {
       line-height: 1.45;
       max-width: 220px;
     }
-    .wifi-edit-wrap {
+    .user-table th.wifi-col-head,
+    .user-table td.wifi-td {
+      width: 1%;
+      white-space: nowrap;
+      vertical-align: top;
+    }
+    .wifi-cell-inner {
+      max-width: 110px;
+    }
+    .wifi-cell-inner.wifi-expanded {
+      max-width: 204px;
+    }
+    .wifi-line {
       display: flex;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+    }
+    .wifi-text {
+      flex: 1;
+      min-width: 0;
+      max-width: 72px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+    .wifi-text-empty {
+      color: #9ca3af;
+    }
+    .wifi-toggle {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      margin: 0;
+      border-radius: 6px;
+      background: #f3f4f6;
+      color: #374151;
+      border: 1px solid #e5e7eb;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .wifi-toggle:hover {
+      background: #e5e7eb;
+      color: #111827;
+    }
+    .wifi-toggle svg {
+      display: block;
+    }
+    .wifi-cell-inner .wifi-ico-close {
+      display: none;
+    }
+    .wifi-cell-inner.wifi-expanded .wifi-ico-edit {
+      display: none;
+    }
+    .wifi-cell-inner.wifi-expanded .wifi-ico-close {
+      display: block;
+    }
+    .wifi-cell-inner .wifi-editor {
+      display: none;
       flex-direction: column;
       gap: 6px;
-      align-items: flex-start;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed #e5e7eb;
+      max-width: 200px;
+    }
+    .wifi-cell-inner.wifi-expanded .wifi-editor {
+      display: flex;
     }
     .wifi-name-input {
       width: 100%;
-      max-width: 220px;
+      max-width: 200px;
       box-sizing: border-box;
       border: 1px solid #d1d5db;
       border-radius: 6px;
@@ -1108,6 +1175,7 @@ app.get("/", (req, res) => {
       font-size: 12px;
       border-radius: 6px;
       cursor: pointer;
+      align-self: flex-start;
     }
     .wifi-save-btn:hover {
       background: #374151;
@@ -1262,7 +1330,7 @@ app.get("/", (req, res) => {
     <main class="main-content">
       <section id="panelUsers" class="panel active">
         <h1>用户管理</h1>
-        <p class="user-hint">用户行来自 <code>route.rules</code> 的 <code>outbound</code>，与 SOCKS 出站一一对应；WiFi 名称写入 <code>proxy-user-meta.json</code> 的 <code>wifi_by_outbound</code>，可在下表编辑后点「保存」（留空并保存可清除备注），勿写入 sing-box 路由。出口 IP、国家、州/省、城市由 <code>/api/port_status</code> 与公网 IP 地理信息补齐。</p>
+        <p class="user-hint">用户行来自 <code>route.rules</code> 的 <code>outbound</code>，与 SOCKS 出站一一对应；WiFi 名称写入 <code>proxy-user-meta.json</code> 的 <code>wifi_by_outbound</code>。点击该行右侧<strong>铅笔</strong>展开输入框与「保存」，<strong>关闭</strong>图标可收起不保存；留空后保存可清除备注。出口 IP、国家、州/省、城市由 <code>/api/port_status</code> 与公网 IP 地理信息补齐。</p>
         <div class="toolbar">
           <button type="button" id="refreshUsersBtn">刷新用户</button>
           <span class="status" id="userStatusText">加载中...</span>
@@ -1271,7 +1339,7 @@ app.get("/", (req, res) => {
           <thead>
             <tr>
               <th style="width:120px;">用户 ID</th>
-              <th style="min-width:200px;">WiFi 名称</th>
+              <th class="wifi-col-head">WiFi</th>
               <th style="width:130px;">出口 IP</th>
               <th style="width:100px;">IP 国家</th>
               <th style="width:120px;">IP 州/省</th>
@@ -1465,21 +1533,43 @@ app.get("/", (req, res) => {
         const outTag = String(row.outbound || "");
         const tagAttr = escapeHtml(outTag);
         const wifiVal = escapeHtml(String(row.wifi_name || "").trim());
+        const wnRaw = String(row.wifi_name || "").trim();
+        let wifiDisplay;
+        if (wnRaw !== "") {
+          const esc = escapeHtml(wnRaw);
+          wifiDisplay = '<span class="wifi-text" title="' + esc + '">' + esc + "</span>";
+        } else {
+          wifiDisplay =
+            '<span class="wifi-text wifi-text-empty" title="\u672a\u8bbe\u7f6e">-</span>';
+        }
         const wifiCell =
-          '<div class="wifi-edit-wrap">' +
+          '<div class="wifi-cell-inner">' +
+          '<div class="wifi-line">' +
+          wifiDisplay +
+          '<button type="button" class="wifi-toggle" aria-label="\u7f16\u8f91\u6216\u5173\u95ed WiFi">' +
+          '<span class="wifi-ico-edit" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></span>' +
+          '<span class="wifi-ico-close" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/></svg></span>' +
+          "</button>" +
+          "</div>" +
+          '<div class="wifi-editor">' +
           '<input type="text" class="wifi-name-input" data-outbound="' +
           tagAttr +
+          '" data-initial="' +
+          wifiVal +
           '" value="' +
           wifiVal +
-          '" placeholder="WiFi 名称" maxlength="128" />' +
+          '" placeholder="WiFi" maxlength="128" />' +
           '<button type="button" class="wifi-save-btn" data-outbound="' +
           tagAttr +
-          '">保存</button>' +
+          '">\u4fdd\u5b58</button>' +
+          "</div>" +
           "</div>";
         return (
           "<tr>" +
           "<td><strong>" + escapeHtml(row.outbound || "-") + "</strong>" + bindHint + "</td>" +
-          "<td>" + wifiCell + "</td>" +
+          '<td class="wifi-td">' +
+          wifiCell +
+          "</td>" +
           "<td>" + (pub || '<span class="muted-cell">-</span>') + "</td>" +
           "<td>" + (cc ? countryFlag(cc) + " " + escapeHtml(cc) : '<span class="muted-cell">-</span>') + "</td>" +
           "<td>" + (reg || '<span class="muted-cell">-</span>') + "</td>" +
@@ -1905,13 +1995,32 @@ app.get("/", (req, res) => {
     navProxies.addEventListener("click", () => showPanel("proxies"));
     refreshUsersBtn.addEventListener("click", loadSingboxUsers);
     userBody.addEventListener("click", async (ev) => {
+      const toggle = ev.target.closest(".wifi-toggle");
+      if (toggle) {
+        const inner = toggle.closest(".wifi-cell-inner");
+        if (!inner) {
+          return;
+        }
+        const expanded = inner.classList.toggle("wifi-expanded");
+        const inp = inner.querySelector(".wifi-name-input");
+        if (expanded) {
+          if (inp) {
+            inp.focus();
+            inp.select();
+          }
+        } else if (inp) {
+          const back = inp.getAttribute("data-initial");
+          inp.value = back != null ? back : "";
+        }
+        return;
+      }
       const btn = ev.target.closest(".wifi-save-btn");
       if (!btn) {
         return;
       }
       const tag = btn.getAttribute("data-outbound");
-      const tr = btn.closest("tr");
-      const inp = tr && tr.querySelector(".wifi-name-input");
+      const inner = btn.closest(".wifi-cell-inner");
+      const inp = inner && inner.querySelector(".wifi-name-input");
       if (!tag || !inp) {
         return;
       }
