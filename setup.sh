@@ -25,84 +25,92 @@ else
     sudo apt install -y wget curl git jq || die "安装基础依赖失败"
 fi
 
-echo "========== Step 1: 安装 9proxy =========="
+echo "========== Step 1: 9proxy（可选）=========="
 
-DEB_FILE="9proxy-linux-debian-amd64.deb"
-DOWNLOAD_URL="https://static.9proxy-cdn.net/download/latest/linux/9proxy-linux-debian-amd64.deb"
+INSTALL_NINEPROXY=0
+read -r -p "是否安装并配置 9proxy（下载 deb、登录、监听 8080 API）？[y/N] " _nine_ans
+case "${_nine_ans//$'\r'/}" in
+    [yY]|[yY][eE][sS]) INSTALL_NINEPROXY=1 ;;
+    *) INSTALL_NINEPROXY=0 ;;
+esac
 
-if have_cmd 9proxy; then
-    echo "9proxy 已安装，跳过 deb 下载与 apt 安装"
-else
-    if [ -f "$DEB_FILE" ]; then
-        echo "文件已存在，跳过下载: $DEB_FILE"
+if [ "$INSTALL_NINEPROXY" -eq 1 ]; then
+    DEB_FILE="9proxy-linux-debian-amd64.deb"
+    DOWNLOAD_URL="https://static.9proxy-cdn.net/download/latest/linux/9proxy-linux-debian-amd64.deb"
+
+    if have_cmd 9proxy; then
+        echo "9proxy 已安装，跳过 deb 下载与 apt 安装"
     else
-        echo "开始下载 9proxy..."
-        wget "$DOWNLOAD_URL" -O "$DEB_FILE" || die "下载 9proxy deb 失败"
-        [ -s "$DEB_FILE" ] || die "下载的 deb 文件为空: $DEB_FILE"
+        if [ -f "$DEB_FILE" ]; then
+            echo "文件已存在，跳过下载: $DEB_FILE"
+        else
+            echo "开始下载 9proxy..."
+            wget "$DOWNLOAD_URL" -O "$DEB_FILE" || die "下载 9proxy deb 失败"
+            [ -s "$DEB_FILE" ] || die "下载的 deb 文件为空: $DEB_FILE"
+        fi
+
+        echo "安装 9proxy..."
+        sudo apt install -y ./"$DEB_FILE" || die "安装 9proxy deb 失败"
     fi
 
-    echo "安装 9proxy..."
-    sudo apt install -y ./"$DEB_FILE" || die "安装 9proxy deb 失败"
-fi
+    echo "启动 9proxy 服务..."
+    sudo systemctl start 9proxyd.service || die "启动 9proxyd.service 失败"
 
-echo "启动 9proxy 服务..."
-sudo systemctl start 9proxyd.service || die "启动 9proxyd.service 失败"
+    AUTH_STATE_FILE="${HOME}/.9proxy_auth_state"
 
-AUTH_STATE_FILE="${HOME}/.9proxy_auth_state"
-
-mark_auth_state() {
-    local username="$1"
-    cat >"$AUTH_STATE_FILE" <<EOF
+    mark_auth_state() {
+        local username="$1"
+        cat >"$AUTH_STATE_FILE" <<EOF
 authenticated=1
 username=$username
 updated_at=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 EOF
-}
+    }
 
-clear_auth_state() {
-    rm -f "$AUTH_STATE_FILE"
-}
+    login_9proxy() {
+        local username
+        local password
+        echo "请手动输入 9proxy 账号密码进行登录："
+        read -r -p "Username: " username
+        read -r -s -p "Password: " password
+        echo
+        9proxy auth -u "$username" -p "$password" || die "9proxy 登录失败"
+        mark_auth_state "$username"
+    }
 
-login_9proxy() {
-    local username
-    local password
-    echo "请手动输入 9proxy 账号密码进行登录："
-    read -r -p "Username: " username
-    read -r -s -p "Password: " password
-    echo
-    9proxy auth -u "$username" -p "$password" || die "9proxy 登录失败"
-    mark_auth_state "$username"
-}
+    if [ -f "$AUTH_STATE_FILE" ]; then
+        echo "检测到本地登录状态文件，先按已登录处理: $AUTH_STATE_FILE"
+    else
+        login_9proxy
+    fi
 
-if [ -f "$AUTH_STATE_FILE" ]; then
-    echo "检测到本地登录状态文件，先按已登录处理: $AUTH_STATE_FILE"
+    echo "检查 API 状态..."
+    API_STATUS_OUTPUT="$(9proxy api -d 2>&1 || true)"
+    echo "$API_STATUS_OUTPUT"
+
+    API_STATUS="$(echo "$API_STATUS_OUTPUT" | awk -F: '/API Status/{print $2}' | xargs | tr '[:upper:]' '[:lower:]')"
+    API_PORT="$(echo "$API_STATUS_OUTPUT" | awk -F: '/API Port/{print $2}' | xargs)"
+
+    if [ -z "$API_STATUS" ] || [ -z "$API_PORT" ]; then
+        die "无法从 9proxy api -d 输出中解析 API Status/API Port"
+    fi
+
+    if [ "$API_PORT" != "8080" ]; then
+        echo "API 端口为 $API_PORT，按要求改为 8080 并启动 API..."
+        9proxy api -p 8080 || die "9proxy 设置 API 端口失败"
+        9proxy api -s || die "9proxy 启动 API 失败"
+    elif [[ "$API_STATUS" == "stopped" || "$API_STATUS" == "stop" ]]; then
+        echo "API 端口为 8080 且状态为停止，启动 API..."
+        9proxy api -s || die "9proxy 启动 API 失败"
+    else
+        echo "不满足启动条件（端口=$API_PORT, 状态=$API_STATUS），跳过 API 处理"
+    fi
+
+    echo "========== Step 1（9proxy）完成 =========="
 else
-    login_9proxy
+    echo "已跳过 9proxy：仍可安装本脚本其余部分；sing-box 用户出站将默认为直连（见 Step 7）。"
+    echo "========== Step 1 跳过 =========="
 fi
-
-echo "检查 API 状态..."
-API_STATUS_OUTPUT="$(9proxy api -d 2>&1 || true)"
-echo "$API_STATUS_OUTPUT"
-
-API_STATUS="$(echo "$API_STATUS_OUTPUT" | awk -F: '/API Status/{print $2}' | xargs | tr '[:upper:]' '[:lower:]')"
-API_PORT="$(echo "$API_STATUS_OUTPUT" | awk -F: '/API Port/{print $2}' | xargs)"
-
-if [ -z "$API_STATUS" ] || [ -z "$API_PORT" ]; then
-    die "无法从 9proxy api -d 输出中解析 API Status/API Port"
-fi
-
-if [ "$API_PORT" != "8080" ]; then
-    echo "API 端口为 $API_PORT，按要求改为 8080 并启动 API..."
-    9proxy api -p 8080 || die "9proxy 设置 API 端口失败"
-    9proxy api -s || die "9proxy 启动 API 失败"
-elif [[ "$API_STATUS" == "stopped" || "$API_STATUS" == "stop" ]]; then
-    echo "API 端口为 8080 且状态为停止，启动 API..."
-    9proxy api -s || die "9proxy 启动 API 失败"
-else
-    echo "不满足启动条件（端口=$API_PORT, 状态=$API_STATUS），跳过 API 处理"
-fi
-
-echo "========== Step 1 完成 =========="
 
 
 echo "========== Step 2: 安装 Node.js 20 =========="
@@ -169,7 +177,7 @@ CONFIG_FILE="/etc/v2ray-agent/sing-box/conf/config.json"
 echo "备份 sing-box 配置..."
 sudo cp "$CONFIG_FILE" "${CONFIG_FILE}.bak" || die "备份 sing-box 配置失败"
 
-echo "按入站 UUID 用户生成 SOCKS 出站：tag=用户ID（UUID 首段 8 位），端口 60000 起递增，并写入 auth_user 路由..."
+echo "按入站 UUID 用户生成出站：tag=用户ID（UUID 首段 8 位），类型默认为 direct（直连）；并写入 auth_user 路由..."
 
 read -r -p "WiFi 名称前缀（写入 conf/proxy-user-meta.json，供控制台显示，如 OB → OB-1、OB-2…；留空则清空映射）: " WIFI_NAME_PREFIX
 WIFI_NAME_PREFIX="${WIFI_NAME_PREFIX//$'\r'/}"
@@ -217,17 +225,23 @@ def should_remove_socks(o; r):
     | [
         .[]
         | if (type == "object") and should_remove_socks(.; $rid_tags) then empty else . end
+      ]) as $kept_after_socks_rm
+| ($kept_after_socks_rm
+    | [
+        .[]
+        | if (type != "object") then .
+          elif (((.tag // "") | ascii_downcase) as $tg | ($rid_tags | index($tg)) != null) then empty
+          else .
+          end
       ]) as $kept
 | (if any($kept[]; type == "object" and .tag == "direct")
    then $kept
    else ([{type:"direct",tag:"direct"}] + $kept)
    end) as $ob1
 | ($keys | to_entries | map(. as $e | {
-    type: "socks",
-    tag: ($e.value | split("-")[0] | ascii_downcase),
-    server: "127.0.0.1",
-    server_port: (60000 + $e.key)
-  })) as $new_socks
+    type: "direct",
+    tag: ($e.value | split("-")[0] | ascii_downcase)
+  })) as $new_user_outbounds
 | ($keys | to_entries | map(. as $e | {
     auth_user: (
       [ $all[] | select(account_key(.) == $e.value) | auth_strings(.) ] | add // [] | unique
@@ -235,7 +249,7 @@ def should_remove_socks(o; r):
     outbound: ($e.value | split("-")[0] | ascii_downcase)
   })) as $rules
 | $root
-| .outbounds = ($ob1 + $new_socks)
+| .outbounds = ($ob1 + $new_user_outbounds)
 | .route |= (.rules = $rules | .final = "direct")
 ' "$CONFIG_FILE" >"$TMP_JSON" || die "jq 处理 sing-box 配置失败"
 
