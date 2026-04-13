@@ -55,6 +55,7 @@ if [ "$INSTALL_NINEPROXY" -eq 1 ]; then
 
     echo "启动 9proxy 服务..."
     sudo systemctl start 9proxyd.service || die "启动 9proxyd.service 失败"
+    sudo systemctl enable 9proxyd || die "启用 9proxyd 开机自启失败"
 
     AUTH_STATE_FILE="${HOME}/.9proxy_auth_state"
 

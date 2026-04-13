@@ -10,8 +10,8 @@ const { SocksProxyAgent } = require("socks-proxy-agent");
 const { STATE_CODE_ROWS } = require("./stateCodes");
 
 /**
- * sing-box / 9proxy 简易控制台：聚合本机 9proxy 端口 API、代理列表、按 tag 切换并写 CONFIG_PATH，
- * 并提供 `/` 静态 HTML 管理页。
+ * sing-box / 9proxy 简易控制台：聚合本机 9proxy 端口 API、代理列表、按 tag 切换并写 CONFIG_PATH；
+ * 自定义远端 SOCKS 使用独立接口 `/api/switch-proxy-custom`。根路径 `/` 为静态 HTML 管理页。
  */
 const app = express();
 app.use(express.json({ limit: "64kb" }));
@@ -929,6 +929,66 @@ function parsePortFromBindingAddress(addr) {
     return Number.isFinite(p) && p > 0 ? p : null;
 }
 
+/** 本机 9proxy 转发类 SOCKS 的 `server` 取值（与 `enrichSingboxUsersWithSocksGeo` 本地判断一致） */
+function isLocalNineProxySocksServer(server) {
+    const s = String(server ?? "")
+        .trim()
+        .toLowerCase();
+    return s === "127.0.0.1" || s === "localhost" || s === "::1";
+}
+
+/**
+ * sing-box 配置里使用 `127.0.0.1:port`（类）本机 SOCKS 的出站 tag 列表。
+ * @param {object} config
+ * @param {number|string} port
+ * @returns {string[]}
+ */
+function tagsUsingLocalSocksPort(config, port) {
+    const p = Number(port);
+    if (!Number.isFinite(p) || p <= 0) {
+        return [];
+    }
+    const outbounds = config?.outbounds;
+    if (!Array.isArray(outbounds)) {
+        return [];
+    }
+    const tags = [];
+    for (let i = 0; i < outbounds.length; i += 1) {
+        const ob = outbounds[i];
+        if (!ob || ob.type !== "socks") {
+            continue;
+        }
+        if (!isLocalNineProxySocksServer(ob.server)) {
+            continue;
+        }
+        const sp = Number(ob.server_port);
+        if (!Number.isFinite(sp) || sp !== p) {
+            continue;
+        }
+        const t = String(ob.tag ?? "").trim();
+        if (t && !tags.includes(t)) {
+            tags.push(t);
+        }
+    }
+    return tags;
+}
+
+/**
+ * 是否可对该本地端口调用 9proxy forward 而不影响其它用户：
+ * 无出站占用，或仅有当前 tag 的本机 SOCKS 占用（含独占或「仅自己」复用）。
+ * @param {object} config
+ * @param {string} tag
+ * @param {number|string} port
+ */
+function canRebindLocalNineProxyPortForTag(config, tag, port) {
+    const users = tagsUsingLocalSocksPort(config, port);
+    if (users.length === 0) {
+        return true;
+    }
+    const t = String(tag || "").trim();
+    return users.every((u) => u === t);
+}
+
 /**
  * 在内存中的 sing-box 配置里，将指定 tag 的 SOCKS 出站改为本机固定地址与端口。
  * @param {object} config
@@ -1311,9 +1371,11 @@ async function nineProxyPortFreeOk(port) {
  * 在 port_status 结果中找第一个在线且 `public_ip` 与目标代理 IP 一致的端口。
  * @param {object[]} rows
  * @param {string} targetPublicIp
+ * @param {object} config sing-box 配置（避免复用已被其它出站 tag 占用的本地端口）
+ * @param {string} tag 当前切换的出站 tag
  * @returns {number|null}
  */
-function pickPortFromPortStatus(rows, targetPublicIp) {
+function pickPortFromPortStatus(rows, targetPublicIp, config, tag) {
     const tip = String(targetPublicIp || "").trim();
     if (!tip || !Array.isArray(rows)) {
         return null;
@@ -1331,6 +1393,9 @@ function pickPortFromPortStatus(rows, targetPublicIp) {
         if (port == null) {
             continue;
         }
+        if (!canRebindLocalNineProxyPortForTag(config, tag, port)) {
+            continue;
+        }
         return port;
     }
     return null;
@@ -1338,11 +1403,16 @@ function pickPortFromPortStatus(rows, targetPublicIp) {
 
 /**
  * 在 [LOCAL_SOCKS_SCAN_MIN, LOCAL_SOCKS_SCAN_MAX] 内顺序调用 `nineProxyPortFreeOk`，返回第一个可用端口。
+ * @param {object} config
+ * @param {string} tag
  * @returns {Promise<number|null>}
  */
-async function pickPortViaPortFreeScan() {
+async function pickPortViaPortFreeScan(config, tag) {
     for (let p = LOCAL_SOCKS_SCAN_MIN; p <= LOCAL_SOCKS_SCAN_MAX; p += 1) {
         try {
+            if (!canRebindLocalNineProxyPortForTag(config, tag, p)) {
+                continue;
+            }
             if (await nineProxyPortFreeOk(p)) {
                 return p;
             }
@@ -1356,9 +1426,11 @@ async function pickPortViaPortFreeScan() {
 /**
  * 在 port_check 全量结果中取在线端口的最小端口号。
  * @param {object[]} rows
+ * @param {object} config
+ * @param {string} tag
  * @returns {number|null}
  */
-function pickPortFromPortCheckAll(rows) {
+function pickPortFromPortCheckAll(rows, config, tag) {
     if (!Array.isArray(rows)) {
         return null;
     }
@@ -1370,6 +1442,9 @@ function pickPortFromPortCheckAll(rows) {
         }
         const p = Number(row.port);
         if (!Number.isFinite(p) || p <= 0) {
+            continue;
+        }
+        if (!canRebindLocalNineProxyPortForTag(config, tag, p)) {
             continue;
         }
         candidates.push(p);
@@ -1569,8 +1644,98 @@ app.get("/api/proxy-list", async (req, res) => {
 });
 
 /**
+ * GET /api/switch-proxy-custom
+ * 将指定出站 tag 切换为**自定义远端 SOCKS5**（与 9proxy 今日列表无关）。
+ * 查询参数：`id`（必填，须为 `readCustomProxiesFile` 中的 id，通常为 `custom-` 前缀）、`tag`（sing-box SOCKS 出站 tag，必填）。
+ */
+async function handleSwitchProxyCustom(req, res) {
+    const id = req.query.id;
+    const tag = req.query.tag != null ? String(req.query.tag).trim() : "";
+
+    if (!id) {
+        return res.status(400).json({
+            success: false,
+            msg: "缺少代理 id"
+        });
+    }
+    if (!tag) {
+        return res.status(400).json({
+            success: false,
+            msg: "缺少出站 tag（本地 SOCKS 出站）"
+        });
+    }
+    if (!String(id).startsWith("custom-")) {
+        return res.status(400).json({
+            success: false,
+            msg: "本接口仅用于自定义 SOCKS：id 须以 custom- 开头（今日代理请用 GET /api/switch-proxy）"
+        });
+    }
+
+    try {
+        const list = readCustomProxiesFile();
+        const entry = list.find((x) => String(x.id) === String(id));
+        if (!entry) {
+            return res.status(404).json({
+                success: false,
+                msg: "未找到自定义代理: " + id
+            });
+        }
+        const raw = fs.readFileSync(CONFIG_PATH, "utf8");
+        const config = JSON.parse(raw);
+        try {
+            ensureOutboundIsSocksShellForTag(config, tag);
+        } catch (e) {
+            return res.status(400).json({
+                success: false,
+                msg: e.message || String(e)
+            });
+        }
+        const currentRow = Array.isArray(config.outbounds)
+            ? config.outbounds.find((o) => o && o.type === "socks" && o.tag === tag)
+            : null;
+        if (!currentRow) {
+            return res.status(400).json({
+                success: false,
+                msg: "未找到 SOCKS 出站: " + tag
+            });
+        }
+        applyRemoteSocksToConfig(config, tag, entry);
+        fs.writeFileSync(CONFIG_PATH, `${JSON.stringify(config, null, 2)}\n`);
+        try {
+            await restartSingBox();
+        } catch (restartErr) {
+            return res.status(500).json({
+                success: false,
+                msg: "配置已写入，但 systemctl restart sing-box 失败",
+                error: restartErr.message || String(restartErr),
+                tag,
+                custom: true
+            });
+        }
+        return res.json({
+            success: true,
+            msg: "切换成功（自定义 SOCKS，已重启 sing-box）",
+            tag,
+            custom: true,
+            host: entry.host,
+            port: entry.port,
+            data: { error: false, message: "custom socks" }
+        });
+    } catch (e) {
+        return res.status(500).json({
+            success: false,
+            msg: e.message || "自定义 SOCKS 切换失败",
+            error: e.message
+        });
+    }
+}
+
+app.get("/api/switch-proxy-custom", handleSwitchProxyCustom);
+
+/**
  * GET /api/switch-proxy
- * 查询参数：`id`（代理 id，必填）、`tag`（sing-box SOCKS 出站 tag，必填）、`ip`（公网 IP，可选）。
+ * **仅** 9proxy 今日代理：查询参数 `id`（今日代理 id）、`tag`（sing-box SOCKS 出站 tag）、`ip`（公网 IP，可选）。
+ * 自定义 SOCKS 请使用 `GET /api/switch-proxy-custom`。
  * 流程：解析 IP → port_status 匹配端口 → 否则 port_free 扫描 → 否则 port_check all；
  * 再调用 9proxy forward，把该 tag 的 SOCKS 出站写为 127.0.0.1:所选端口 保存 CONFIG_PATH，
  * 最后执行 `systemctl restart sing-box` 使配置生效。
@@ -1597,63 +1762,10 @@ app.get("/api/switch-proxy", async (req, res) => {
     }
 
     if (String(id).startsWith("custom-")) {
-        try {
-            const list = readCustomProxiesFile();
-            const entry = list.find((x) => String(x.id) === String(id));
-            if (!entry) {
-                return res.status(404).json({
-                    success: false,
-                    msg: "未找到自定义代理: " + id
-                });
-            }
-            const raw = fs.readFileSync(CONFIG_PATH, "utf8");
-            const config = JSON.parse(raw);
-            try {
-                ensureOutboundIsSocksShellForTag(config, tag);
-            } catch (e) {
-                return res.status(400).json({
-                    success: false,
-                    msg: e.message || String(e)
-                });
-            }
-            const currentRow = Array.isArray(config.outbounds)
-                ? config.outbounds.find((o) => o && o.type === "socks" && o.tag === tag)
-                : null;
-            if (!currentRow) {
-                return res.status(400).json({
-                    success: false,
-                    msg: "未找到 SOCKS 出站: " + tag
-                });
-            }
-            applyRemoteSocksToConfig(config, tag, entry);
-            fs.writeFileSync(CONFIG_PATH, `${JSON.stringify(config, null, 2)}\n`);
-            try {
-                await restartSingBox();
-            } catch (restartErr) {
-                return res.status(500).json({
-                    success: false,
-                    msg: "配置已写入，但 systemctl restart sing-box 失败",
-                    error: restartErr.message || String(restartErr),
-                    tag,
-                    custom: true
-                });
-            }
-            return res.json({
-                success: true,
-                msg: "切换成功（自定义 SOCKS，已重启 sing-box）",
-                tag,
-                custom: true,
-                host: entry.host,
-                port: entry.port,
-                data: { error: false, message: "custom socks" }
-            });
-        } catch (e) {
-            return res.status(500).json({
-                success: false,
-                msg: e.message || "自定义 SOCKS 切换失败",
-                error: e.message
-            });
-        }
+        return res.status(400).json({
+            success: false,
+            msg: "自定义 SOCKS 请使用 GET /api/switch-proxy-custom?id=" + encodeURIComponent(String(id)) + "&tag=" + encodeURIComponent(tag)
+        });
     }
 
     try {
@@ -1662,7 +1774,7 @@ app.get("/api/switch-proxy", async (req, res) => {
             return res.status(400).json({
                 success: false,
                 msg:
-                    "无法解析代理公网 IP。未安装或未运行 9proxy 时不能按「今日代理 id」切换；请改用自定义 SOCKS（id 以 custom- 开头），或在请求中附带 ip= 公网 IP 参数。"
+                    "无法解析代理公网 IP。未安装或未运行 9proxy 时不能按「今日代理 id」切换；自定义 SOCKS 请使用 GET /api/switch-proxy-custom，或在请求中附带 ip= 公网 IP 参数。"
             });
         }
 
@@ -1687,20 +1799,20 @@ app.get("/api/switch-proxy", async (req, res) => {
         }
 
         const statusRows = await nineProxyPortStatusRows();
-        let chosen = pickPortFromPortStatus(statusRows, proxyIp);
+        let chosen = pickPortFromPortStatus(statusRows, proxyIp, config, tag);
 
         if (chosen == null) {
-            chosen = await pickPortViaPortFreeScan();
+            chosen = await pickPortViaPortFreeScan(config, tag);
         }
         if (chosen == null) {
             const checkRows = await nineProxyPortCheckAllRows();
-            chosen = pickPortFromPortCheckAll(checkRows);
+            chosen = pickPortFromPortCheckAll(checkRows, config, tag);
         }
         if (chosen == null) {
             return res.status(503).json({
                 success: false,
                 msg:
-                    "无可用本地转发端口（依赖 9proxy 的 port_status / port_free / port_check）。未安装 9proxy 时请使用「自定义 SOCKS」切换出站。"
+                    "无可用本地转发端口（依赖 9proxy 的 port_status / port_free / port_check）。未安装 9proxy 时请使用 GET /api/switch-proxy-custom 切换自定义 SOCKS。"
             });
         }
 
@@ -2948,6 +3060,13 @@ app.get("/", (req, res) => {
       return { list, nineNote };
     }
 
+    /** 自定义 SOCKS 与 9proxy 今日代理分属不同 API */
+    function apiPathForSwitchProxy(proxyId) {
+      return String(proxyId).startsWith("custom-")
+        ? "/api/switch-proxy-custom"
+        : "/api/switch-proxy";
+    }
+
     async function openUseProxyForOutbound(tag) {
       pendingUserOutboundTag = String(tag || "").trim();
       pendingUserSocksNorm = "";
@@ -3081,7 +3200,8 @@ app.get("/", (req, res) => {
             ? "&ip=" + encodeURIComponent(String(selfRow.ip).trim())
             : "";
         const resp = await fetch(
-          "/api/switch-proxy?id=" +
+          apiPathForSwitchProxy(proxyId) +
+            "?id=" +
             encodeURIComponent(proxyId) +
             "&tag=" +
             encodeURIComponent(tag) +
@@ -3446,7 +3566,8 @@ app.get("/", (req, res) => {
             ? "&ip=" + encodeURIComponent(String(selfRow.ip).trim())
             : "";
         const resp = await fetch(
-          "/api/switch-proxy?id=" +
+          apiPathForSwitchProxy(pendingSwitchProxyId) +
+            "?id=" +
             encodeURIComponent(pendingSwitchProxyId) +
             "&tag=" +
             encodeURIComponent(tag) +
