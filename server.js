@@ -547,23 +547,101 @@ function isOutboundTypeDirect(ob) {
     return String(ob?.type ?? "").toLowerCase() === "direct";
 }
 
-/** 与 `socksAddressForOutboundTag` 写入的「直连」展示串对齐（兼容不可见字符、NFKC） */
+/** 与 `socksAddressForOutboundTag` 展示串对齐（简繁/英文、不可见字符、NFKC） */
+const DIRECT_SOCKS_ADDRESS_LABELS = new Set([
+    "直连",
+    "直連",
+    "直接",
+    "direct"
+]);
+
 function isDirectSocksAddressLabel(addr) {
     const s = String(addr ?? "")
         .replace(/^\uFEFF/, "")
         .replace(/[\u200B-\u200D\uFEFF]/g, "")
         .trim();
-    if (s === "直连") {
+    if (DIRECT_SOCKS_ADDRESS_LABELS.has(s) || /^direct$/i.test(s)) {
         return true;
     }
     try {
-        if (s.normalize("NFKC") === "直连") {
+        const n = s.normalize("NFKC").trim();
+        if (DIRECT_SOCKS_ADDRESS_LABELS.has(n) || /^direct$/i.test(n)) {
             return true;
         }
     } catch {
         // ignore
     }
-    return /^direct$/i.test(s);
+    return false;
+}
+
+/**
+ * 本机出口 overlay（直连多用户共用一次探测结果）。
+ * @param {string[]|null|undefined} debugLogs
+ */
+async function buildMachinePortStatusOverlayOnce(debugLogs) {
+    try {
+        const probe = await fetchMachinePublicIp(8000, debugLogs);
+        if (!probe.ok || !probe.exitIp) {
+            pushSingboxDebug(
+                debugLogs,
+                "buildMachinePortStatusOverlayOnce: probe empty -> empty overlay"
+            );
+            return {
+                public_ip: "",
+                ip_country: "",
+                ip_region: "",
+                ip_city: "",
+                online: false
+            };
+        }
+        const geo = await getIpGeo(probe.exitIp);
+        pushSingboxDebug(
+            debugLogs,
+            `buildMachinePortStatusOverlayOnce: ok ip=${probe.exitIp} country=${geo.country}`
+        );
+        return {
+            public_ip: probe.exitIp,
+            ip_country: geo.country || "",
+            ip_region: geo.region || "",
+            ip_city: geo.city || "",
+            online: true
+        };
+    } catch (e) {
+        pushSingboxDebug(
+            debugLogs,
+            `buildMachinePortStatusOverlayOnce catch: ${e.message || String(e)}`
+        );
+        return {
+            public_ip: "",
+            ip_country: "",
+            ip_region: "",
+            ip_city: "",
+            online: false
+        };
+    }
+}
+
+function rowHasPortStatusOverlay(row) {
+    return (
+        row
+        && row.port_status_overlay != null
+        && typeof row.port_status_overlay === "object"
+    );
+}
+
+function needsMachineEgressBackfill(row, config) {
+    if (rowHasPortStatusOverlay(row)) {
+        return false;
+    }
+    const tag = String(row?.outbound ?? "").trim();
+    if (!tag) {
+        return false;
+    }
+    if (isDirectSocksAddressLabel(row?.socks_address)) {
+        return true;
+    }
+    const ob = getOutboundObForTag(config, tag);
+    return Boolean(ob && isOutboundTypeDirect(ob));
 }
 
 /**
@@ -612,55 +690,14 @@ async function enrichSingboxUsersWithSocksGeo(users, config, debugLogs) {
         `enrichSingboxUsersWithSocksGeo start n=${users.length} config=${CONFIG_PATH}`
     );
     let machineEgressOverlayPromise;
-    const getMachineEgressOverlay = async () => {
+    const getMachineEgressOverlay = () => {
         if (machineEgressOverlayPromise == null) {
-            pushSingboxDebug(debugLogs, "machine_egress: create shared promise");
-            machineEgressOverlayPromise = (async () => {
-                try {
-                    const probe = await fetchMachinePublicIp(8000, debugLogs);
-                    if (!probe.ok || !probe.exitIp) {
-                        pushSingboxDebug(
-                            debugLogs,
-                            "machine_egress: probe empty -> empty overlay online=false"
-                        );
-                        return {
-                            public_ip: "",
-                            ip_country: "",
-                            ip_region: "",
-                            ip_city: "",
-                            online: false
-                        };
-                    }
-                    const geo = await getIpGeo(probe.exitIp);
-                    pushSingboxDebug(
-                        debugLogs,
-                        `machine_egress: geo country=${geo.country} region=${geo.region} city=${geo.city}`
-                    );
-                    return {
-                        public_ip: probe.exitIp,
-                        ip_country: geo.country || "",
-                        ip_region: geo.region || "",
-                        ip_city: geo.city || "",
-                        online: true
-                    };
-                } catch (e) {
-                    pushSingboxDebug(
-                        debugLogs,
-                        `machine_egress inner catch: ${e.message || String(e)}`
-                    );
-                    return {
-                        public_ip: "",
-                        ip_country: "",
-                        ip_region: "",
-                        ip_city: "",
-                        online: false
-                    };
-                }
-            })();
+            pushSingboxDebug(debugLogs, "machine_egress: buildMachinePortStatusOverlayOnce");
+            machineEgressOverlayPromise = buildMachinePortStatusOverlayOnce(debugLogs);
         }
         return machineEgressOverlayPromise;
     };
-    return Promise.all(
+    const results = await Promise.all(
         users.map(async (u) => {
             try {
                 const tag = String(u.outbound || "").trim();
@@ -768,6 +805,27 @@ async function enrichSingboxUsersWithSocksGeo(users, config, debugLogs) {
             }
         })
     );
+
+    for (let bi = 0; bi < results.length; bi += 1) {
+        if (!needsMachineEgressBackfill(results[bi], config)) {
+            continue;
+        }
+        pushSingboxDebug(
+            debugLogs,
+            `backfill_direct i=${bi} outbound=${String(results[bi].outbound || "").trim()} socks_repr=${JSON.stringify(results[bi].socks_address)}`
+        );
+        const ovl = await getMachineEgressOverlay();
+        results[bi] = {
+            ...results[bi],
+            port_status_overlay: { ...ovl },
+            outbound_egress: "direct"
+        };
+    }
+    pushSingboxDebug(
+        debugLogs,
+        `enrichSingboxUsersWithSocksGeo done rows=${results.length}`
+    );
+    return results;
 }
 
 /**
@@ -2495,14 +2553,16 @@ app.get("/", (req, res) => {
     }
 
     function isDirectSocksAddressClient(addr) {
+      const labels = { 直连: 1, 直連: 1, 直接: 1, direct: 1 };
       const s = String(addr ?? "")
         .replace(/[\u200B-\u200D\uFEFF]/g, "")
         .trim();
-      if (s === "直连") {
+      if (labels[s] || /^direct$/i.test(s)) {
         return true;
       }
       try {
-        return s.normalize("NFKC") === "直连";
+        const n = s.normalize("NFKC").trim();
+        return Boolean(labels[n] || /^direct$/i.test(n));
       } catch {
         return false;
       }
