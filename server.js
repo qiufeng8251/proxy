@@ -239,6 +239,30 @@ async function fetchExitIpViaSocksEntry(entry, timeoutMs = 8000) {
 }
 
 /**
+ * 本机不经代理访问 ipify，得到当前服务器出口公网 IP（用于「直连」出站与用户管理展示）。
+ * @param {number} [timeoutMs]
+ * @returns {Promise<{ ok: true, exitIp: string }|{ ok: false }>}
+ */
+async function fetchMachinePublicIp(timeoutMs = 8000) {
+    try {
+        const r = await axios.get("https://api.ipify.org?format=json", {
+            timeout: timeoutMs,
+            validateStatus: () => true
+        });
+        if (r.status !== 200) {
+            return { ok: false };
+        }
+        const ip = typeof r.data?.ip === "string" ? r.data.ip.trim() : "";
+        if (ip) {
+            return { ok: true, exitIp: ip };
+        }
+        return { ok: false };
+    } catch {
+        return { ok: false };
+    }
+}
+
+/**
  * 将 `host:port` 类绑定串规范化成比对键（去空白、小写）。
  * @param {string|null|undefined} addr
  * @returns {string}
@@ -463,7 +487,7 @@ function socksAddressForOutboundTag(config, tag) {
 }
 
 /**
- * 对「用户管理」行：若 SOCKS 出站指向非本机地址，则经 SOCKS 探测出口 IP 与地理信息（与自定义代理列表同源逻辑）。
+ * 对「用户管理」行：`direct` 出站补本机出口 IP + ipinfo；远端 SOCKS 经 SOCKS 探测（与自定义代理同源）。
  * @param {object[]} users `getSingboxRouteUsers().users`
  * @param {object} config 已解析的 sing-box JSON
  */
@@ -471,12 +495,46 @@ async function enrichSingboxUsersWithSocksGeo(users, config) {
     if (!Array.isArray(users) || users.length === 0) {
         return users;
     }
+    let machineEgressOverlayPromise;
+    const getMachineEgressOverlay = async () => {
+        if (machineEgressOverlayPromise == null) {
+            machineEgressOverlayPromise = (async () => {
+                const probe = await fetchMachinePublicIp();
+                if (!probe.ok || !probe.exitIp) {
+                    return {
+                        public_ip: "",
+                        ip_country: "",
+                        ip_region: "",
+                        ip_city: "",
+                        online: false
+                    };
+                }
+                const geo = await getIpGeo(probe.exitIp);
+                return {
+                    public_ip: probe.exitIp,
+                    ip_country: geo.country || "",
+                    ip_region: geo.region || "",
+                    ip_city: geo.city || "",
+                    online: true
+                };
+            })();
+        }
+        return machineEgressOverlayPromise;
+    };
     return Promise.all(
         users.map(async (u) => {
             try {
                 const tag = String(u.outbound || "").trim();
                 if (!tag) {
                     return u;
+                }
+                const anyOb = getOutboundObForTag(config, tag);
+                if (anyOb && anyOb.type === "direct") {
+                    const ovl = await getMachineEgressOverlay();
+                    return {
+                        ...u,
+                        port_status_overlay: ovl
+                    };
                 }
                 const ob = getSocksOutboundObForTag(config, tag);
                 if (
@@ -2025,7 +2083,7 @@ app.get("/", (req, res) => {
     <main class="main-content">
       <section id="panelUsers" class="panel active">
         <h1>用户管理</h1>
-        <p class="user-hint">用户行来自 <code>route.rules</code> 的 <code>outbound</code>，与 <code>outbounds</code> 中<strong>同名 tag</strong> 的出站一一对应；右侧<strong>操作 · 切换</strong>可弹出列表选择今日代理或列表底部的<strong>直连</strong>（将该 tag 出站改为 <code>type: direct</code>，不经 SOCKS）。WiFi 名称写入 <code>proxy-user-meta.json</code> 的 <code>wifi_by_outbound</code>；点击<strong>铅笔</strong>展开编辑，<strong>关闭</strong>图标收起不保存。本机 <code>127.0.0.1</code> 类 SOCKS 的出口 IP、国家、州/省、城市由 <code>/api/port_status</code> 与地址匹配补齐；<strong>远端 SOCKS</strong>由服务端经 SOCKS 探测；出站为 <strong>直连</strong> 时出口等列显示为「—」，在线列显示「直连」。</p>
+        <p class="user-hint">用户行来自 <code>route.rules</code> 的 <code>outbound</code>，与 <code>outbounds</code> 中<strong>同名 tag</strong> 的出站一一对应；右侧<strong>操作 · 切换</strong>可弹出列表选择今日代理或列表底部的<strong>直连</strong>（将该 tag 出站改为 <code>type: direct</code>，不经 SOCKS）。WiFi 名称写入 <code>proxy-user-meta.json</code> 的 <code>wifi_by_outbound</code>；点击<strong>铅笔</strong>展开编辑，<strong>关闭</strong>图标收起不保存。本机 <code>127.0.0.1</code> 类 SOCKS 的出口 IP、国家、州/省、城市由 <code>/api/port_status</code> 与地址匹配补齐；<strong>远端 SOCKS</strong>由服务端经 SOCKS 探测；出站为 <strong>直连</strong> 时由服务端<strong>不经代理</strong>访问 ipify 取本机出口 IP，并用 ipinfo 补齐国家、州/省、城市（与 SOCKS 列一致）；在线列显示「在线（直连）」或「离线」（探测失败时）。</p>
         <div class="toolbar">
           <button type="button" id="refreshUsersBtn">刷新用户</button>
           <span class="status" id="userStatusText">加载中...</span>
@@ -2273,26 +2331,24 @@ app.get("/", (req, res) => {
             : null;
         const isDirectUser = String(row.socks_address || "").trim() === "直连";
         const ps = isDirectUser
-          ? null
+          ? overlay
           : overlay || matchPortRow(portRows, row.socks_address);
-        let pub =
+        const pub =
           ps && ps.public_ip != null && String(ps.public_ip).trim() !== ""
             ? escapeHtml(String(ps.public_ip).trim())
             : "";
-        let cc = ps && ps.ip_country ? String(ps.ip_country) : "";
-        let reg = ps && ps.ip_region ? escapeHtml(String(ps.ip_region)) : "";
-        let city = ps && ps.ip_city != null ? escapeHtml(String(ps.ip_city)) : "";
+        const cc = ps && ps.ip_country ? String(ps.ip_country) : "";
+        const reg = ps && ps.ip_region ? escapeHtml(String(ps.ip_region)) : "";
+        const city = ps && ps.ip_city != null ? escapeHtml(String(ps.ip_city)) : "";
         let onlineCell = "-";
-        if (isDirectUser) {
-          pub = '<span class="muted-cell">\u2014</span>';
-          cc = "";
-          reg = '<span class="muted-cell">\u2014</span>';
-          city = '<span class="muted-cell">\u2014</span>';
-          onlineCell = '<span class="online">直连</span>';
-        } else if (ps && typeof ps.online === "boolean") {
+        if (ps && typeof ps.online === "boolean") {
           onlineCell = ps.online
-            ? '<span class="online">在线</span>'
+            ? '<span class="online">' +
+                (isDirectUser ? "在线（直连）" : "在线") +
+                "</span>"
             : '<span class="offline">离线</span>';
+        } else if (isDirectUser) {
+          onlineCell = '<span class="muted-cell">—</span>';
         }
         const bindHint = row.socks_address
           ? '<div class="muted-cell">' + escapeHtml(row.socks_address) + "</div>"
