@@ -1,6 +1,7 @@
 const express = require("express");
 const axios = require("axios");
 const fs = require("fs");
+const path = require("path");
 const { exec } = require("child_process");
 const { SocksProxyAgent } = require("socks-proxy-agent");
 const { STATE_CODE_ROWS } = require("./stateCodes");
@@ -247,6 +248,56 @@ function getOutboundWifiNameMap() {
         // ignore
     }
     return map;
+}
+
+/**
+ * 写入或删除 `proxy-user-meta.json` 中 `wifi_by_outbound[tag]`（空名称则删除该键）。
+ * @param {string} tag 出站 tag
+ * @param {string} name WiFi 名称（可含空格，trim 后为空则删除）
+ * @returns {{ ok: boolean, error?: string }}
+ */
+function setOutboundWifiInUserMeta(tag, name) {
+    const t = String(tag || "").trim();
+    if (!t) {
+        return { ok: false, error: "缺少 tag" };
+    }
+    const n = String(name ?? "").trim();
+    let root = { wifi_by_outbound: {} };
+    try {
+        if (fs.existsSync(USER_META_PATH)) {
+            const raw = fs.readFileSync(USER_META_PATH, "utf8");
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+                root = parsed;
+            }
+        }
+    } catch (e) {
+        return { ok: false, error: "读取 meta 失败: " + (e.message || String(e)) };
+    }
+    if (
+        !root.wifi_by_outbound
+        || typeof root.wifi_by_outbound !== "object"
+        || Array.isArray(root.wifi_by_outbound)
+    ) {
+        root.wifi_by_outbound = {};
+    }
+    const w = root.wifi_by_outbound;
+    if (n === "") {
+        delete w[t];
+    } else {
+        w[t] = n;
+    }
+    try {
+        fs.mkdirSync(path.dirname(USER_META_PATH), { recursive: true });
+    } catch {
+        // 目录已存在等
+    }
+    try {
+        fs.writeFileSync(USER_META_PATH, `${JSON.stringify(root, null, 2)}\n`, "utf8");
+    } catch (e) {
+        return { ok: false, error: "写入 meta 失败: " + (e.message || String(e)) };
+    }
+    return { ok: true };
 }
 
 /**
@@ -800,6 +851,35 @@ app.get("/api/singbox-users", (req, res) => {
 });
 
 /**
+ * GET /api/user-wifi
+ * 查询参数：`tag`（出站 tag，必填）、`wifi_name`（可选；留空或仅空格则删除该 tag 的 WiFi 备注）。
+ * 读写 `USER_META_PATH` 中的 `wifi_by_outbound`，不触碰 sing-box 主配置。
+ */
+app.get("/api/user-wifi", (req, res) => {
+    const tag = req.query.tag != null ? String(req.query.tag).trim() : "";
+    const wifiName = req.query.wifi_name != null ? String(req.query.wifi_name) : "";
+    if (!tag) {
+        return res.status(400).json({
+            success: false,
+            msg: "缺少 tag"
+        });
+    }
+    const { ok, error } = setOutboundWifiInUserMeta(tag, wifiName);
+    if (!ok) {
+        return res.status(500).json({
+            success: false,
+            msg: error || "保存失败"
+        });
+    }
+    res.json({
+        success: true,
+        msg: "ok",
+        tag,
+        wifi_name: String(wifiName).trim()
+    });
+});
+
+/**
  * GET /api/port_status
  * 转发 9proxy port_status，并为每条端口记录的 public_ip 补充 ip_country / ip_region / ip_city（ipinfo）。
  */
@@ -1006,6 +1086,36 @@ app.get("/", (req, res) => {
       line-height: 1.45;
       max-width: 220px;
     }
+    .wifi-edit-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: flex-start;
+    }
+    .wifi-name-input {
+      width: 100%;
+      max-width: 220px;
+      box-sizing: border-box;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 13px;
+    }
+    .wifi-save-btn {
+      background: #4b5563;
+      color: #fff;
+      padding: 4px 12px;
+      font-size: 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .wifi-save-btn:hover {
+      background: #374151;
+    }
+    .wifi-save-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
     .toolbar {
       display: flex;
       gap: 12px;
@@ -1152,7 +1262,7 @@ app.get("/", (req, res) => {
     <main class="main-content">
       <section id="panelUsers" class="panel active">
         <h1>用户管理</h1>
-        <p class="user-hint">用户行来自 <code>route.rules</code> 的 <code>outbound</code>，与 SOCKS 出站一一对应；WiFi 名称仅用于界面展示，来自 <code>proxy-user-meta.json</code>（由 setup 脚本写入，勿写入 sing-box 路由）。出口 IP、国家、州/省、城市由 <code>/api/port_status</code>（转发 9proxy 8080）与公网 IP 地理信息共同补齐。</p>
+        <p class="user-hint">用户行来自 <code>route.rules</code> 的 <code>outbound</code>，与 SOCKS 出站一一对应；WiFi 名称写入 <code>proxy-user-meta.json</code> 的 <code>wifi_by_outbound</code>，可在下表编辑后点「保存」（留空并保存可清除备注），勿写入 sing-box 路由。出口 IP、国家、州/省、城市由 <code>/api/port_status</code> 与公网 IP 地理信息补齐。</p>
         <div class="toolbar">
           <button type="button" id="refreshUsersBtn">刷新用户</button>
           <span class="status" id="userStatusText">加载中...</span>
@@ -1161,7 +1271,7 @@ app.get("/", (req, res) => {
           <thead>
             <tr>
               <th style="width:120px;">用户 ID</th>
-              <th style="width:110px;">WiFi 名称</th>
+              <th style="min-width:200px;">WiFi 名称</th>
               <th style="width:130px;">出口 IP</th>
               <th style="width:100px;">IP 国家</th>
               <th style="width:120px;">IP 州/省</th>
@@ -1352,10 +1462,20 @@ app.get("/", (req, res) => {
         const bindHint = row.socks_address
           ? '<div class="muted-cell">' + escapeHtml(row.socks_address) + "</div>"
           : "";
+        const outTag = String(row.outbound || "");
+        const tagAttr = escapeHtml(outTag);
+        const wifiVal = escapeHtml(String(row.wifi_name || "").trim());
         const wifiCell =
-          row.wifi_name && String(row.wifi_name).trim() !== ""
-            ? "<strong>" + escapeHtml(String(row.wifi_name).trim()) + "</strong>"
-            : '<span class="muted-cell">-</span>';
+          '<div class="wifi-edit-wrap">' +
+          '<input type="text" class="wifi-name-input" data-outbound="' +
+          tagAttr +
+          '" value="' +
+          wifiVal +
+          '" placeholder="WiFi 名称" maxlength="128" />' +
+          '<button type="button" class="wifi-save-btn" data-outbound="' +
+          tagAttr +
+          '">保存</button>' +
+          "</div>";
         return (
           "<tr>" +
           "<td><strong>" + escapeHtml(row.outbound || "-") + "</strong>" + bindHint + "</td>" +
@@ -1368,6 +1488,34 @@ app.get("/", (req, res) => {
           "</tr>"
         );
       }).join("");
+    }
+
+    async function saveUserWifi(tag, inputEl, btnEl) {
+      if (!tag) {
+        return;
+      }
+      try {
+        if (btnEl) {
+          btnEl.disabled = true;
+        }
+        setUserStatus("正在保存 WiFi…");
+        const params = new URLSearchParams();
+        params.set("tag", tag);
+        params.set("wifi_name", inputEl ? inputEl.value : "");
+        const resp = await fetch("/api/user-wifi?" + params.toString());
+        const data = await resp.json();
+        if (!resp.ok || data.success === false) {
+          throw new Error(data.msg || data.error || "保存失败");
+        }
+        await loadSingboxUsers();
+        setUserStatus(userStatusText.textContent + " · WiFi 已保存");
+      } catch (e) {
+        setUserStatus("WiFi 保存失败: " + e.message);
+      } finally {
+        if (btnEl) {
+          btnEl.disabled = false;
+        }
+      }
     }
 
     async function loadSingboxUsers() {
@@ -1756,6 +1904,33 @@ app.get("/", (req, res) => {
     navUsers.addEventListener("click", () => showPanel("users"));
     navProxies.addEventListener("click", () => showPanel("proxies"));
     refreshUsersBtn.addEventListener("click", loadSingboxUsers);
+    userBody.addEventListener("click", async (ev) => {
+      const btn = ev.target.closest(".wifi-save-btn");
+      if (!btn) {
+        return;
+      }
+      const tag = btn.getAttribute("data-outbound");
+      const tr = btn.closest("tr");
+      const inp = tr && tr.querySelector(".wifi-name-input");
+      if (!tag || !inp) {
+        return;
+      }
+      await saveUserWifi(tag, inp, btn);
+    });
+    userBody.addEventListener("keydown", (ev) => {
+      if (ev.key !== "Enter") {
+        return;
+      }
+      if (!ev.target.classList || !ev.target.classList.contains("wifi-name-input")) {
+        return;
+      }
+      ev.preventDefault();
+      const tr = ev.target.closest("tr");
+      const btn = tr && tr.querySelector(".wifi-save-btn");
+      if (btn) {
+        btn.click();
+      }
+    });
     loadLocationCodes();
     loadSingboxUsers();
     loadProxyList();
