@@ -1881,7 +1881,7 @@ app.get("/", (req, res) => {
       <section id="panelProxies" class="panel">
         <h1>代理列表</h1>
         <div class="toolbar">
-          <button id="openAddModalBtn" class="add-btn">新增代理</button>
+          <button id="openAddModalBtn" class="add-btn" type="button" style="display:none" aria-hidden="true">新增代理</button>
           <button id="refreshBtn">刷新列表</button>
           <span class="status" id="statusText">加载中...</span>
         </div>
