@@ -544,6 +544,7 @@ async function resolveProxyIpForId(id, explicitIp) {
 /**
  * 将 sing-box 配置中**第一个**出站改为直连型 SOCKS（远端 ip:port + 账密），写回 CONFIG_PATH。
  * 与当前「按 tag 改本地 127.0.0.1 端口」的切换逻辑并存，供其它场景或历史脚本使用。
+ * 写入后会异步触发 `systemctl restart sing-box`（失败仅打日志）。
  * @param {{ ip: string, port: number|string, username: string, password: string }} proxy
  */
 function updateV2Ray(proxy) {
@@ -567,6 +568,9 @@ function updateV2Ray(proxy) {
     };
 
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
+    restartSingBox().catch((err) => {
+        console.error("systemctl restart sing-box failed (updateV2Ray):", err.message || err);
+    });
 }
 
 /**
@@ -576,6 +580,19 @@ function updateV2Ray(proxy) {
 function restartV2Ray() {
     return new Promise((resolve, reject) => {
         exec("systemctl restart v2ray", (err) => {
+            if (err) return reject(err);
+            resolve();
+        });
+    });
+}
+
+/**
+ * 修改 CONFIG_PATH 后重启 sing-box 使配置生效。
+ * @returns {Promise<void>}
+ */
+function restartSingBox() {
+    return new Promise((resolve, reject) => {
+        exec("systemctl restart sing-box", (err) => {
             if (err) return reject(err);
             resolve();
         });
@@ -646,7 +663,8 @@ app.get("/api/proxy-list", async (req, res) => {
  * GET /api/switch-proxy
  * 查询参数：`id`（代理 id，必填）、`tag`（sing-box SOCKS 出站 tag，必填）、`ip`（公网 IP，可选）。
  * 流程：解析 IP → port_status 匹配端口 → 否则 port_free 扫描 → 否则 port_check all；
- * 再调用 9proxy forward，最后把该 tag 的 SOCKS 出站写为 127.0.0.1:所选端口 并保存 CONFIG_PATH。
+ * 再调用 9proxy forward，把该 tag 的 SOCKS 出站写为 127.0.0.1:所选端口 保存 CONFIG_PATH，
+ * 最后执行 `systemctl restart sing-box` 使配置生效。
  */
 app.get("/api/switch-proxy", async (req, res) => {
     const id = req.query.id;
@@ -727,9 +745,22 @@ app.get("/api/switch-proxy", async (req, res) => {
         applySocksPortToConfig(config, tag, chosen);
         fs.writeFileSync(CONFIG_PATH, `${JSON.stringify(config, null, 2)}\n`);
 
+        try {
+            await restartSingBox();
+        } catch (restartErr) {
+            return res.status(500).json({
+                success: false,
+                msg: "配置已写入，但 systemctl restart sing-box 失败",
+                error: restartErr.message || String(restartErr),
+                port: chosen,
+                tag,
+                data: result.data
+            });
+        }
+
         res.json({
             success: true,
-            msg: "切换成功（已写入 sing-box 配置）",
+            msg: "切换成功（已写入 sing-box 配置并已重启 sing-box）",
             port: chosen,
             tag,
             data: result.data
