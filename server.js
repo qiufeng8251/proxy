@@ -2143,8 +2143,14 @@ app.get("/", (req, res) => {
         const isCustom = p.is_custom === true;
         const ip = p.ip != null ? String(p.ip).trim() : "";
         const city = p.city != null ? String(p.city) : "";
+        const st = p.state != null ? String(p.state).trim() : "";
         const loc = city || (isCustom ? "自定义" : "");
-        const label = (loc ? loc + " · " : "") + (ip || "-") + " · ID " + id;
+        const label =
+          (loc ? loc + " · " : "") +
+          (st ? st + " · " : "") +
+          (ip || "-") +
+          " · ID " +
+          id;
         parts.push(
           '<option value="' +
             escapeHtml(id) +
@@ -2231,7 +2237,7 @@ app.get("/", (req, res) => {
         const u = users.find((x) => String(x.outbound) === String(pendingUserOutboundTag));
         const addr = u && u.socks_address ? String(u.socks_address).trim() : "";
         pendingUserSocksNorm = addr ? normAddr(addr) : "";
-        const list = await fetchProxyListData({ lite: true });
+        const list = await fetchProxyListData();
         setTodayProxySelectFromList(useProxySelectFromUser, list);
         setUseProxyFromUserStatus("");
       } catch (e) {
@@ -2255,7 +2261,7 @@ app.get("/", (req, res) => {
       const proxyId = opt.value;
       let list;
       try {
-        list = await fetchProxyListData({ lite: true });
+        list = await fetchProxyListData();
       } catch (e) {
         setUseProxyFromUserStatus("刷新代理列表失败: " + e.message);
         return;
@@ -2788,7 +2794,7 @@ app.get("/", (req, res) => {
         setUseProxyFromUserStatus("正在保存…");
         const row = await addCustomSocksLine(userCustomSocksLine.value);
         userCustomSocksLine.value = "";
-        const list = await fetchProxyListData({ lite: true });
+        const list = await fetchProxyListData();
         setTodayProxySelectFromList(useProxySelectFromUser, list);
         if (row && row.id) {
           const sid = String(row.id);
