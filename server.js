@@ -281,9 +281,10 @@ function httpGetBodyNoProxy(url, timeoutMs) {
 /**
  * 本机出口公网 IP（直连用户管理展示）；多 URL 回退。
  * @param {number} [timeoutMs]
+ * @param {string[]|null|undefined} [debugLogs]
  * @returns {Promise<{ ok: true, exitIp: string }|{ ok: false }>}
  */
-async function fetchMachinePublicIp(timeoutMs = 8000) {
+async function fetchMachinePublicIp(timeoutMs = 8000, debugLogs) {
     const urls = [
         "https://api.ipify.org?format=json",
         "https://api64.ipify.org?format=json",
@@ -293,6 +294,13 @@ async function fetchMachinePublicIp(timeoutMs = 8000) {
     for (let u = 0; u < urls.length; u += 1) {
         try {
             const raw = await httpGetBodyNoProxy(urls[u], timeoutMs);
+            const preview = String(raw || "")
+                .slice(0, 120)
+                .replace(/\s+/g, " ");
+            pushSingboxDebug(
+                debugLogs,
+                `fetchMachinePublicIp try idx=${u} url=${urls[u]} rawLen=${String(raw || "").length} preview=${preview}`
+            );
             if (!raw) {
                 continue;
             }
@@ -300,19 +308,39 @@ async function fetchMachinePublicIp(timeoutMs = 8000) {
                 const j = JSON.parse(raw);
                 const ip = typeof j.ip === "string" ? j.ip.trim() : "";
                 if (ip) {
+                    pushSingboxDebug(debugLogs, `fetchMachinePublicIp ok json ip=${ip}`);
                     return { ok: true, exitIp: ip };
                 }
             } else {
                 const ip = raw.split(/\n/)[0].trim();
                 if (ip.length >= 3 && ip.length <= 128 && !/\s/.test(ip)) {
+                    pushSingboxDebug(debugLogs, `fetchMachinePublicIp ok text ip=${ip}`);
                     return { ok: true, exitIp: ip };
                 }
             }
-        } catch {
-            // try next URL
+        } catch (e) {
+            pushSingboxDebug(
+                debugLogs,
+                `fetchMachinePublicIp catch idx=${u} url=${urls[u]} err=${e.message || String(e)}`
+            );
         }
     }
+    pushSingboxDebug(debugLogs, "fetchMachinePublicIp all urls failed -> ok=false");
     return { ok: false };
+}
+
+/**
+ * 调试：`GET /api/singbox-users?debug=1` 时写入数组并 `console.log`。
+ * @param {string[]|null|undefined} logs
+ * @param {string} line
+ */
+function pushSingboxDebug(logs, line) {
+    if (!Array.isArray(logs)) {
+        return;
+    }
+    const s = `[singbox-users] ${new Date().toISOString()} ${line}`;
+    logs.push(s);
+    console.log(s);
 }
 
 /**
@@ -573,18 +601,28 @@ function socksAddressForOutboundTag(config, tag) {
  * 对「用户管理」行：`direct` 出站补本机出口 IP + ipinfo；远端 SOCKS 经 SOCKS 探测（与自定义代理同源）。
  * @param {object[]} users `getSingboxRouteUsers().users`
  * @param {object} config 已解析的 sing-box JSON
+ * @param {string[]|null|undefined} [debugLogs] 传入数组时记录调试行（与 `?debug=1` 配合）
  */
-async function enrichSingboxUsersWithSocksGeo(users, config) {
+async function enrichSingboxUsersWithSocksGeo(users, config, debugLogs) {
     if (!Array.isArray(users) || users.length === 0) {
         return users;
     }
+    pushSingboxDebug(
+        debugLogs,
+        `enrichSingboxUsersWithSocksGeo start n=${users.length} config=${CONFIG_PATH}`
+    );
     let machineEgressOverlayPromise;
     const getMachineEgressOverlay = async () => {
         if (machineEgressOverlayPromise == null) {
+            pushSingboxDebug(debugLogs, "machine_egress: create shared promise");
             machineEgressOverlayPromise = (async () => {
                 try {
-                    const probe = await fetchMachinePublicIp();
+                    const probe = await fetchMachinePublicIp(8000, debugLogs);
                     if (!probe.ok || !probe.exitIp) {
+                        pushSingboxDebug(
+                            debugLogs,
+                            "machine_egress: probe empty -> empty overlay online=false"
+                        );
                         return {
                             public_ip: "",
                             ip_country: "",
@@ -594,6 +632,10 @@ async function enrichSingboxUsersWithSocksGeo(users, config) {
                         };
                     }
                     const geo = await getIpGeo(probe.exitIp);
+                    pushSingboxDebug(
+                        debugLogs,
+                        `machine_egress: geo country=${geo.country} region=${geo.region} city=${geo.city}`
+                    );
                     return {
                         public_ip: probe.exitIp,
                         ip_country: geo.country || "",
@@ -601,7 +643,11 @@ async function enrichSingboxUsersWithSocksGeo(users, config) {
                         ip_city: geo.city || "",
                         online: true
                     };
-                } catch {
+                } catch (e) {
+                    pushSingboxDebug(
+                        debugLogs,
+                        `machine_egress inner catch: ${e.message || String(e)}`
+                    );
                     return {
                         public_ip: "",
                         ip_country: "",
@@ -622,14 +668,25 @@ async function enrichSingboxUsersWithSocksGeo(users, config) {
                     return u;
                 }
                 const anyOb = getOutboundObForTag(config, tag);
-                if (
-                    isDirectSocksAddressLabel(u.socks_address)
-                    || (anyOb && isOutboundTypeDirect(anyOb))
-                ) {
+                const labelDirect = isDirectSocksAddressLabel(u.socks_address);
+                const cfgDirect = Boolean(anyOb && isOutboundTypeDirect(anyOb));
+                pushSingboxDebug(
+                    debugLogs,
+                    `user tag=${tag} socks_addr_repr=${JSON.stringify(u.socks_address)} labelDirect=${labelDirect} obType=${anyOb?.type ?? "(none)"} cfgDirect=${cfgDirect}`
+                );
+                if (labelDirect || cfgDirect) {
                     let ovl;
                     try {
                         ovl = await getMachineEgressOverlay();
-                    } catch {
+                        pushSingboxDebug(
+                            debugLogs,
+                            `user tag=${tag} direct overlay public_ip=${ovl.public_ip || ""} online=${ovl.online}`
+                        );
+                    } catch (e) {
+                        pushSingboxDebug(
+                            debugLogs,
+                            `user tag=${tag} getMachineEgressOverlay catch: ${e.message || String(e)}`
+                        );
                         ovl = {
                             public_ip: "",
                             ip_country: "",
@@ -681,6 +738,10 @@ async function enrichSingboxUsersWithSocksGeo(users, config) {
                     binding: `${server}:${port}`,
                     is_custom: true
                 };
+                pushSingboxDebug(
+                    debugLogs,
+                    `user tag=${tag} remote_socks ${server}:${port} -> enrichCustomProxyFromEntry`
+                );
                 const enriched = await enrichCustomProxyFromEntry(apiRow, entry);
                 return {
                     ...u,
@@ -698,7 +759,11 @@ async function enrichSingboxUsersWithSocksGeo(users, config) {
                         online: enriched.is_online === true
                     }
                 };
-            } catch {
+            } catch (e) {
+                pushSingboxDebug(
+                    debugLogs,
+                    `user tag=${String(u?.outbound || "").trim()} enrich catch: ${e.message || String(e)}`
+                );
                 return u;
             }
         })
@@ -1613,36 +1678,50 @@ app.get("/api/location-codes", (req, res) => {
  * GET /api/singbox-users
  * 读取 CONFIG_PATH 中 route.rules 的 outbound 与对应 SOCKS 地址、WiFi 名，供「用户管理」页表格。
  * 若某用户 SOCKS 出站为远端（非 127.0.0.1），则经 SOCKS 探测出口 IP / 国家 / 州省 / 城市 / 在线，置于 `port_status_overlay`（与 port_status 字段对齐供前端复用）。
+ * 调试：查询参数 `debug=1`（或 `true`/`yes`）时响应体增加 `debug: string[]`，且每条写入服务端控制台。
  */
 app.get("/api/singbox-users", async (req, res) => {
+    const wantDebug =
+        req.query.debug === "1"
+        || req.query.debug === "true"
+        || String(req.query.debug || "").toLowerCase() === "yes";
+    const debugLogs = wantDebug ? [] : null;
+
     const { ok, error, users } = getSingboxRouteUsers();
     if (!ok) {
         return res.json({
             success: ok,
             msg: error || "读取失败",
-            users
+            users,
+            ...(wantDebug ? { debug: debugLogs || [] } : {})
         });
     }
     try {
         if (!fs.existsSync(CONFIG_PATH)) {
+            pushSingboxDebug(debugLogs, "CONFIG_PATH missing, skip enrich");
             return res.json({
                 success: true,
                 msg: "ok",
-                users
+                users,
+                ...(wantDebug ? { debug: debugLogs || [] } : {})
             });
         }
         const config = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
-        const enriched = await enrichSingboxUsersWithSocksGeo(users, config);
+        const enriched = await enrichSingboxUsersWithSocksGeo(users, config, debugLogs);
+        pushSingboxDebug(debugLogs, `enrichSingboxUsersWithSocksGeo done users_out=${enriched.length}`);
         return res.json({
             success: true,
             msg: "ok",
-            users: enriched
+            users: enriched,
+            ...(wantDebug ? { debug: debugLogs } : {})
         });
-    } catch {
+    } catch (e) {
+        pushSingboxDebug(debugLogs, `route try/catch: ${e.message || String(e)}`);
         return res.json({
             success: true,
             msg: "ok",
-            users
+            users,
+            ...(wantDebug ? { debug: debugLogs || [] } : {})
         });
     }
 });
