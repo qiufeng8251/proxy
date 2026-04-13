@@ -1,5 +1,6 @@
 const express = require("express");
 const axios = require("axios");
+const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const { exec } = require("child_process");
@@ -11,12 +12,18 @@ const { STATE_CODE_ROWS } = require("./stateCodes");
  * 并提供 `/` 静态 HTML 管理页。
  */
 const app = express();
+app.use(express.json({ limit: "64kb" }));
 /** 本服务监听端口 */
 const PORT = 3000;
 /** sing-box 主配置路径（切换代理时会改写其中 SOCKS 出站） */
 const CONFIG_PATH = "/etc/v2ray-agent/sing-box/conf/config.json";
 /** 出站与 WiFi 名称等元数据，不参与 sing-box 路由语法 */
 const USER_META_PATH = "/etc/v2ray-agent/sing-box/conf/proxy-user-meta.json";
+/** 用户粘贴保存的 SOCKS5 代理（明文账密，与 sing-box 出站切换配合） */
+const CUSTOM_PROXIES_PATH = path.join(
+    path.dirname(USER_META_PATH),
+    "custom-proxies.json"
+);
 /** ipinfo 州/省字段缓存（历史兼容） */
 const IPINFO_CACHE = new Map();
 /** ipinfo 国家/州/市缓存 */
@@ -128,6 +135,12 @@ async function getStateByIp(ip) {
 async function enrichProxyState(list) {
     if (!Array.isArray(list) || list.length === 0) return list;
     const tasks = list.map(async (item) => {
+        if (item?.is_custom) {
+            return {
+                ...item,
+                state: item.state != null ? String(item.state) : ""
+            };
+        }
         const state = await getStateByIp(item?.ip);
         return {
             ...item,
@@ -446,6 +459,132 @@ function applySocksPortToConfig(config, tag, port) {
         if (ob && ob.type === "socks" && ob.tag === tag) {
             ob.server = "127.0.0.1";
             ob.server_port = n;
+            delete ob.username;
+            delete ob.password;
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        throw new Error("未找到 SOCKS 出站: " + tag);
+    }
+}
+
+/**
+ * 解析一行 SOCKS5：`host:port:username:password`（从最后一个 `:` 起依次取密码、用户名、端口，剩余为 host，支持 host 中含 `:` 的写法）。
+ * @param {string} line
+ * @returns {{ host: string, port: number, username: string, password: string }|null}
+ */
+function parseSocksProxyLine(line) {
+    const s = String(line || "").trim();
+    if (!s) {
+        return null;
+    }
+    let rest = s;
+    const take = () => {
+        const i = rest.lastIndexOf(":");
+        if (i < 0) {
+            return null;
+        }
+        const v = rest.slice(i + 1);
+        rest = rest.slice(0, i);
+        return v;
+    };
+    const password = take();
+    const username = take();
+    const portStr = take();
+    if (password == null || username == null || portStr == null) {
+        return null;
+    }
+    const host = rest.trim();
+    const port = Number(portStr);
+    if (!host || !Number.isFinite(port) || port <= 0 || port > 65535) {
+        return null;
+    }
+    return {
+        host,
+        port,
+        username: String(username),
+        password: String(password)
+    };
+}
+
+function readCustomProxiesFile() {
+    try {
+        if (!fs.existsSync(CUSTOM_PROXIES_PATH)) {
+            return [];
+        }
+        const j = JSON.parse(fs.readFileSync(CUSTOM_PROXIES_PATH, "utf8"));
+        return Array.isArray(j?.proxies) ? j.proxies : [];
+    } catch {
+        return [];
+    }
+}
+
+function writeCustomProxiesFile(proxies) {
+    fs.mkdirSync(path.dirname(CUSTOM_PROXIES_PATH), { recursive: true });
+    fs.writeFileSync(
+        CUSTOM_PROXIES_PATH,
+        `${JSON.stringify({ proxies }, null, 2)}\n`,
+        "utf8"
+    );
+}
+
+/**
+ * 转为与 today_list 类似的列表项（不含密码）；`binding` 与 SOCKS 出站地址一致便于绑定列展示。
+ * @param {{ id: string, host: string, port: number }} c
+ */
+function customProxyToApiRow(c) {
+    const bind = `${c.host}:${c.port}`;
+    return {
+        id: c.id,
+        ip: c.host,
+        city: "自定义",
+        country_code: "",
+        state: "",
+        is_online: true,
+        binding: bind,
+        is_custom: true
+    };
+}
+
+function mergeCustomProxiesIntoList(arr) {
+    const base = Array.isArray(arr) ? arr : [];
+    const customs = readCustomProxiesFile().map(customProxyToApiRow);
+    return customs.concat(base);
+}
+
+/**
+ * 将 SOCKS 出站改为直连远端 SOCKS5（带账密）。
+ */
+function applyRemoteSocksToConfig(config, tag, entry) {
+    const outbounds = config?.outbounds;
+    if (!Array.isArray(outbounds)) {
+        throw new Error("配置缺少 outbounds");
+    }
+    const host = String(entry.host || "").trim();
+    const port = Number(entry.port);
+    if (!host || !Number.isFinite(port) || port <= 0) {
+        throw new Error("无效远端 SOCKS 地址");
+    }
+    let found = false;
+    for (let i = 0; i < outbounds.length; i += 1) {
+        const ob = outbounds[i];
+        if (ob && ob.type === "socks" && ob.tag === tag) {
+            ob.server = host;
+            ob.server_port = port;
+            const u = entry.username != null ? String(entry.username) : "";
+            const p = entry.password != null ? String(entry.password) : "";
+            if (u !== "") {
+                ob.username = u;
+            } else {
+                delete ob.username;
+            }
+            if (p !== "") {
+                ob.password = p;
+            } else {
+                delete ob.password;
+            }
             found = true;
             break;
         }
@@ -683,7 +822,8 @@ app.get("/api/proxy-list", async (req, res) => {
         const bindingMap = getSocksBindingToUsersMap();
         const result = await getProxy();
         if (Array.isArray(result?.data)) {
-            const base = lite ? result.data : await enrichProxyState(result.data);
+            const merged = mergeCustomProxiesIntoList(result.data);
+            const base = lite ? merged : await enrichProxyState(merged);
             const enrichedData = attachBoundUserToProxyList(base, bindingMap);
             return res.json({
                 ...result,
@@ -691,9 +831,8 @@ app.get("/api/proxy-list", async (req, res) => {
             });
         }
         if (Array.isArray(result?.proxy?.data)) {
-            const base = lite
-                ? result.proxy.data
-                : await enrichProxyState(result.proxy.data);
+            const merged = mergeCustomProxiesIntoList(result.proxy.data);
+            const base = lite ? merged : await enrichProxyState(merged);
             const enrichedData = attachBoundUserToProxyList(base, bindingMap);
             return res.json({
                 ...result,
@@ -739,6 +878,58 @@ app.get("/api/switch-proxy", async (req, res) => {
             success: false,
             msg: "缺少出站 tag（本地 SOCKS 出站）"
         });
+    }
+
+    if (String(id).startsWith("custom-")) {
+        try {
+            const list = readCustomProxiesFile();
+            const entry = list.find((x) => String(x.id) === String(id));
+            if (!entry) {
+                return res.status(404).json({
+                    success: false,
+                    msg: "未找到自定义代理: " + id
+                });
+            }
+            const raw = fs.readFileSync(CONFIG_PATH, "utf8");
+            const config = JSON.parse(raw);
+            const currentRow = Array.isArray(config.outbounds)
+                ? config.outbounds.find((o) => o && o.type === "socks" && o.tag === tag)
+                : null;
+            if (!currentRow) {
+                return res.status(400).json({
+                    success: false,
+                    msg: "未找到 SOCKS 出站: " + tag
+                });
+            }
+            applyRemoteSocksToConfig(config, tag, entry);
+            fs.writeFileSync(CONFIG_PATH, `${JSON.stringify(config, null, 2)}\n`);
+            try {
+                await restartSingBox();
+            } catch (restartErr) {
+                return res.status(500).json({
+                    success: false,
+                    msg: "配置已写入，但 systemctl restart sing-box 失败",
+                    error: restartErr.message || String(restartErr),
+                    tag,
+                    custom: true
+                });
+            }
+            return res.json({
+                success: true,
+                msg: "切换成功（自定义 SOCKS，已重启 sing-box）",
+                tag,
+                custom: true,
+                host: entry.host,
+                port: entry.port,
+                data: { error: false, message: "custom socks" }
+            });
+        } catch (e) {
+            return res.status(500).json({
+                success: false,
+                msg: e.message || "自定义 SOCKS 切换失败",
+                error: e.message
+            });
+        }
     }
 
     try {
@@ -880,6 +1071,50 @@ app.get("/api/user-wifi", (req, res) => {
         tag,
         wifi_name: String(wifiName).trim()
     });
+});
+
+/**
+ * 添加自定义 SOCKS5（格式 host:port:username:password），持久化到 custom-proxies.json。
+ */
+app.post("/api/custom-proxies", (req, res) => {
+    try {
+        const line =
+            typeof req.body?.line === "string"
+                ? req.body.line
+                : typeof req.body?.proxy === "string"
+                  ? req.body.proxy
+                  : "";
+        const parsed = parseSocksProxyLine(line);
+        if (!parsed) {
+            return res.status(400).json({
+                success: false,
+                msg: "格式应为 host:port:username:password（端口 1-65535）"
+            });
+        }
+        const list = readCustomProxiesFile();
+        const id = "custom-" + crypto.randomUUID();
+        const entry = {
+            id,
+            host: parsed.host,
+            port: parsed.port,
+            username: parsed.username,
+            password: parsed.password,
+            created_at: new Date().toISOString()
+        };
+        list.push(entry);
+        writeCustomProxiesFile(list);
+        return res.json({
+            success: true,
+            msg: "已保存自定义代理",
+            data: customProxyToApiRow(entry)
+        });
+    } catch (e) {
+        return res.status(500).json({
+            success: false,
+            msg: e.message || "保存自定义代理失败",
+            error: e.message
+        });
+    }
 });
 
 /**
@@ -1429,6 +1664,20 @@ app.get("/", (req, res) => {
         <div class="modal-inner">
           <h3 style="margin-top:0;">使用代理</h3>
           <p class="status" id="switchProxyMeta" style="margin:0 0 10px;font-size:13px;color:#374151;"></p>
+          <div class="modal-row" style="margin-bottom:10px;">
+            <label for="switchCustomSocksLine">自定义 SOCKS5（host:port:user:pass）</label>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <input
+                type="text"
+                id="switchCustomSocksLine"
+                class="wifi-name-input"
+                style="min-width:220px;flex:1;"
+                placeholder="例: 154.17.94.164:45001:user:pass"
+                autocomplete="off"
+              />
+              <button type="button" id="switchAddCustomSocksBtn" class="cancel-btn">添加到列表</button>
+            </div>
+          </div>
           <div class="modal-row">
             <label for="switchUserSelect">绑定出站（sing-box SOCKS tag）</label>
             <select id="switchUserSelect" class="proxy-pick-list" size="14"></select>
@@ -1444,6 +1693,20 @@ app.get("/", (req, res) => {
         <div class="modal-inner">
           <h3 style="margin-top:0;">切换代理</h3>
           <p class="status" id="useProxyFromUserMeta" style="margin:0 0 10px;font-size:13px;color:#374151;"></p>
+          <div class="modal-row" style="margin-bottom:10px;">
+            <label for="userCustomSocksLine">粘贴自定义 SOCKS5 并保存</label>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <input
+                type="text"
+                id="userCustomSocksLine"
+                class="wifi-name-input"
+                style="min-width:220px;flex:1;"
+                placeholder="host:port:username:password"
+                autocomplete="off"
+              />
+              <button type="button" id="userAddCustomSocksBtn" class="cancel-btn">添加</button>
+            </div>
+          </div>
           <div class="modal-row">
             <label for="useProxySelectFromUser">选择今日代理</label>
             <select id="useProxySelectFromUser" class="proxy-pick-list" size="14"></select>
@@ -1490,6 +1753,10 @@ app.get("/", (req, res) => {
     const useProxyFromUserStatus = document.getElementById("useProxyFromUserStatus");
     const cancelUseProxyFromUserBtn = document.getElementById("cancelUseProxyFromUserBtn");
     const confirmUseProxyFromUserBtn = document.getElementById("confirmUseProxyFromUserBtn");
+    const switchCustomSocksLine = document.getElementById("switchCustomSocksLine");
+    const switchAddCustomSocksBtn = document.getElementById("switchAddCustomSocksBtn");
+    const userCustomSocksLine = document.getElementById("userCustomSocksLine");
+    const userAddCustomSocksBtn = document.getElementById("userAddCustomSocksBtn");
     const endpoint = "/api/proxy-list";
     let statesByCountry = {};
     let allProxyList = [];
@@ -1627,6 +1894,63 @@ app.get("/", (req, res) => {
       useProxyFromUserStatus.textContent = text;
     }
 
+    function buildTodayProxyOptionsHtml(list) {
+      const parts = [];
+      for (let i = 0; i < list.length; i += 1) {
+        const p = list[i];
+        const id = p.id != null ? String(p.id) : "";
+        if (!id) {
+          continue;
+        }
+        const isCustom = p.is_custom === true;
+        const ip = p.ip != null ? String(p.ip).trim() : "";
+        const city = p.city != null ? String(p.city) : "";
+        const loc = city || (isCustom ? "自定义" : "");
+        const label = (loc ? loc + " · " : "") + (ip || "-") + " · ID " + id;
+        parts.push(
+          '<option value="' +
+            escapeHtml(id) +
+            '" data-ip="' +
+            escapeHtml(ip) +
+            '">' +
+            escapeHtml(label) +
+            "</option>"
+        );
+      }
+      return parts;
+    }
+
+    function setTodayProxySelectFromList(selectEl, list) {
+      if (!Array.isArray(list) || !list.length) {
+        selectEl.innerHTML = '<option value="">暂无代理</option>';
+        return;
+      }
+      const parts = buildTodayProxyOptionsHtml(list);
+      selectEl.innerHTML = parts.length
+        ? parts.join("")
+        : '<option value="">暂无有效代理</option>';
+      if (parts.length) {
+        selectEl.selectedIndex = 0;
+      }
+    }
+
+    async function addCustomSocksLine(line) {
+      const t = String(line || "").trim();
+      if (!t) {
+        throw new Error("请输入代理字符串");
+      }
+      const resp = await fetch("/api/custom-proxies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ line: t })
+      });
+      const data = await resp.json();
+      if (!resp.ok || data.success === false) {
+        throw new Error(data.msg || data.error || "保存失败");
+      }
+      return data.data;
+    }
+
     async function fetchProxyListData(options) {
       const lite = options && options.lite === true;
       const url = lite ? endpoint + "?lite=1" : endpoint;
@@ -1670,36 +1994,7 @@ app.get("/", (req, res) => {
         const addr = u && u.socks_address ? String(u.socks_address).trim() : "";
         pendingUserSocksNorm = addr ? normAddr(addr) : "";
         const list = await fetchProxyListData({ lite: true });
-        if (!list.length) {
-          useProxySelectFromUser.innerHTML = '<option value="">暂无代理</option>';
-        } else {
-          const parts = [];
-          for (let i = 0; i < list.length; i += 1) {
-            const p = list[i];
-            const id = p.id != null ? String(p.id) : "";
-            if (!id) {
-              continue;
-            }
-            const ip = p.ip != null ? String(p.ip).trim() : "";
-            const city = p.city != null ? String(p.city) : "";
-            const label = (city ? city + " · " : "") + (ip || "-") + " · ID " + id;
-            parts.push(
-              '<option value="' +
-                escapeHtml(id) +
-                '" data-ip="' +
-                escapeHtml(ip) +
-                '">' +
-                escapeHtml(label) +
-                "</option>"
-            );
-          }
-          useProxySelectFromUser.innerHTML = parts.length
-            ? parts.join("")
-            : '<option value="">暂无有效代理</option>';
-          if (parts.length) {
-            useProxySelectFromUser.selectedIndex = 0;
-          }
-        }
+        setTodayProxySelectFromList(useProxySelectFromUser, list);
         setUseProxyFromUserStatus("");
       } catch (e) {
         useProxySelectFromUser.innerHTML = '<option value="">加载失败</option>';
@@ -1748,7 +2043,12 @@ app.get("/", (req, res) => {
             "）。"
         );
       }
-      if (selfRow && selfRow.binding && String(selfRow.binding).trim() !== "") {
+      if (
+        selfRow &&
+        !selfRow.is_custom &&
+        selfRow.binding &&
+        String(selfRow.binding).trim() !== ""
+      ) {
         hints.push(
           "当前代理已有绑定（" +
             selfRow.binding +
@@ -1766,7 +2066,10 @@ app.get("/", (req, res) => {
       try {
         setUseProxyFromUserStatus("正在切换…");
         const ipParam =
-          selfRow && selfRow.ip && String(selfRow.ip).trim() !== ""
+          selfRow &&
+          !selfRow.is_custom &&
+          selfRow.ip &&
+          String(selfRow.ip).trim() !== ""
             ? "&ip=" + encodeURIComponent(String(selfRow.ip).trim())
             : "";
         const resp = await fetch(
@@ -1783,7 +2086,13 @@ app.get("/", (req, res) => {
           throw new Error(data.msg || data.error || "切换失败");
         }
         const portHint =
-          data.port != null ? "，本地端口 " + String(data.port) : "";
+          data.custom === true
+            ? "，远端 " +
+              String(data.host || "") +
+              (data.port != null ? ":" + String(data.port) : "")
+            : data.port != null
+              ? "，本地端口 " + String(data.port)
+              : "";
         const detailMsg = data?.data?.message ? "（" + data.data.message + "）" : "";
         setUserStatus("切换成功" + portHint + detailMsg);
         useProxyFromUserDialog.close();
@@ -2093,7 +2402,12 @@ app.get("/", (req, res) => {
             "。"
         );
       }
-      if (selfRow && selfRow.binding && String(selfRow.binding).trim() !== "") {
+      if (
+        selfRow &&
+        !selfRow.is_custom &&
+        selfRow.binding &&
+        String(selfRow.binding).trim() !== ""
+      ) {
         hints.push(
           "当前代理已有绑定（" +
             selfRow.binding +
@@ -2112,7 +2426,10 @@ app.get("/", (req, res) => {
       try {
         setSwitchStatus("正在使用…");
         const ipParam =
-          selfRow && selfRow.ip && String(selfRow.ip).trim() !== ""
+          selfRow &&
+          !selfRow.is_custom &&
+          selfRow.ip &&
+          String(selfRow.ip).trim() !== ""
             ? "&ip=" + encodeURIComponent(String(selfRow.ip).trim())
             : "";
         const resp = await fetch(
@@ -2129,7 +2446,13 @@ app.get("/", (req, res) => {
           throw new Error(data.msg || data.error || "使用失败");
         }
         const portHint =
-          data.port != null ? "，本地端口 " + String(data.port) : "";
+          data.custom === true
+            ? "，远端 " +
+              String(data.host || "") +
+              (data.port != null ? ":" + String(data.port) : "")
+            : data.port != null
+              ? "，本地端口 " + String(data.port)
+              : "";
         const detailMsg = data?.data?.message ? "（" + data.data.message + "）" : "";
         setStatus("使用成功" + portHint + detailMsg);
         switchProxyDialog.close();
@@ -2204,6 +2527,47 @@ app.get("/", (req, res) => {
     });
     confirmUseProxyFromUserBtn.addEventListener("click", () => {
       void confirmUseProxyFromUser();
+    });
+    switchAddCustomSocksBtn.addEventListener("click", async () => {
+      try {
+        switchAddCustomSocksBtn.disabled = true;
+        setSwitchStatus("正在保存自定义代理…");
+        await addCustomSocksLine(switchCustomSocksLine.value);
+        switchCustomSocksLine.value = "";
+        await loadProxyList();
+        setSwitchStatus(
+          "已加入代理列表（顶部「自定义」）。当前仍为已选中的那条；新代理请到列表中点「使用」。"
+        );
+      } catch (e) {
+        setSwitchStatus(e.message || String(e));
+      } finally {
+        switchAddCustomSocksBtn.disabled = false;
+      }
+    });
+    userAddCustomSocksBtn.addEventListener("click", async () => {
+      try {
+        userAddCustomSocksBtn.disabled = true;
+        setUseProxyFromUserStatus("正在保存…");
+        const row = await addCustomSocksLine(userCustomSocksLine.value);
+        userCustomSocksLine.value = "";
+        const list = await fetchProxyListData({ lite: true });
+        setTodayProxySelectFromList(useProxySelectFromUser, list);
+        if (row && row.id) {
+          const sid = String(row.id);
+          for (let j = 0; j < useProxySelectFromUser.options.length; j += 1) {
+            if (useProxySelectFromUser.options[j].value === sid) {
+              useProxySelectFromUser.selectedIndex = j;
+              break;
+            }
+          }
+        }
+        setUseProxyFromUserStatus("已保存并选中，可点「确认切换」。");
+        await loadProxyList();
+      } catch (e) {
+        setUseProxyFromUserStatus(e.message || String(e));
+      } finally {
+        userAddCustomSocksBtn.disabled = false;
+      }
     });
     userBody.addEventListener("click", async (ev) => {
       const useFromUser = ev.target.closest(".use-from-user-btn");
