@@ -1327,7 +1327,7 @@ app.get("/", (req, res) => {
     <main class="main-content">
       <section id="panelUsers" class="panel active">
         <h1>用户管理</h1>
-        <p class="user-hint">用户行来自 <code>route.rules</code> 的 <code>outbound</code>，与 SOCKS 出站一一对应；右侧<strong>操作 · 使用</strong>可为该出站选择今日代理（与代理列表相同逻辑）。WiFi 名称写入 <code>proxy-user-meta.json</code> 的 <code>wifi_by_outbound</code>；点击<strong>铅笔</strong>展开编辑，<strong>关闭</strong>图标收起不保存。出口 IP、国家、州/省、城市由 <code>/api/port_status</code> 与公网 IP 地理信息补齐。</p>
+        <p class="user-hint">用户行来自 <code>route.rules</code> 的 <code>outbound</code>，与 SOCKS 出站一一对应；右侧<strong>操作 · 切换</strong>可弹出列表选择今日代理并完成切换（与代理列表「使用」同源接口）。WiFi 名称写入 <code>proxy-user-meta.json</code> 的 <code>wifi_by_outbound</code>；点击<strong>铅笔</strong>展开编辑，<strong>关闭</strong>图标收起不保存。出口 IP、国家、州/省、城市由 <code>/api/port_status</code> 与公网 IP 地理信息补齐。</p>
         <div class="toolbar">
           <button type="button" id="refreshUsersBtn">刷新用户</button>
           <span class="status" id="userStatusText">加载中...</span>
@@ -1394,16 +1394,16 @@ app.get("/", (req, res) => {
         </dialog>
         <dialog id="useProxyFromUserDialog">
           <div class="modal-inner">
-            <h3 style="margin-top:0;">使用代理</h3>
+            <h3 style="margin-top:0;">切换代理</h3>
             <p class="status" id="useProxyFromUserMeta" style="margin:0 0 10px;font-size:13px;color:#374151;"></p>
             <div class="modal-row">
-              <label for="useProxySelectFromUser">今日代理</label>
+              <label for="useProxySelectFromUser">选择今日代理</label>
               <select id="useProxySelectFromUser" size="8" style="width:100%;min-height:140px;"></select>
             </div>
             <div class="status" id="useProxyFromUserStatus"></div>
             <div class="modal-actions">
               <button type="button" id="cancelUseProxyFromUserBtn" class="cancel-btn">取消</button>
-              <button type="button" id="confirmUseProxyFromUserBtn" class="switch-btn">确认使用</button>
+              <button type="button" id="confirmUseProxyFromUserBtn" class="switch-btn">确认切换</button>
             </div>
           </div>
         </dialog>
@@ -1598,7 +1598,7 @@ app.get("/", (req, res) => {
           "<td>" + onlineCell + "</td>" +
           '<td><button type="button" class="switch-btn use-from-user-btn" data-outbound="' +
           tagAttr +
-          '">使用</button></td>' +
+          '">切换</button></td>' +
           "</tr>"
         );
       }).join("");
@@ -1631,7 +1631,7 @@ app.get("/", (req, res) => {
       }
       setUseProxyFromUserStatus("");
       useProxyFromUserMeta.textContent =
-        "出站 " + pendingUserOutboundTag + " · 请选择要使用的代理";
+        "出站 " + pendingUserOutboundTag + " · 请在下表选择要切换到的代理";
       try {
         const uresp = await fetch("/api/singbox-users");
         const udata = await uresp.json();
@@ -1675,7 +1675,7 @@ app.get("/", (req, res) => {
         }
         useProxyFromUserDialog.showModal();
       } catch (e) {
-        setUserStatus("打开使用代理窗口失败: " + e.message);
+        setUserStatus("打开切换代理窗口失败: " + e.message);
       }
     }
 
@@ -1729,13 +1729,13 @@ app.get("/", (req, res) => {
         );
       }
       if (hints.length > 0) {
-        hints.push("确定要继续使用吗？");
+        hints.push("确定要继续切换吗？");
         if (!window.confirm(hints.join("\\n\\n"))) {
           return;
         }
       }
       try {
-        setUseProxyFromUserStatus("正在生效…");
+        setUseProxyFromUserStatus("正在切换…");
         const ipParam =
           selfRow && selfRow.ip && String(selfRow.ip).trim() !== ""
             ? "&ip=" + encodeURIComponent(String(selfRow.ip).trim())
@@ -1751,12 +1751,12 @@ app.get("/", (req, res) => {
         const forwardOk =
           data?.data?.error === false || data?.data?.error == null;
         if (!resp.ok || data.success === false || !forwardOk) {
-          throw new Error(data.msg || data.error || "使用失败");
+          throw new Error(data.msg || data.error || "切换失败");
         }
         const portHint =
           data.port != null ? "，本地端口 " + String(data.port) : "";
         const detailMsg = data?.data?.message ? "（" + data.data.message + "）" : "";
-        setUserStatus("使用成功" + portHint + detailMsg);
+        setUserStatus("切换成功" + portHint + detailMsg);
         useProxyFromUserDialog.close();
         await Promise.all([loadSingboxUsers(), loadProxyList()]);
       } catch (err) {
