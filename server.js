@@ -5,21 +5,41 @@ const { exec } = require("child_process");
 const { SocksProxyAgent } = require("socks-proxy-agent");
 const { STATE_CODE_ROWS } = require("./stateCodes");
 
+/**
+ * sing-box / 9proxy 简易控制台：聚合本机 9proxy 端口 API、代理列表、按 tag 切换并写 CONFIG_PATH，
+ * 并提供 `/` 静态 HTML 管理页。
+ */
 const app = express();
+/** 本服务监听端口 */
 const PORT = 3000;
+/** sing-box 主配置路径（切换代理时会改写其中 SOCKS 出站） */
 const CONFIG_PATH = "/etc/v2ray-agent/sing-box/conf/config.json";
+/** 出站与 WiFi 名称等元数据，不参与 sing-box 路由语法 */
 const USER_META_PATH = "/etc/v2ray-agent/sing-box/conf/proxy-user-meta.json";
+/** ipinfo 州/省字段缓存（历史兼容） */
 const IPINFO_CACHE = new Map();
+/** ipinfo 国家/州/市缓存 */
 const IP_GEO_CACHE = new Map();
+/** 本机 9proxy 应用 HTTP 根地址（端口 API、today_list、forward 等） */
 const NINE_PROXY_BASE = "http://127.0.0.1:8080";
+/** 本地 SOCKS 端口扫描下界（与 port_free 扫描配合） */
 const LOCAL_SOCKS_SCAN_MIN = 60000;
+/** 本地 SOCKS 端口扫描上界 */
 const LOCAL_SOCKS_SCAN_MAX = 60255;
 
+/**
+ * 请求 9proxy `today_list`，获取今日可用代理列表原始 JSON。
+ * @returns {Promise<object>} 9proxy 返回体（含 data 或 proxy.data 等形态）
+ */
 async function getProxy() {
     const res = await axios.get(`${NINE_PROXY_BASE}/api/today_list?t=2&limit=200`);
     return res.data;
 }
 
+/**
+ * 从内置州省表整理出国家列表、各国下的州代码，供前端下拉与新增代理选区。
+ * @returns {{ rows: typeof STATE_CODE_ROWS, countries: string[], statesByCountry: Record<string, string[]> }}
+ */
 function getLocationCodes() {
         const countriesSet = new Set();
         const statesByCountry = {};
@@ -49,6 +69,11 @@ function getLocationCodes() {
         };
 }
 
+/**
+ * 调用 ipinfo.io 解析公网 IP 的国家、州/省、城市；结果带内存缓存。
+ * @param {string} ip
+ * @returns {Promise<{ country: string, region: string, city: string }>}
+ */
 async function getIpGeo(ip) {
     if (!ip) {
         return { country: "", region: "", city: "" };
@@ -80,6 +105,11 @@ async function getIpGeo(ip) {
     }
 }
 
+/**
+ * 根据 IP 取美国州级代码（或 ipinfo 的 region），供代理列表「州/地区」展示。
+ * @param {string} ip
+ * @returns {Promise<string>}
+ */
 async function getStateByIp(ip) {
     if (!ip) return "";
     if (IPINFO_CACHE.has(ip)) {
@@ -89,6 +119,11 @@ async function getStateByIp(ip) {
     return geo.region;
 }
 
+/**
+ * 为代理列表每一项补充 `state` 字段（由 getStateByIp 推断）。
+ * @param {object[]|null|undefined} list
+ * @returns {Promise<object[]>}
+ */
 async function enrichProxyState(list) {
     if (!Array.isArray(list) || list.length === 0) return list;
     const tasks = list.map(async (item) => {
@@ -101,11 +136,21 @@ async function enrichProxyState(list) {
     return Promise.all(tasks);
 }
 
+/**
+ * 按代理账号构造 SOCKS5 Agent，供 testProxy 连通性检测。
+ * @param {{ username: string, password: string, ip: string, port: number|string }} proxy
+ * @returns {import("socks-proxy-agent").SocksProxyAgent}
+ */
 function buildSocksAgent(proxy) {
     const url = `socks5://${proxy.username}:${proxy.password}@${proxy.ip}:${proxy.port}`;
     return new SocksProxyAgent(url);
 }
 
+/**
+ * 通过代理访问 api.ipify.org 判断是否可用（超时 5s）。
+ * @param {object} proxy
+ * @returns {Promise<boolean>}
+ */
 async function testProxy(proxy) {
     try {
         const agent = buildSocksAgent(proxy);
@@ -122,10 +167,20 @@ async function testProxy(proxy) {
     }
 }
 
+/**
+ * 将 `host:port` 类绑定串规范化成比对键（去空白、小写）。
+ * @param {string|null|undefined} addr
+ * @returns {string}
+ */
 function normalizeBindingKey(addr) {
     return String(addr || "").replace(/\s+/g, "").toLowerCase();
 }
 
+/**
+ * 读取 sing-box 配置中所有 SOCKS 出站，按 `server:port` 分组得到绑定的出站 tag 列表
+ *（多出站可共用同一端口，故值为 string[]）。
+ * @returns {Record<string, string[]>}
+ */
 function getSocksBindingToUsersMap() {
     const map = Object.create(null);
     try {
@@ -165,6 +220,10 @@ function getSocksBindingToUsersMap() {
     return map;
 }
 
+/**
+ * 读取 `proxy-user-meta.json` 中 `wifi_by_outbound`，得到出站 tag → WiFi 名称。
+ * @returns {Record<string, string>}
+ */
 function getOutboundWifiNameMap() {
     const map = Object.create(null);
     try {
@@ -190,6 +249,13 @@ function getOutboundWifiNameMap() {
     return map;
 }
 
+/**
+ * 将 9proxy 返回的 `binding` 与本地 SOCKS 出站对照，为每条代理补充
+ * `bound_users`、`bound_user`（顿号拼接）、`bound_wifi_name`（与 tag 顺序对齐的 WiFi，无则「—」）。
+ * @param {object[]|null|undefined} list
+ * @param {Record<string, string|string[]>} bindingMap `getSocksBindingToUsersMap()` 的返回值
+ * @returns {object[]|null|undefined}
+ */
 function attachBoundUserToProxyList(list, bindingMap) {
     if (!Array.isArray(list)) {
         return list;
@@ -223,6 +289,12 @@ function attachBoundUserToProxyList(list, bindingMap) {
     });
 }
 
+/**
+ * 在配置中查找指定 tag 的 SOCKS 出站，返回 `server:port` 字符串。
+ * @param {object} config 已解析的 sing-box JSON
+ * @param {string} tag 出站 tag
+ * @returns {string}
+ */
 function socksAddressForOutboundTag(config, tag) {
     const outbounds = config?.outbounds;
     if (!Array.isArray(outbounds) || typeof tag !== "string") {
@@ -243,6 +315,11 @@ function socksAddressForOutboundTag(config, tag) {
     return "";
 }
 
+/**
+ * 从 `route.rules` 收集带 `outbound` 的规则，与 SOCKS 出站地址、WiFi 展示名组合成「用户管理」行数据
+ *（不要求 auth_user）。
+ * @returns {{ ok: boolean, error?: string, users: Array<{ outbound: string, socks_address: string, wifi_name: string }> }}
+ */
 function getSingboxRouteUsers() {
     try {
         if (!fs.existsSync(CONFIG_PATH)) {
@@ -282,6 +359,11 @@ function getSingboxRouteUsers() {
     }
 }
 
+/**
+ * 从 `127.0.0.1:60001` 或 port_status 的 `address` 字段解析端口号。
+ * @param {string|null|undefined} addr
+ * @returns {number|null}
+ */
 function parsePortFromBindingAddress(addr) {
     const s = String(addr || "").trim();
     const idx = s.lastIndexOf(":");
@@ -292,6 +374,12 @@ function parsePortFromBindingAddress(addr) {
     return Number.isFinite(p) && p > 0 ? p : null;
 }
 
+/**
+ * 在内存中的 sing-box 配置里，将指定 tag 的 SOCKS 出站改为本机固定地址与端口。
+ * @param {object} config
+ * @param {string} tag
+ * @param {number|string} port
+ */
 function applySocksPortToConfig(config, tag, port) {
     const outbounds = config?.outbounds;
     if (!Array.isArray(outbounds)) {
@@ -316,6 +404,10 @@ function applySocksPortToConfig(config, tag, port) {
     }
 }
 
+/**
+ * 转发请求 9proxy `GET /api/port_status`，返回端口状态行数组（含 address、public_ip、online 等）。
+ * @returns {Promise<object[]>}
+ */
 async function nineProxyPortStatusRows() {
     const r = await axios.get(`${NINE_PROXY_BASE}/api/port_status`, {
         params: { t: 2 },
@@ -324,6 +416,10 @@ async function nineProxyPortStatusRows() {
     return Array.isArray(r.data?.data) ? r.data.data : [];
 }
 
+/**
+ * 转发请求 9proxy `GET /api/port_check?ports=all`，返回各端口在线状态列表。
+ * @returns {Promise<object[]>}
+ */
 async function nineProxyPortCheckAllRows() {
     const r = await axios.get(`${NINE_PROXY_BASE}/api/port_check`, {
         params:
@@ -336,14 +432,25 @@ async function nineProxyPortCheckAllRows() {
     return Array.isArray(r.data?.data) ? r.data.data : [];
 }
 
+/**
+ * 查询 9proxy `GET /api/port_free` 判断单个端口是否可用（以 `error === false` 为可用）。
+ * @param {number|string} port
+ * @returns {Promise<boolean>}
+ */
 async function nineProxyPortFreeOk(port) {
     const r = await axios.get(`${NINE_PROXY_BASE}/api/port_free`, {
-        params: { t: 2,ports: String(port) },
+        params: { t: 2, ports: String(port) },
         timeout: 8000
     });
     return r.data && r.data.error === false;
 }
 
+/**
+ * 在 port_status 结果中找第一个在线且 `public_ip` 与目标代理 IP 一致的端口。
+ * @param {object[]} rows
+ * @param {string} targetPublicIp
+ * @returns {number|null}
+ */
 function pickPortFromPortStatus(rows, targetPublicIp) {
     const tip = String(targetPublicIp || "").trim();
     if (!tip || !Array.isArray(rows)) {
@@ -367,6 +474,10 @@ function pickPortFromPortStatus(rows, targetPublicIp) {
     return null;
 }
 
+/**
+ * 在 [LOCAL_SOCKS_SCAN_MIN, LOCAL_SOCKS_SCAN_MAX] 内顺序调用 `nineProxyPortFreeOk`，返回第一个可用端口。
+ * @returns {Promise<number|null>}
+ */
 async function pickPortViaPortFreeScan() {
     for (let p = LOCAL_SOCKS_SCAN_MIN; p <= LOCAL_SOCKS_SCAN_MAX; p += 1) {
         try {
@@ -380,6 +491,11 @@ async function pickPortViaPortFreeScan() {
     return null;
 }
 
+/**
+ * 在 port_check 全量结果中取在线端口的最小端口号。
+ * @param {object[]} rows
+ * @returns {number|null}
+ */
 function pickPortFromPortCheckAll(rows) {
     if (!Array.isArray(rows)) {
         return null;
@@ -400,6 +516,12 @@ function pickPortFromPortCheckAll(rows) {
     return candidates.length ? candidates[0] : null;
 }
 
+/**
+ * 解析代理公网 IP：优先使用调用方传入的 `explicitIp`，否则从 `today_list` 按 id 查找。
+ * @param {string} id 代理 id
+ * @param {string} [explicitIp]
+ * @returns {Promise<string>} 无则返回空字符串
+ */
 async function resolveProxyIpForId(id, explicitIp) {
     const ip = String(explicitIp || "").trim();
     if (ip) {
@@ -419,6 +541,11 @@ async function resolveProxyIpForId(id, explicitIp) {
     return hit?.ip ? String(hit.ip).trim() : "";
 }
 
+/**
+ * 将 sing-box 配置中**第一个**出站改为直连型 SOCKS（远端 ip:port + 账密），写回 CONFIG_PATH。
+ * 与当前「按 tag 改本地 127.0.0.1 端口」的切换逻辑并存，供其它场景或历史脚本使用。
+ * @param {{ ip: string, port: number|string, username: string, password: string }} proxy
+ */
 function updateV2Ray(proxy) {
     const config = JSON.parse(fs.readFileSync(CONFIG_PATH));
 
@@ -442,6 +569,10 @@ function updateV2Ray(proxy) {
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
 }
 
+/**
+ * 执行 `systemctl restart v2ray`（与 sing-box 是否同名服务取决于机器配置）。
+ * @returns {Promise<void>}
+ */
 function restartV2Ray() {
     return new Promise((resolve, reject) => {
         exec("systemctl restart v2ray", (err) => {
@@ -451,6 +582,10 @@ function restartV2Ray() {
     });
 }
 
+/**
+ * GET /change-ip
+ * 拉取 9proxy today_list 原始数据并返回（历史/调试接口，未做 sing-box 写入）。
+ */
 app.get("/change-ip", async (req, res) => {
     try {
 
@@ -466,6 +601,10 @@ app.get("/change-ip", async (req, res) => {
     }
 });
 
+/**
+ * GET /api/proxy-list
+ * 转发 today_list，为每条代理补充州/地区（ipinfo）、绑定出站 tag 与 WiFi 展示名后返回 JSON。
+ */
 app.get("/api/proxy-list", async (req, res) => {
     try {
         const bindingMap = getSocksBindingToUsersMap();
@@ -503,6 +642,12 @@ app.get("/api/proxy-list", async (req, res) => {
     }
 });
 
+/**
+ * GET /api/switch-proxy
+ * 查询参数：`id`（代理 id，必填）、`tag`（sing-box SOCKS 出站 tag，必填）、`ip`（公网 IP，可选）。
+ * 流程：解析 IP → port_status 匹配端口 → 否则 port_free 扫描 → 否则 port_check all；
+ * 再调用 9proxy forward，最后把该 tag 的 SOCKS 出站写为 127.0.0.1:所选端口 并保存 CONFIG_PATH。
+ */
 app.get("/api/switch-proxy", async (req, res) => {
     const id = req.query.id;
     const tag = req.query.tag != null ? String(req.query.tag).trim() : "";
@@ -598,6 +743,10 @@ app.get("/api/switch-proxy", async (req, res) => {
     }
 });
 
+/**
+ * GET /api/location-codes
+ * 返回内置 `stateCodes` 整理后的国家列表、各国州代码及完整行数据，供前端筛选与新增代理。
+ */
 app.get("/api/location-codes", (req, res) => {
     const data = getLocationCodes();
     res.json({
@@ -606,6 +755,10 @@ app.get("/api/location-codes", (req, res) => {
     });
 });
 
+/**
+ * GET /api/singbox-users
+ * 读取 CONFIG_PATH 中 route.rules 的 outbound 与对应 SOCKS 地址、WiFi 名，供「用户管理」页表格。
+ */
 app.get("/api/singbox-users", (req, res) => {
     const { ok, error, users } = getSingboxRouteUsers();
     res.json({
@@ -615,6 +768,10 @@ app.get("/api/singbox-users", (req, res) => {
     });
 });
 
+/**
+ * GET /api/port_status
+ * 转发 9proxy port_status，并为每条端口记录的 public_ip 补充 ip_country / ip_region / ip_city（ipinfo）。
+ */
 app.get("/api/port_status", async (req, res) => {
     try {
         const r = await axios.get(`${NINE_PROXY_BASE}/api/port_status?t=2`, {
@@ -657,6 +814,10 @@ app.get("/api/port_status", async (req, res) => {
     }
 });
 
+/**
+ * GET /api/add-proxy
+ * 将允许的 query 参数透传至 9proxy `GET /api/proxy` 以创建新代理（默认 num=1、port=60000、t=2）。
+ */
 app.get("/api/add-proxy", async (req, res) => {
     try {
         const allowedKeys = [
@@ -698,6 +859,10 @@ app.get("/api/add-proxy", async (req, res) => {
     }
 });
 
+/**
+ * GET /
+ * 返回内嵌 sing-box 控制台 HTML（用户管理、代理列表、切换/新增等前端脚本）。
+ */
 app.get("/", (req, res) => {
     res.send(`<!DOCTYPE html>
 <html lang="zh-CN">
@@ -965,12 +1130,12 @@ app.get("/", (req, res) => {
           <thead>
             <tr>
               <th style="width:120px;">用户 ID</th>
+              <th style="width:110px;">WiFi 名称</th>
               <th style="width:130px;">出口 IP</th>
               <th style="width:100px;">IP 国家</th>
               <th style="width:120px;">IP 州/省</th>
               <th style="width:120px;">城市</th>
               <th style="width:72px;">在线</th>
-              <th style="width:110px;">WiFi 名称</th>
             </tr>
           </thead>
           <tbody id="userBody"></tbody>
@@ -1163,12 +1328,12 @@ app.get("/", (req, res) => {
         return (
           "<tr>" +
           "<td><strong>" + escapeHtml(row.outbound || "-") + "</strong>" + bindHint + "</td>" +
+          "<td>" + wifiCell + "</td>" +
           "<td>" + (pub || '<span class="muted-cell">-</span>') + "</td>" +
           "<td>" + (cc ? countryFlag(cc) + " " + escapeHtml(cc) : '<span class="muted-cell">-</span>') + "</td>" +
           "<td>" + (reg || '<span class="muted-cell">-</span>') + "</td>" +
           "<td>" + (city || '<span class="muted-cell">-</span>') + "</td>" +
           "<td>" + onlineCell + "</td>" +
-          "<td>" + wifiCell + "</td>" +
           "</tr>"
         );
       }).join("");
@@ -1568,6 +1733,7 @@ app.get("/", (req, res) => {
 </html>`);
 });
 
+/** 启动 HTTP 服务，监听 0.0.0.0:PORT。 */
 app.listen(PORT, "0.0.0.0", () => {
     console.log(`API running: http://0.0.0.0:${PORT}`);
 });
