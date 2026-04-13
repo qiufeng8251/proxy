@@ -32,6 +32,11 @@ const IPINFO_CACHE = new Map();
 const IP_GEO_CACHE = new Map();
 /** 本机 9proxy 应用 HTTP 根地址（端口 API、today_list、forward 等） */
 const NINE_PROXY_BASE = "http://127.0.0.1:8080";
+/**
+ * Node 上 axios 会默认使用环境变量里的 HTTP(S)_PROXY；PM2/systemd 常继承系统代理，
+ * 导致访问本机 9proxy(127.0.0.1) 或 ipinfo 失败，而交互式 `node server.js` 无代理则正常。
+ */
+const AXIOS_OPTS_NO_PROXY = { proxy: false };
 /** 本地 SOCKS 端口扫描下界（与 port_free 扫描配合） */
 const LOCAL_SOCKS_SCAN_MIN = 60000;
 /** 本地 SOCKS 端口扫描上界 */
@@ -42,7 +47,10 @@ const LOCAL_SOCKS_SCAN_MAX = 60255;
  * @returns {Promise<object>} 9proxy 返回体（含 data 或 proxy.data 等形态）
  */
 async function getProxy() {
-    const res = await axios.get(`${NINE_PROXY_BASE}/api/today_list?t=2&limit=200`);
+    const res = await axios.get(`${NINE_PROXY_BASE}/api/today_list?t=2&limit=200`, {
+        ...AXIOS_OPTS_NO_PROXY,
+        timeout: 25000
+    });
     return res.data;
 }
 
@@ -97,6 +105,7 @@ async function getIpGeo(ip) {
     }
     try {
         const res = await axios.get(`https://ipinfo.io/${key}/json`, {
+            ...AXIOS_OPTS_NO_PROXY,
             timeout: 5000
         });
         const geo = {
@@ -172,6 +181,7 @@ async function testProxy(proxy) {
         const agent = buildSocksAgent(proxy);
 
         await axios.get("https://api.ipify.org", {
+            ...AXIOS_OPTS_NO_PROXY,
             httpAgent: agent,
             httpsAgent: agent,
             timeout: 5000
@@ -222,6 +232,7 @@ async function fetchExitIpViaSocksEntry(entry, timeoutMs = 8000) {
     try {
         const agent = buildSocksAgentFromEntry(entry);
         const r = await axios.get("https://api.ipify.org?format=json", {
+            ...AXIOS_OPTS_NO_PROXY,
             httpAgent: agent,
             httpsAgent: agent,
             timeout: timeoutMs,
@@ -1216,6 +1227,7 @@ function ensureOutboundIsSocksShellForTag(config, tag) {
  */
 async function nineProxyPortStatusRows() {
     const r = await axios.get(`${NINE_PROXY_BASE}/api/port_status`, {
+        ...AXIOS_OPTS_NO_PROXY,
         params: { t: 2 },
         timeout: 15000
     });
@@ -1228,6 +1240,7 @@ async function nineProxyPortStatusRows() {
  */
 async function nineProxyPortCheckAllRows() {
     const r = await axios.get(`${NINE_PROXY_BASE}/api/port_check`, {
+        ...AXIOS_OPTS_NO_PROXY,
         params:
             {
                 t: 2,
@@ -1245,6 +1258,7 @@ async function nineProxyPortCheckAllRows() {
  */
 async function nineProxyPortFreeOk(port) {
     const r = await axios.get(`${NINE_PROXY_BASE}/api/port_free`, {
+        ...AXIOS_OPTS_NO_PROXY,
         params: { t: 2, ports: String(port) },
         timeout: 8000
     });
@@ -1334,6 +1348,7 @@ async function resolveProxyIpForId(id, explicitIp) {
         return ip;
     }
     const res = await axios.get(`${NINE_PROXY_BASE}/api/today_list`, {
+        ...AXIOS_OPTS_NO_PROXY,
         params: { t: 2, limit: 500 },
         timeout: 15000
     });
@@ -1422,6 +1437,36 @@ app.get("/change-ip", async (req, res) => {
     } catch (e) {
         res.json({ success: false, error: e.message });
     }
+});
+
+/**
+ * GET /api/runtime-meta
+ * 返回进程 cwd、脚本路径、代理相关环境变量等，便于对比 `pm2` 与直接 `node server.js` 的差异。
+ */
+app.get("/api/runtime-meta", (req, res) => {
+    const pick = (k) => (typeof process.env[k] === "string" ? process.env[k] : "");
+    let configExists = null;
+    try {
+        configExists = fs.existsSync(CONFIG_PATH);
+    } catch {
+        configExists = false;
+    }
+    res.json({
+        cwd: process.cwd(),
+        argv: process.argv,
+        execPath: process.execPath,
+        mainScript: __filename,
+        configPath: CONFIG_PATH,
+        configExists,
+        userMetaPath: USER_META_PATH,
+        nineProxyBase: NINE_PROXY_BASE,
+        httpProxy: pick("HTTP_PROXY"),
+        httpsProxy: pick("HTTPS_PROXY"),
+        allProxy: pick("ALL_PROXY"),
+        noProxy: pick("NO_PROXY"),
+        pm2Home: pick("PM2_HOME"),
+        nodeAppInstance: pick("NODE_APP_INSTANCE")
+    });
 });
 
 /**
@@ -1605,6 +1650,7 @@ app.get("/api/switch-proxy", async (req, res) => {
         }
 
         const result = await axios.get(`${NINE_PROXY_BASE}/api/forward`, {
+            ...AXIOS_OPTS_NO_PROXY,
             params: {
                 t: 2,
                 port: chosen,
@@ -1874,6 +1920,7 @@ app.post("/api/custom-proxies", async (req, res) => {
 app.get("/api/port_status", async (req, res) => {
     try {
         const r = await axios.get(`${NINE_PROXY_BASE}/api/port_status?t=2`, {
+            ...AXIOS_OPTS_NO_PROXY,
             timeout: 15000
         });
         const body = r.data;
@@ -1943,7 +1990,10 @@ app.get("/api/add-proxy", async (req, res) => {
         if (!params.port) params.port = "60000";
         if (!params.t) params.t = "2";
 
-        const result = await axios.get(`${NINE_PROXY_BASE}/api/proxy`, { params });
+        const result = await axios.get(`${NINE_PROXY_BASE}/api/proxy`, {
+            ...AXIOS_OPTS_NO_PROXY,
+            params
+        });
         res.json({
             success: true,
             msg: "新增代理请求成功",
@@ -3470,5 +3520,10 @@ app.get("/", (req, res) => {
 
 /** 启动 HTTP 服务，监听 0.0.0.0:PORT。 */
 app.listen(PORT, "0.0.0.0", () => {
-    console.log(`API running: http://0.0.0.0:${PORT}`);
+    const hp = process.env.HTTP_PROXY || "";
+    const hsp = process.env.HTTPS_PROXY || "";
+    const ap = process.env.ALL_PROXY || "";
+    console.log(
+        `API running: http://0.0.0.0:${PORT} | script=${__filename} cwd=${process.cwd()} HTTP_PROXY=${hp ? "[set]" : ""} HTTPS_PROXY=${hsp ? "[set]" : ""} ALL_PROXY=${ap ? "[set]" : ""}`
+    );
 });
