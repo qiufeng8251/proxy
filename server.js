@@ -1281,6 +1281,22 @@ app.get("/", (req, res) => {
       width: 360px;
       max-width: 90%;
     }
+    dialog.dialog-proxy-pick {
+      width: min(640px, 94vw);
+      max-width: 94vw;
+      max-height: 90vh;
+    }
+    dialog.dialog-proxy-pick .modal-inner {
+      max-height: min(82vh, 720px);
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    dialog.dialog-proxy-pick select.proxy-pick-list {
+      min-height: min(380px, 48vh);
+      max-height: min(520px, 56vh);
+      font-size: 13px;
+      line-height: 1.4;
+    }
     dialog::backdrop {
       background: rgba(0, 0, 0, 0.35);
     }
@@ -1409,13 +1425,13 @@ app.get("/", (req, res) => {
           </div>
         </div>
       </dialog>
-      <dialog id="switchProxyDialog">
+      <dialog id="switchProxyDialog" class="dialog-proxy-pick">
         <div class="modal-inner">
           <h3 style="margin-top:0;">使用代理</h3>
           <p class="status" id="switchProxyMeta" style="margin:0 0 10px;font-size:13px;color:#374151;"></p>
           <div class="modal-row">
             <label for="switchUserSelect">绑定出站（sing-box SOCKS tag）</label>
-            <select id="switchUserSelect"></select>
+            <select id="switchUserSelect" class="proxy-pick-list" size="14"></select>
           </div>
           <div class="status" id="switchStatusText"></div>
           <div class="modal-actions">
@@ -1424,13 +1440,13 @@ app.get("/", (req, res) => {
           </div>
         </div>
       </dialog>
-      <dialog id="useProxyFromUserDialog">
+      <dialog id="useProxyFromUserDialog" class="dialog-proxy-pick">
         <div class="modal-inner">
           <h3 style="margin-top:0;">切换代理</h3>
           <p class="status" id="useProxyFromUserMeta" style="margin:0 0 10px;font-size:13px;color:#374151;"></p>
           <div class="modal-row">
             <label for="useProxySelectFromUser">选择今日代理</label>
-            <select id="useProxySelectFromUser" size="8" style="width:100%;min-height:140px;"></select>
+            <select id="useProxySelectFromUser" class="proxy-pick-list" size="14"></select>
           </div>
           <div class="status" id="useProxyFromUserStatus"></div>
           <div class="modal-actions">
