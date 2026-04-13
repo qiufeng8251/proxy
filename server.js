@@ -973,14 +973,26 @@ app.get("/api/add-proxy", async (req, res) => {
 /**
  * GET /
  * 返回内嵌 sing-box 控制台 HTML（用户管理、代理列表、切换/新增等前端脚本）。
+ * 文档标题 `<title>` 使用请求主机名（`req.hostname` 或 `Host` 头去掉端口），无则回退为「代理控制台」。
  */
 app.get("/", (req, res) => {
+    let titleHost = String(req.hostname || "").trim();
+    if (!titleHost) {
+        titleHost = String(req.get("host") || "")
+            .trim()
+            .split(":")[0]
+            .trim();
+    }
+    const pageTitle = (titleHost || "代理控制台")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
     res.send(`<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>代理控制台</title>
+  <title>${pageTitle}</title>
   <style>
     * {
       box-sizing: border-box;
@@ -1086,18 +1098,6 @@ app.get("/", (req, res) => {
       line-height: 1.45;
       max-width: 220px;
     }
-    .user-table th.wifi-col-head,
-    .user-table td.wifi-td {
-      width: 1%;
-      white-space: nowrap;
-      vertical-align: top;
-    }
-    .wifi-cell-inner {
-      max-width: 110px;
-    }
-    .wifi-cell-inner.wifi-expanded {
-      max-width: 204px;
-    }
     .wifi-line {
       display: flex;
       align-items: center;
@@ -1107,11 +1107,10 @@ app.get("/", (req, res) => {
     .wifi-text {
       flex: 1;
       min-width: 0;
-      max-width: 72px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      font-size: 13px;
+      font-size: 14px;
     }
     .wifi-text-empty {
       color: #9ca3af;
@@ -1154,14 +1153,12 @@ app.get("/", (req, res) => {
       margin-top: 8px;
       padding-top: 8px;
       border-top: 1px dashed #e5e7eb;
-      max-width: 200px;
     }
     .wifi-cell-inner.wifi-expanded .wifi-editor {
       display: flex;
     }
     .wifi-name-input {
       width: 100%;
-      max-width: 200px;
       box-sizing: border-box;
       border: 1px solid #d1d5db;
       border-radius: 6px;
@@ -1339,7 +1336,7 @@ app.get("/", (req, res) => {
           <thead>
             <tr>
               <th style="width:120px;">用户 ID</th>
-              <th class="wifi-col-head">WiFi</th>
+              <th style="width:120px;">WiFi 名称</th>
               <th style="width:130px;">出口 IP</th>
               <th style="width:100px;">IP 国家</th>
               <th style="width:120px;">IP 州/省</th>
@@ -1567,7 +1564,7 @@ app.get("/", (req, res) => {
         return (
           "<tr>" +
           "<td><strong>" + escapeHtml(row.outbound || "-") + "</strong>" + bindHint + "</td>" +
-          '<td class="wifi-td">' +
+          "<td>" +
           wifiCell +
           "</td>" +
           "<td>" + (pub || '<span class="muted-cell">-</span>') + "</td>" +
