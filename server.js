@@ -126,7 +126,7 @@ function normalizeBindingKey(addr) {
     return String(addr || "").replace(/\s+/g, "").toLowerCase();
 }
 
-function getSocksBindingToUserMap() {
+function getSocksBindingToUsersMap() {
     const map = Object.create(null);
     try {
         if (!fs.existsSync(CONFIG_PATH)) {
@@ -147,8 +147,15 @@ function getSocksBindingToUserMap() {
                 && ob.server_port != null
             ) {
                 const key = normalizeBindingKey(`${ob.server}:${ob.server_port}`);
-                if (key) {
-                    map[key] = ob.tag;
+                if (!key) {
+                    continue;
+                }
+                if (!map[key]) {
+                    map[key] = [];
+                }
+                const tag = ob.tag;
+                if (!map[key].includes(tag)) {
+                    map[key].push(tag);
                 }
             }
         }
@@ -190,11 +197,26 @@ function attachBoundUserToProxyList(list, bindingMap) {
     const wifiByTag = getOutboundWifiNameMap();
     return list.map((item) => {
         const key = normalizeBindingKey(item?.binding);
-        const bound_user = key && bindingMap[key] ? bindingMap[key] : "";
-        const bound_wifi_name =
-            bound_user && wifiByTag[bound_user] ? wifiByTag[bound_user] : "";
+        let tags = [];
+        if (key && bindingMap[key]) {
+            const v = bindingMap[key];
+            tags = Array.isArray(v) ? v.slice() : [String(v)];
+        }
+        const sep = "、";
+        const bound_user = tags.length ? tags.join(sep) : "";
+        const bound_wifi_name = tags.length
+            ? tags
+                  .map((t) => {
+                      const w = wifiByTag[t];
+                      return w && String(w).trim() !== ""
+                          ? String(w).trim()
+                          : "—";
+                  })
+                  .join(sep)
+            : "";
         return {
             ...item,
+            bound_users: tags,
             bound_user,
             bound_wifi_name
         };
@@ -446,7 +468,7 @@ app.get("/change-ip", async (req, res) => {
 
 app.get("/api/proxy-list", async (req, res) => {
     try {
-        const bindingMap = getSocksBindingToUserMap();
+        const bindingMap = getSocksBindingToUsersMap();
         const result = await getProxy();
         if (Array.isArray(result?.data)) {
             const enrichedData = attachBoundUserToProxyList(
@@ -781,6 +803,12 @@ app.get("/", (req, res) => {
     .muted-cell {
       color: #9ca3af;
       font-size: 12px;
+    }
+    .multi-bind-cell {
+      white-space: normal;
+      word-break: break-all;
+      line-height: 1.45;
+      max-width: 220px;
     }
     .toolbar {
       display: flex;
@@ -1278,6 +1306,10 @@ app.get("/", (req, res) => {
         const useStatusText = hasBinding ? "正在使用" : "-";
         const useStatusClass = hasBinding ? "using" : "";
         const rowClass = hasBinding ? "row-using" : "";
+        const boundUserCell =
+          item.bound_user && String(item.bound_user).trim() !== ""
+            ? escapeHtml(String(item.bound_user).trim())
+            : "-";
         const boundWifiCell =
           item.bound_wifi_name && String(item.bound_wifi_name).trim() !== ""
             ? escapeHtml(String(item.bound_wifi_name).trim())
@@ -1291,8 +1323,8 @@ app.get("/", (req, res) => {
             <td>\${item.state || "-"}</td>
             <td class="\${onlineClass}">\${onlineText}</td>
             <td>\${item.binding || "-"}</td>
-            <td>\${item.bound_user || "-"}</td>
-            <td>\${boundWifiCell}</td>
+            <td class="multi-bind-cell">\${boundUserCell}</td>
+            <td class="multi-bind-cell">\${boundWifiCell}</td>
             <td class="\${useStatusClass}">\${useStatusText}</td>
             <td>
               <button
