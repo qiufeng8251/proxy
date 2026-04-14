@@ -58,6 +58,9 @@ if [ "$INSTALL_NINEPROXY" -eq 1 ]; then
 
     echo "跳过 9proxy 账号登录（按需可手动执行: 9proxy auth -u USER -p PASS）。"
 
+    echo "设置 9proxy 端口数量为 50..."
+    9proxy setting -l 50 || die "9proxy 设置端口数量失败（命令: 9proxy setting -l 50）"
+
     echo "检查 API 状态..."
     API_STATUS_OUTPUT="$(9proxy api -d 2>&1 || true)"
     echo "$API_STATUS_OUTPUT"
