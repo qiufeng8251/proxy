@@ -1328,28 +1328,6 @@ async function nineProxyPortStatusRows() {
 }
 
 /**
- * 转发请求 9proxy `GET /api/port_check?ports=all`，返回各端口在线状态列表。
- * @returns {Promise<object[]>}
- */
-async function nineProxyPortCheckAllRows() {
-    try {
-        const r = await axios.get(`${NINE_PROXY_BASE}/api/port_check`, {
-            ...AXIOS_OPTS_NO_PROXY,
-            params:
-                {
-                    t: 2,
-                    ports: "all"
-                },
-            timeout: 20000
-        });
-        return Array.isArray(r.data?.data) ? r.data.data : [];
-    } catch (e) {
-        console.warn("[9proxy] port_check:", e.message || e);
-        return [];
-    }
-}
-
-/**
  * 查询 9proxy `GET /api/port_free` 判断单个端口是否可用（以 `error === false` 为可用）。
  * @param {number|string} port
  * @returns {Promise<boolean>}
@@ -1368,7 +1346,8 @@ async function nineProxyPortFreeOk(port) {
 }
 
 /**
- * 在 port_status 结果中找第一个在线且 `public_ip` 与目标代理 IP 一致的端口。
+ * 在 `GET /api/port_status` 结果中找第一个 `public_ip` 与目标 IP（通常来自 query `ip`）一致的端口。
+ * 不因 `online === false` 跳过，以便与 9proxy 展示行一致时仍绑定该本地端口。
  * @param {object[]} rows
  * @param {string} targetPublicIp
  * @param {object} config sing-box 配置（避免复用已被其它出站 tag 占用的本地端口）
@@ -1382,7 +1361,7 @@ function pickPortFromPortStatus(rows, targetPublicIp, config, tag) {
     }
     for (let i = 0; i < rows.length; i += 1) {
         const row = rows[i];
-        if (!row || row.online === false) {
+        if (!row) {
             continue;
         }
         const pub = String(row.public_ip || "").trim();
@@ -1421,36 +1400,6 @@ async function pickPortViaPortFreeScan(config, tag) {
         }
     }
     return null;
-}
-
-/**
- * 在 port_check 全量结果中取在线端口的最小端口号。
- * @param {object[]} rows
- * @param {object} config
- * @param {string} tag
- * @returns {number|null}
- */
-function pickPortFromPortCheckAll(rows, config, tag) {
-    if (!Array.isArray(rows)) {
-        return null;
-    }
-    const candidates = [];
-    for (let i = 0; i < rows.length; i += 1) {
-        const row = rows[i];
-        if (!row || row.online !== true || row.port == null) {
-            continue;
-        }
-        const p = Number(row.port);
-        if (!Number.isFinite(p) || p <= 0) {
-            continue;
-        }
-        if (!canRebindLocalNineProxyPortForTag(config, tag, p)) {
-            continue;
-        }
-        candidates.push(p);
-    }
-    candidates.sort((a, b) => a - b);
-    return candidates.length ? candidates[0] : null;
 }
 
 /**
@@ -1736,9 +1685,9 @@ app.get("/api/switch-proxy-custom", handleSwitchProxyCustom);
  * GET /api/switch-proxy
  * **仅** 9proxy 今日代理：查询参数 `id`（今日代理 id）、`tag`（sing-box SOCKS 出站 tag）、`ip`（公网 IP，可选）。
  * 自定义 SOCKS 请使用 `GET /api/switch-proxy-custom`。
- * 流程：解析 IP → port_status 匹配端口 → 否则 port_free 扫描 → 否则 port_check all；
- * 再调用 9proxy forward，把该 tag 的 SOCKS 出站写为 127.0.0.1:所选端口 保存 CONFIG_PATH，
- * 最后执行 `systemctl restart sing-box` 使配置生效。
+ * 规则：解析公网 IP（query `ip` 优先，否则 today_list）→ 请求 9proxy `GET /api/port_status`，
+ * 按该 IP 匹配行的 `public_ip`：若命中则**仅**把该 tag 的 SOCKS 写为 127.0.0.1:该端口、保存 CONFIG_PATH 并重启 sing-box（**不**调用 `/api/forward`）；
+ * 若未命中则在端口区间内调用 `GET /api/port_free` 取空闲端口，再 `GET /api/forward` 绑定今日代理 `id`，随后同样写入 CONFIG_PATH 并重启 sing-box。
  */
 app.get("/api/switch-proxy", async (req, res) => {
     const id = req.query.id;
@@ -1800,47 +1749,48 @@ app.get("/api/switch-proxy", async (req, res) => {
 
         const statusRows = await nineProxyPortStatusRows();
         let chosen = pickPortFromPortStatus(statusRows, proxyIp, config, tag);
+        const matchedByPortStatus = chosen != null;
 
         if (chosen == null) {
             chosen = await pickPortViaPortFreeScan(config, tag);
         }
         if (chosen == null) {
-            const checkRows = await nineProxyPortCheckAllRows();
-            chosen = pickPortFromPortCheckAll(checkRows, config, tag);
-        }
-        if (chosen == null) {
             return res.status(503).json({
                 success: false,
                 msg:
-                    "无可用本地转发端口（依赖 9proxy 的 port_status / port_free / port_check）。未安装 9proxy 时请使用 GET /api/switch-proxy-custom 切换自定义 SOCKS。"
+                    "无可用本地转发端口（已查 9proxy 的 port_status 与 port_free）。未安装 9proxy 时请使用 GET /api/switch-proxy-custom 切换自定义 SOCKS。"
             });
         }
 
-        let result;
-        try {
-            result = await axios.get(`${NINE_PROXY_BASE}/api/forward`, {
-                ...AXIOS_OPTS_NO_PROXY,
-                params: {
-                    t: 2,
-                    port: chosen,
-                    id
-                },
-                timeout: 20000
-            });
-        } catch (e) {
-            return res.status(503).json({
-                success: false,
-                msg: NINE_PROXY_UNAVAILABLE_HINT,
-                error: e.message || String(e)
-            });
-        }
+        let forwardData = null;
+        if (!matchedByPortStatus) {
+            let result;
+            try {
+                result = await axios.get(`${NINE_PROXY_BASE}/api/forward`, {
+                    ...AXIOS_OPTS_NO_PROXY,
+                    params: {
+                        t: 2,
+                        port: chosen,
+                        id
+                    },
+                    timeout: 20000
+                });
+            } catch (e) {
+                return res.status(503).json({
+                    success: false,
+                    msg: NINE_PROXY_UNAVAILABLE_HINT,
+                    error: e.message || String(e)
+                });
+            }
 
-        if (result.data?.error === true) {
-            return res.status(502).json({
-                success: false,
-                msg: result.data?.message || "9proxy forward 失败",
-                data: result.data
-            });
+            if (result.data?.error === true) {
+                return res.status(502).json({
+                    success: false,
+                    msg: result.data?.message || "9proxy forward 失败",
+                    data: result.data
+                });
+            }
+            forwardData = result.data;
         }
 
         applySocksPortToConfig(config, tag, chosen);
@@ -1855,16 +1805,19 @@ app.get("/api/switch-proxy", async (req, res) => {
                 error: restartErr.message || String(restartErr),
                 port: chosen,
                 tag,
-                data: result.data
+                data: forwardData
             });
         }
 
         res.json({
             success: true,
-            msg: "切换成功（已写入 sing-box 配置并已重启 sing-box）",
+            msg: matchedByPortStatus
+                ? "切换成功（port_status 已匹配 public_ip，仅更新本地端口并已重启 sing-box）"
+                : "切换成功（已 forward、写入 sing-box 并已重启 sing-box）",
             port: chosen,
             tag,
-            data: result.data
+            forward_called: !matchedByPortStatus,
+            data: forwardData
         });
     } catch (e) {
         res.status(500).json({

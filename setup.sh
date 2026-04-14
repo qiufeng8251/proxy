@@ -53,9 +53,8 @@ if [ "$INSTALL_NINEPROXY" -eq 1 ]; then
         sudo apt install -y ./"$DEB_FILE" || die "安装 9proxy deb 失败"
     fi
 
-    echo "启动 9proxy 服务..."
-    sudo systemctl start 9proxyd.service || die "启动 9proxyd.service 失败"
-    sudo systemctl enable 9proxyd || die "启用 9proxyd 开机自启失败"
+    echo "启用并启动 9proxy 服务（systemctl enable --now 9proxyd）..."
+    sudo systemctl enable --now 9proxyd || die "systemctl enable --now 9proxyd 失败（开机自启 + 当前启动）"
 
     AUTH_STATE_FILE="${HOME}/.9proxy_auth_state"
 
@@ -79,10 +78,43 @@ EOF
         mark_auth_state "$username"
     }
 
-    if [ -f "$AUTH_STATE_FILE" ]; then
-        echo "检测到本地登录状态文件，先按已登录处理: $AUTH_STATE_FILE"
+    # `9proxy setting -d` 中的 User Logged 为实际登录态（优于仅看本地标记文件）
+    parse_9proxy_user_logged() {
+        echo "$1" | awk -F: '
+            $1 ~ /User Logged/ {
+                v = $2
+                gsub(/^[[:space:]]+|[[:space:]]+$/, "", v)
+                print tolower(v)
+                exit
+            }
+        '
+    }
+
+    echo "检查 9proxy 登录状态（9proxy setting -d）..."
+    NINE_SETTING_OUT="$(9proxy setting -d 2>&1 || true)"
+    echo "$NINE_SETTING_OUT"
+    USER_LOGGED_VAL="$(parse_9proxy_user_logged "$NINE_SETTING_OUT")"
+
+    if [ "$USER_LOGGED_VAL" = "true" ]; then
+        echo "9proxy 报告 User Logged: true（已登录）。"
+        if [ ! -f "$AUTH_STATE_FILE" ]; then
+            echo "提示: 未找到 $AUTH_STATE_FILE；若以其它方式登录可忽略，以 9proxy 为准。"
+        fi
     else
+        if [ -n "$USER_LOGGED_VAL" ]; then
+            echo "9proxy 报告 User Logged: ${USER_LOGGED_VAL}（未登录），需要执行 9proxy auth。"
+        else
+            echo "未能从输出中解析 User Logged 行，将引导登录。"
+        fi
+        if [ -f "$AUTH_STATE_FILE" ]; then
+            echo "注意: 存在 $AUTH_STATE_FILE 但 9proxy 未处于登录态，将忽略该文件并重新登录。"
+        fi
         login_9proxy
+        echo "登录后再次检查（9proxy setting -d）..."
+        NINE_SETTING_OUT="$(9proxy setting -d 2>&1 || true)"
+        echo "$NINE_SETTING_OUT"
+        USER_LOGGED_VAL="$(parse_9proxy_user_logged "$NINE_SETTING_OUT")"
+        [ "$USER_LOGGED_VAL" = "true" ] || die "登录后 User Logged 仍为 false 或无法解析，请手动执行 9proxy auth 后重试本脚本。"
     fi
 
     echo "检查 API 状态..."
