@@ -2908,12 +2908,6 @@ app.get("/", (req, res) => {
       max-height: 90vh;
       overflow: auto;
     }
-    .nf-hint {
-      font-size: 12px;
-      color: #6b7280;
-      margin: 0 0 12px;
-      line-height: 1.45;
-    }
     .nf-row {
       margin-bottom: 10px;
     }
@@ -3132,9 +3126,6 @@ app.get("/", (req, res) => {
       <dialog id="nineFilterRuleDialog" class="dialog-proxy-pick">
         <div class="modal-inner nf-dialog-inner">
           <h3 style="margin-top:0;">9proxy 筛选规则 · <code id="nfTagLabel"></code></h3>
-          <p class="nf-hint">
-            仅写入本机 <code>proxy-user-meta.json</code>：country、state、city、isp、today（响应类型 t 固定为 JSON，对应值为 2，不在此配置）。流程：先选国家，再在该国家下添加州/市/ISP；若未选国家时先从全局列表添加了州/市/ISP，再选择国家将清空已选州/市/ISP。各列均可搜索。保存仅写磁盘，不发起创建或切换代理的请求。
-          </p>
           <div class="nf-row">
             <label for="nfCountrySelect">country（国家代码）</label>
             <div class="nf-row-toolbar">
