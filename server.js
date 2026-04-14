@@ -680,6 +680,7 @@ function nineFilterDefaults() {
         states: [],
         cities: [],
         isps: [],
+        zip: "",
         today: false,
         t: "2"
     };
@@ -692,6 +693,7 @@ function normNineFilterPayload(f) {
         states: Array.isArray(o.states) ? o.states.map((x) => String(x).trim()).filter(Boolean) : [],
         cities: Array.isArray(o.cities) ? o.cities.map((x) => String(x).trim()).filter(Boolean) : [],
         isps: Array.isArray(o.isps) ? o.isps.map((x) => String(x).trim()).filter(Boolean) : [],
+        zip: typeof o.zip === "string" ? o.zip.trim() : "",
         today: o.today === true || o.today === "true" || o.today === 1 || o.today === "1",
         t: "2"
     };
@@ -2144,7 +2146,7 @@ app.get("/api/user-wifi", (req, res) => {
 
 /**
  * GET /api/user-nine-filter?tag=出站tag
- * 读取 `proxy-user-meta.json` 内按 tag 保存的筛选规则（country/state/city/isp/today；t 固定为 2，仅持久化）。
+ * 读取 `proxy-user-meta.json` 内按 tag 保存的筛选规则（country/state/city/isp/zip/today；t 固定为 2，仅持久化）。
  */
 app.get("/api/user-nine-filter", (req, res) => {
     const tag = req.query.tag != null ? String(req.query.tag).trim() : "";
@@ -2160,7 +2162,7 @@ app.get("/api/user-nine-filter", (req, res) => {
 
 /**
  * POST /api/user-nine-filter
- * JSON：`{ "tag": "…", "filter": { "country", "states", "cities", "isps", "today" } }`（t 固定为 2，可省略），写入 meta（仅保存，不请求 9proxy）。
+ * JSON：`{ "tag": "…", "filter": { "country", "states", "cities", "isps", "zip", "today" } }`（t 固定为 2，可省略；zip 可选），写入 meta（仅保存，不请求 9proxy）。
  */
 app.post("/api/user-nine-filter", (req, res) => {
     const tag = req.body?.tag != null ? String(req.body.tag).trim() : "";
@@ -2338,9 +2340,42 @@ app.get("/api/add-proxy", async (req, res) => {
 });
 
 /**
+ * 序列化发往 9proxy `GET /api/proxy` 的 query，键顺序与完整示例一致：
+ * t → num → port → country → isp → city → zip → state（若有 today 则排在最后）。
+ * @param {Record<string, string|undefined>} p
+ */
+function serializeNineProxyApiProxyQuery(p) {
+    const order = [
+        "t",
+        "num",
+        "port",
+        "country",
+        "isp",
+        "city",
+        "zip",
+        "state",
+        "today"
+    ];
+    const parts = [];
+    for (let i = 0; i < order.length; i += 1) {
+        const key = order[i];
+        const v = p[key];
+        if (v === undefined || v === null) {
+            continue;
+        }
+        const s = String(v).trim();
+        if (s === "") {
+            continue;
+        }
+        parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(s)}`);
+    }
+    return parts.join("&");
+}
+
+/**
  * GET /api/proxy?tag=出站tag
  * 读取该 tag 已保存的筛选规则，在本地端口区间内通过 9proxy `GET /api/port_free` 扫描得到空闲端口，
- * 再以 num=1、t=2 及 country/state/city/isp/today 调用 9proxy `GET /api/proxy`。
+ * 再以 num=1、t=2 调用 9proxy `GET /api/proxy`；query 键顺序见 `serializeNineProxyApiProxyQuery`。
  */
 app.get("/api/proxy", async (req, res) => {
     const tag = req.query.tag != null ? String(req.query.tag).trim() : "";
@@ -2365,12 +2400,6 @@ app.get("/api/proxy", async (req, res) => {
                 msg: "无可用本地 SOCKS 端口（已在区间内扫描 9proxy port_free）"
             });
         }
-        const params = {
-            t: "2",
-            num: "1",
-            port: String(port),
-            country: f.country
-        };
         const joinCsv = (arr) =>
             Array.isArray(arr) && arr.length
                 ? arr
@@ -2379,23 +2408,33 @@ app.get("/api/proxy", async (req, res) => {
                       .join(",")
                 : "";
         const stateStr = joinCsv(f.states);
-        if (stateStr) {
-            params.state = stateStr;
-        }
         const cityStr = joinCsv(f.cities);
+        const ispStr = joinCsv(f.isps);
+        const zipStr = f.zip != null ? String(f.zip).trim() : "";
+        const params = {};
+        params.t = "2";
+        params.num = "1";
+        params.port = String(port);
+        params.country = f.country;
+        if (ispStr) {
+            params.isp = ispStr;
+        }
         if (cityStr) {
             params.city = cityStr;
         }
-        const ispStr = joinCsv(f.isps);
-        if (ispStr) {
-            params.isp = ispStr;
+        if (zipStr) {
+            params.zip = zipStr;
+        }
+        if (stateStr) {
+            params.state = stateStr;
         }
         if (f.today) {
             params.today = "true";
         }
         const result = await axios.get(`${NINE_PROXY_BASE}/api/proxy`, {
             ...AXIOS_OPTS_NO_PROXY,
-            params
+            params,
+            paramsSerializer: serializeNineProxyApiProxyQuery
         });
         res.json({
             success: true,
