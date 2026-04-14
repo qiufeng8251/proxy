@@ -1365,10 +1365,12 @@ function pickPortFromPortStatus(rows, targetPublicIp, config, tag) {
             continue;
         }
         const pub = String(row.public_ip || "").trim();
+        console.log(pub,tip)
         if (pub !== tip) {
             continue;
         }
         const port = parsePortFromBindingAddress(row.address);
+        console.log(port)
         if (port == null) {
             continue;
         }
