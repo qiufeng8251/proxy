@@ -2340,7 +2340,7 @@ app.get("/api/add-proxy", async (req, res) => {
 /**
  * GET /api/proxy?tag=出站tag
  * 读取该 tag 已保存的筛选规则，在本地端口区间内通过 9proxy `GET /api/port_free` 扫描得到空闲端口，
- * 组装 num=1、t=2 及 country/state/city/isp/today 参数；当前仅 console.log，暂不请求 `${NINE_PROXY_BASE}/api/proxy`。
+ * 再以 num=1、t=2 及 country/state/city/isp/today 调用 9proxy `GET /api/proxy`。
  */
 app.get("/api/proxy", async (req, res) => {
     const tag = req.query.tag != null ? String(req.query.tag).trim() : "";
@@ -2393,19 +2393,17 @@ app.get("/api/proxy", async (req, res) => {
         if (f.today) {
             params.today = "true";
         }
-        const proxyUrl = `${NINE_PROXY_BASE}/api/proxy`;
-        console.log("[9proxy] /api/proxy dry-run tag=%s", tag);
-        console.log("[9proxy] /api/proxy dry-run params=%j", params);
-        console.log("[9proxy] /api/proxy dry-run would GET %s (not called)", proxyUrl);
+        const result = await axios.get(`${NINE_PROXY_BASE}/api/proxy`, {
+            ...AXIOS_OPTS_NO_PROXY,
+            params
+        });
         res.json({
             success: true,
-            msg: "已组装参数（未请求 9proxy /api/proxy，见服务端日志）",
-            dry_run: true,
+            msg: "已按筛选规则请求新代理",
             port,
             tag,
             filter: f,
-            params,
-            data: { message: "dry-run" }
+            data: result.data
         });
     } catch (e) {
         res.json({
