@@ -2577,9 +2577,37 @@ function serializeNineProxyApiProxyQuery(p) {
 }
 
 /**
+ * 9proxy `GET /api/proxy` 成功响应示例：`{ "error": false, "message": "Success", "data": ["127.0.0.1:60006"] }`。
+ * 优先从 `data[0]`（`host:port`）解析端口；解析失败时用 fallbackPort。
+ * @param {object|null|undefined} body
+ * @param {number|string} fallbackPort
+ * @returns {number|null}
+ */
+function parsePortFromNineProxyProxyResponse(body, fallbackPort) {
+    const fb = Number(fallbackPort);
+    if (!Number.isFinite(fb) || fb <= 0) {
+        return null;
+    }
+    const arr =
+        body && typeof body === "object" && Array.isArray(body.data) ? body.data : [];
+    const first = arr.length > 0 && arr[0] != null ? String(arr[0]).trim() : "";
+    if (first) {
+        const colon = first.lastIndexOf(":");
+        if (colon > 0) {
+            const p = Number(first.slice(colon + 1).trim());
+            if (Number.isFinite(p) && p > 0 && p <= 65535) {
+                return p;
+            }
+        }
+    }
+    return fb;
+}
+
+/**
  * GET /api/proxy?tag=出站tag
  * 读取该 tag 已保存的筛选规则，在本地端口区间内通过 9proxy `GET /api/port_free` 扫描得到空闲端口，
  * 再以 num=1、t=2 及筛选字段调用 9proxy `GET /api/proxy`（isp/city/state 由内建表转为展示名，query 键顺序固定）。
+ * 9proxy 返回 `error: false` 且（可选）从 `data` 解析端口后：将该 tag 的 SOCKS 出站写为 `127.0.0.1:port`，保存 CONFIG_PATH 并 `systemctl restart sing-box`。
  */
 app.get("/api/proxy", async (req, res) => {
     const tag = req.query.tag != null ? String(req.query.tag).trim() : "";
@@ -2637,13 +2665,70 @@ app.get("/api/proxy", async (req, res) => {
             params,
             paramsSerializer: serializeNineProxyApiProxyQuery
         });
+        const nineBody = result.data;
+        if (nineBody && typeof nineBody === "object" && nineBody.error === true) {
+            return res.json({
+                success: false,
+                msg:
+                    (nineBody.message && String(nineBody.message)) ||
+                    (nineBody.msg && String(nineBody.msg)) ||
+                    "9proxy /api/proxy 返回失败",
+                tag,
+                port,
+                filter: f,
+                data: nineBody,
+                nine_proxy_api: nineProxyRequestUrl,
+                nine_proxy_params: nineProxyRequestParams
+            });
+        }
+
+        const boundPort = parsePortFromNineProxyProxyResponse(nineBody, port);
+        if (boundPort == null) {
+            return res.status(502).json({
+                success: false,
+                msg: "无法确定 9proxy 绑定端口（请检查响应 data）",
+                tag,
+                port,
+                filter: f,
+                data: nineBody,
+                nine_proxy_api: nineProxyRequestUrl,
+                nine_proxy_params: nineProxyRequestParams
+            });
+        }
+
+        try {
+            if (!fs.existsSync(CONFIG_PATH)) {
+                throw new Error("配置文件不存在: " + CONFIG_PATH);
+            }
+            const raw = fs.readFileSync(CONFIG_PATH, "utf8");
+            const config = JSON.parse(raw);
+            ensureOutboundIsSocksShellForTag(config, tag);
+            applySocksPortToConfig(config, tag, boundPort);
+            fs.writeFileSync(CONFIG_PATH, `${JSON.stringify(config, null, 2)}\n`);
+            await restartSingBox();
+        } catch (cfgErr) {
+            return res.status(500).json({
+                success: false,
+                msg:
+                    "9proxy 已成功，但更新 sing-box 配置或重启失败: " +
+                    (cfgErr.message || String(cfgErr)),
+                tag,
+                port: boundPort,
+                filter: f,
+                data: nineBody,
+                nine_proxy_api: nineProxyRequestUrl,
+                nine_proxy_params: nineProxyRequestParams
+            });
+        }
+
         res.json({
             success: true,
-            msg: "已按筛选规则请求新代理",
-            port,
+            msg: "已按筛选规则请求新代理，并已更新 sing-box 出站、重启 sing-box",
+            port: boundPort,
             tag,
             filter: f,
-            data: result.data
+            singbox_updated: true,
+            data: nineBody
         });
     } catch (e) {
         const out = {
