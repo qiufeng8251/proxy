@@ -30,6 +30,11 @@ const CUSTOM_PROXIES_PATH = path.join(
     path.dirname(USER_META_PATH),
     "custom-proxies.json"
 );
+/** 缓存最近一次 9proxy today_list 原始返回，便于排查上游数据问题 */
+const TODAY_LIST_CACHE_PATH = path.join(
+    path.dirname(USER_META_PATH),
+    "today-list-cache.json"
+);
 /** ipinfo 州/省字段缓存（历史兼容） */
 const IPINFO_CACHE = new Map();
 /** ipinfo 国家/州/市缓存 */
@@ -199,6 +204,116 @@ async function getProxy() {
         });
         const body = res.data;
         if (body && typeof body === "object" && !Array.isArray(body)) {
+            try {
+                const rows = Array.isArray(body.data)
+                    ? body.data
+                    : Array.isArray(body.proxy?.data)
+                        ? body.proxy.data
+                        : [];
+
+                const source = `${NINE_PROXY_BASE}/api/today_list?t=2&limit=200`;
+                const makeRowKey = (row) => {
+                    if (!row || typeof row !== "object") {
+                        return "";
+                    }
+                    if (row.id != null && String(row.id).trim() !== "") {
+                        return `id:${String(row.id).trim()}`;
+                    }
+                    const fallback = [
+                        String(row.ip || "").trim(),
+                        String(row.port || "").trim(),
+                        String(row.username || "").trim(),
+                        String(row.password || "").trim()
+                    ].join("|");
+                    if (fallback.replace(/\|/g, "") !== "") {
+                        return `addr:${fallback}`;
+                    }
+                    return `hash:${crypto.createHash("sha256").update(JSON.stringify(row), "utf8").digest("hex")}`;
+                };
+
+                const now = new Date().toISOString();
+                const oldEntries = [];
+                const oldEntryByKey = new Map();
+                try {
+                    const oldText = fs.readFileSync(TODAY_LIST_CACHE_PATH, "utf8");
+                    const oldObj = JSON.parse(oldText);
+                    const legacyRows = Array.isArray(oldObj?.entries)
+                        ? oldObj.entries
+                        : Array.isArray(oldObj?.payload?.data)
+                            ? oldObj.payload.data
+                            : Array.isArray(oldObj?.payload?.proxy?.data)
+                                ? oldObj.payload.proxy.data
+                                : [];
+                    for (let i = 0; i < legacyRows.length; i += 1) {
+                        const it = legacyRows[i];
+                        if (!it || typeof it !== "object") {
+                            continue;
+                        }
+                        const row = it.row && typeof it.row === "object" ? it.row : it;
+                        const key = String(it.key || makeRowKey(row)).trim();
+                        if (!key || oldEntryByKey.has(key)) {
+                            continue;
+                        }
+                        const wrapped = {
+                            key,
+                            row,
+                            first_seen_at: it.first_seen_at || oldObj?.fetched_at || now,
+                            last_seen_at: it.last_seen_at || oldObj?.fetched_at || now
+                        };
+                        oldEntries.push(wrapped);
+                        oldEntryByKey.set(key, wrapped);
+                    }
+                } catch {
+                    // 缓存文件不存在或损坏时，从空集合开始。
+                }
+
+                const merged = oldEntries.slice();
+                const mergedByKey = new Map(oldEntryByKey);
+                for (let i = 0; i < rows.length; i += 1) {
+                    const row = rows[i];
+                    if (!row || typeof row !== "object") {
+                        continue;
+                    }
+                    const key = makeRowKey(row);
+                    if (!key) {
+                        continue;
+                    }
+                    const existing = mergedByKey.get(key);
+                    if (existing) {
+                        existing.row = row;
+                        existing.last_seen_at = now;
+                        continue;
+                    }
+                    const next = {
+                        key,
+                        row,
+                        first_seen_at: now,
+                        last_seen_at: now
+                    };
+                    merged.push(next);
+                    mergedByKey.set(key, next);
+                }
+
+                fs.writeFileSync(
+                    TODAY_LIST_CACHE_PATH,
+                    `${JSON.stringify(
+                        {
+                            updated_at: now,
+                            source,
+                            total_unique: merged.length,
+                            entries: merged
+                        },
+                        null,
+                        2
+                    )}\n`,
+                    "utf8"
+                );
+            } catch (writeErr) {
+                console.warn(
+                    "[9proxy] today_list cache write failed:",
+                    writeErr && writeErr.message ? writeErr.message : writeErr
+                );
+            }
             return { ...body, nine_proxy_available: true };
         }
         console.warn("[9proxy] today_list: 响应非对象，已降级为空列表");
@@ -213,6 +328,58 @@ async function getProxy() {
             nine_proxy_error: e.message || String(e)
         };
     }
+}
+
+/**
+ * 从 today-list-cache 读取去重条目。
+ * @returns {Array<{ key?: string, row?: object, first_seen_at?: string, last_seen_at?: string }>}
+ */
+function readTodayListCacheEntries() {
+    try {
+        const raw = fs.readFileSync(TODAY_LIST_CACHE_PATH, "utf8");
+        const obj = JSON.parse(raw);
+        return Array.isArray(obj?.entries) ? obj.entries : [];
+    } catch {
+        return [];
+    }
+}
+
+/**
+ * 通过 public_ip 在 today-list-cache 中查找对应 today_list `id`。
+ * 命中多条时优先 `last_seen_at` 最新的一条。
+ * @param {string} publicIp
+ * @returns {string}
+ */
+function findTodayProxyIdByPublicIpFromCache(publicIp) {
+    const target = String(publicIp || "").trim();
+    if (!target) {
+        return "";
+    }
+    const entries = readTodayListCacheEntries();
+    let best = null;
+    let bestTs = 0;
+    for (let i = 0; i < entries.length; i += 1) {
+        const entry = entries[i];
+        if (!entry || typeof entry !== "object") {
+            continue;
+        }
+        const row = entry.row && typeof entry.row === "object" ? entry.row : entry;
+        const rowIp = String(row.public_ip || row.ip || "").trim();
+        if (!rowIp || rowIp !== target) {
+            continue;
+        }
+        const id = row.id != null ? String(row.id).trim() : "";
+        if (!id) {
+            continue;
+        }
+        const t = Date.parse(String(entry.last_seen_at || entry.first_seen_at || ""));
+        const ts = Number.isFinite(t) ? t : 0;
+        if (!best || ts >= bestTs) {
+            best = id;
+            bestTs = ts;
+        }
+    }
+    return best || "";
 }
 
 /** @type {null | { rows: typeof STATE_CODE_ROWS, countries: string[], statesByCountry: Record<string, { state_code: string, state_name: string }[]>, citiesByCountry: Record<string, { city_code: string, city_name: string }[]>, ispsByCountry: Record<string, { isp_code: string, isp_name: string }[]> }} */
@@ -2219,6 +2386,108 @@ app.get("/api/switch-proxy-direct", async (req, res) => {
 });
 
 /**
+ * GET /api/refresh-offline-nine
+ * 仅用于「用户管理」中本地 9proxy 离线刷新：按 `public_ip` 从 today-list-cache 找 `id`，
+ * 再请求 9proxy `GET /api/forward` 重新绑定当前 tag 对应本地端口。
+ * 查询参数：`tag`、`public_ip`。
+ */
+app.get("/api/refresh-offline-nine", async (req, res) => {
+    const tag = req.query.tag != null ? String(req.query.tag).trim() : "";
+    const publicIp = req.query.public_ip != null ? String(req.query.public_ip).trim() : "";
+    if (!tag) {
+        return res.status(400).json({
+            success: false,
+            msg: "缺少 tag"
+        });
+    }
+    if (!publicIp) {
+        return res.status(400).json({
+            success: false,
+            msg: "缺少 public_ip"
+        });
+    }
+    const todayId = findTodayProxyIdByPublicIpFromCache(publicIp);
+    if (!todayId) {
+        return res.status(404).json({
+            success: false,
+            msg: "未在 today-list-cache 中找到该 public_ip 对应的 today id",
+            public_ip: publicIp
+        });
+    }
+    try {
+        const raw = fs.readFileSync(CONFIG_PATH, "utf8");
+        const config = JSON.parse(raw);
+        const ob = getOutboundObForTag(config, tag);
+        if (!ob) {
+            return res.status(404).json({
+                success: false,
+                msg: "未找到出站: " + tag
+            });
+        }
+        if (String(ob.type || "").toLowerCase() !== "socks") {
+            return res.status(400).json({
+                success: false,
+                msg: "目标出站不是 SOCKS: " + tag
+            });
+        }
+        const host = String(ob.server || "").trim().toLowerCase();
+        if (host !== "127.0.0.1" && host !== "localhost" && host !== "::1") {
+            return res.status(400).json({
+                success: false,
+                msg: "仅支持本地 9proxy 出站刷新（server 需为 127.0.0.1/localhost/::1）"
+            });
+        }
+        const localPort = Number(ob.server_port);
+        if (!Number.isInteger(localPort) || localPort <= 0 || localPort > 65535) {
+            return res.status(400).json({
+                success: false,
+                msg: "当前出站端口无效: " + String(ob.server_port || "")
+            });
+        }
+        let r;
+        try {
+            r = await axios.get(`${NINE_PROXY_BASE}/api/forward`, {
+                ...AXIOS_OPTS_NO_PROXY,
+                params: {
+                    t: 2,
+                    port: localPort,
+                    id: todayId
+                },
+                timeout: 20000
+            });
+        } catch (e) {
+            return res.status(503).json({
+                success: false,
+                msg: NINE_PROXY_UNAVAILABLE_HINT,
+                error: e.message || String(e)
+            });
+        }
+        if (r.data?.error === true) {
+            return res.status(502).json({
+                success: false,
+                msg: r.data?.message || "forward 失败",
+                data: r.data
+            });
+        }
+        return res.json({
+            success: true,
+            msg: "刷新成功（已请求 forward）",
+            tag,
+            public_ip: publicIp,
+            id: todayId,
+            port: localPort,
+            data: r.data
+        });
+    } catch (e) {
+        return res.status(500).json({
+            success: false,
+            msg: e.message || "刷新失败",
+            error: e.message
+        });
+    }
+});
+
+/**
  * GET /api/location-codes
  * 返回内置州/市/ISP 表整理后的国家列表、各国州/城市/ISP 及完整州行数据，供前端筛选规则与新增代理。
  */
@@ -3578,6 +3847,12 @@ app.get("/", (req, res) => {
       padding: 5px 8px;
       vertical-align: middle;
     }
+    .user-refresh-offline-btn {
+      margin-left: 8px;
+      font-size: 12px;
+      line-height: 1.2;
+      padding: 3px 7px;
+    }
     .nf-dialog-inner {
       max-width: 520px;
       max-height: 90vh;
@@ -4192,9 +4467,16 @@ app.get("/", (req, res) => {
         const ps =
           overlay ||
           (!isDirectUser ? matchPortRow(portRows, row.socks_address) : null);
-        const pub =
+        const outTag = String(row.outbound || "");
+        const tagAttr = escapeHtml(outTag);
+        const isLocalNine = !isDirectUser && isLocalNineProxySocksAddress(row.socks_address);
+        const pubRaw =
           ps && ps.public_ip != null && String(ps.public_ip).trim() !== ""
-            ? escapeHtml(String(ps.public_ip).trim())
+            ? String(ps.public_ip).trim()
+            : "";
+        const pub =
+          pubRaw !== ""
+            ? escapeHtml(pubRaw)
             : "";
         const cc = ps && ps.ip_country ? String(ps.ip_country) : "";
         const reg = ps && ps.ip_region ? escapeHtml(String(ps.ip_region)) : "";
@@ -4205,7 +4487,14 @@ app.get("/", (req, res) => {
             ? '<span class="online">' +
                 (isDirectUser ? "在线（直连）" : "在线") +
                 "</span>"
-            : '<span class="offline">离线</span>';
+            : '<span class="offline">离线</span>' +
+              (isLocalNine && pubRaw
+                ? '<button type="button" class="switch-btn user-refresh-offline-btn" data-outbound="' +
+                  tagAttr +
+                  '" data-public-ip="' +
+                  escapeHtml(pubRaw) +
+                  '">刷新</button>'
+                : "");
         } else if (isDirectUser) {
           onlineCell = '<span class="muted-cell">—</span>';
         }
@@ -4213,8 +4502,6 @@ app.get("/", (req, res) => {
         const bindHint = addrRaw
           ? '<div class="' + userBindSocksClass(row) + '">' + escapeHtml(addrRaw) + "</div>"
           : "";
-        const outTag = String(row.outbound || "");
-        const tagAttr = escapeHtml(outTag);
         const wifiVal = escapeHtml(String(row.wifi_name || "").trim());
         const wnRaw = String(row.wifi_name || "").trim();
         let wifiDisplay;
@@ -5585,6 +5872,41 @@ app.get("/", (req, res) => {
       }
     });
     userBody.addEventListener("click", async (ev) => {
+      const refreshOfflineBtn = ev.target.closest(".user-refresh-offline-btn");
+      if (refreshOfflineBtn) {
+        const tagRf = refreshOfflineBtn.getAttribute("data-outbound");
+        const publicIpRf = refreshOfflineBtn.getAttribute("data-public-ip");
+        if (!tagRf || !publicIpRf) {
+          return;
+        }
+        try {
+          refreshOfflineBtn.disabled = true;
+          setUserStatus("正在刷新离线代理…");
+          const resp = await fetch(
+            "/api/refresh-offline-nine?tag=" +
+              encodeURIComponent(tagRf) +
+              "&public_ip=" +
+              encodeURIComponent(publicIpRf)
+          );
+          const data = await resp.json().catch(() => ({}));
+          const forwardOk = data?.data?.error === false || data?.data?.error == null;
+          if (!resp.ok || data.success === false || !forwardOk) {
+            throw new Error(data.msg || data.error || "刷新失败");
+          }
+          setUserStatus(
+            (data.msg || "刷新成功") +
+              " · " +
+              String(tagRf) +
+              (data.port != null ? " · 本地端口 " + String(data.port) : "")
+          );
+          await Promise.all([loadSingboxUsers(), loadProxyList()]);
+        } catch (e) {
+          setUserStatus("刷新失败: " + (e.message || String(e)));
+        } finally {
+          refreshOfflineBtn.disabled = false;
+        }
+        return;
+      }
       const useFromUser = ev.target.closest(".use-from-user-btn");
       if (useFromUser) {
         const tag = useFromUser.getAttribute("data-outbound");
