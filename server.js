@@ -929,66 +929,6 @@ function parsePortFromBindingAddress(addr) {
     return Number.isFinite(p) && p > 0 ? p : null;
 }
 
-/** 本机 9proxy 转发类 SOCKS 的 `server` 取值（与 `enrichSingboxUsersWithSocksGeo` 本地判断一致） */
-function isLocalNineProxySocksServer(server) {
-    const s = String(server ?? "")
-        .trim()
-        .toLowerCase();
-    return s === "127.0.0.1" || s === "localhost" || s === "::1";
-}
-
-/**
- * sing-box 配置里使用 `127.0.0.1:port`（类）本机 SOCKS 的出站 tag 列表。
- * @param {object} config
- * @param {number|string} port
- * @returns {string[]}
- */
-function tagsUsingLocalSocksPort(config, port) {
-    const p = Number(port);
-    if (!Number.isFinite(p) || p <= 0) {
-        return [];
-    }
-    const outbounds = config?.outbounds;
-    if (!Array.isArray(outbounds)) {
-        return [];
-    }
-    const tags = [];
-    for (let i = 0; i < outbounds.length; i += 1) {
-        const ob = outbounds[i];
-        if (!ob || ob.type !== "socks") {
-            continue;
-        }
-        if (!isLocalNineProxySocksServer(ob.server)) {
-            continue;
-        }
-        const sp = Number(ob.server_port);
-        if (!Number.isFinite(sp) || sp !== p) {
-            continue;
-        }
-        const t = String(ob.tag ?? "").trim();
-        if (t && !tags.includes(t)) {
-            tags.push(t);
-        }
-    }
-    return tags;
-}
-
-/**
- * 是否可对该本地端口调用 9proxy forward 而不影响其它用户：
- * 无出站占用，或仅有当前 tag 的本机 SOCKS 占用（含独占或「仅自己」复用）。
- * @param {object} config
- * @param {string} tag
- * @param {number|string} port
- */
-function canRebindLocalNineProxyPortForTag(config, tag, port) {
-    const users = tagsUsingLocalSocksPort(config, port);
-    if (users.length === 0) {
-        return true;
-    }
-    const t = String(tag || "").trim();
-    return users.every((u) => u === t);
-}
-
 /**
  * 在内存中的 sing-box 配置里，将指定 tag 的 SOCKS 出站改为本机固定地址与端口。
  * @param {object} config
@@ -1350,11 +1290,9 @@ async function nineProxyPortFreeOk(port) {
  * 不因 `online === false` 跳过，以便与 9proxy 展示行一致时仍绑定该本地端口。
  * @param {object[]} rows
  * @param {string} targetPublicIp
- * @param {object} config sing-box 配置（避免复用已被其它出站 tag 占用的本地端口）
- * @param {string} tag 当前切换的出站 tag
  * @returns {number|null}
  */
-function pickPortFromPortStatus(rows, targetPublicIp, config, tag) {
+function pickPortFromPortStatus(rows, targetPublicIp) {
     const tip = String(targetPublicIp || "").trim();
     if (!tip || !Array.isArray(rows)) {
         return null;
@@ -1365,16 +1303,11 @@ function pickPortFromPortStatus(rows, targetPublicIp, config, tag) {
             continue;
         }
         const pub = String(row.public_ip || "").trim();
-        console.log(pub,tip)
         if (pub !== tip) {
             continue;
         }
         const port = parsePortFromBindingAddress(row.address);
-        console.log(port)
         if (port == null) {
-            continue;
-        }
-        if (!canRebindLocalNineProxyPortForTag(config, tag, port)) {
             continue;
         }
         return port;
@@ -1384,16 +1317,11 @@ function pickPortFromPortStatus(rows, targetPublicIp, config, tag) {
 
 /**
  * 在 [LOCAL_SOCKS_SCAN_MIN, LOCAL_SOCKS_SCAN_MAX] 内顺序调用 `nineProxyPortFreeOk`，返回第一个可用端口。
- * @param {object} config
- * @param {string} tag
  * @returns {Promise<number|null>}
  */
-async function pickPortViaPortFreeScan(config, tag) {
+async function pickPortViaPortFreeScan() {
     for (let p = LOCAL_SOCKS_SCAN_MIN; p <= LOCAL_SOCKS_SCAN_MAX; p += 1) {
         try {
-            if (!canRebindLocalNineProxyPortForTag(config, tag, p)) {
-                continue;
-            }
             if (await nineProxyPortFreeOk(p)) {
                 return p;
             }
@@ -1750,11 +1678,11 @@ app.get("/api/switch-proxy", async (req, res) => {
         }
 
         const statusRows = await nineProxyPortStatusRows();
-        let chosen = pickPortFromPortStatus(statusRows, proxyIp, config, tag);
+        let chosen = pickPortFromPortStatus(statusRows, proxyIp);
         const matchedByPortStatus = chosen != null;
 
         if (chosen == null) {
-            chosen = await pickPortViaPortFreeScan(config, tag);
+            chosen = await pickPortViaPortFreeScan();
         }
         if (chosen == null) {
             return res.status(503).json({
