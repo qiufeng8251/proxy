@@ -2886,11 +2886,17 @@ app.get("/", (req, res) => {
       background: #e5e7eb;
     }
     .user-actions-cell {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
       white-space: nowrap;
-      text-align: right;
+      width: 100%;
+      box-sizing: border-box;
     }
-    .user-actions-cell .switch-btn {
-      margin-right: 6px;
+    .user-actions-cell .switch-btn,
+    .user-actions-cell .nine-filter-rule-btn {
+      flex-shrink: 0;
     }
     .nine-filter-rule-btn {
       font-size: 12px;
