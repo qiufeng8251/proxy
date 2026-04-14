@@ -2214,6 +2214,27 @@ app.post("/api/9proxy-login", async (req, res) => {
 });
 
 /**
+ * POST /api/9proxy-logout
+ * 本机执行 `9proxy auth -l` 退出 9proxy 账号登录。
+ */
+app.post("/api/9proxy-logout", async (req, res) => {
+    const r = await nineProxyExecFile(["auth", "-l"], 25000);
+    const out = (r.stdout + "\n" + r.stderr).trim();
+    if (!r.ok) {
+        return res.status(503).json({
+            success: false,
+            msg: r.error || out || "9proxy auth -l 执行失败",
+            detail: out.slice(0, 800)
+        });
+    }
+    res.json({
+        success: true,
+        msg: "已退出 9proxy 登录",
+        detail: out.slice(0, 500)
+    });
+});
+
+/**
  * GET /
  * 返回内嵌 sing-box 控制台 HTML（用户管理、代理列表、切换/新增等前端脚本）。
  * 文档标题 `<title>` 使用请求主机名（`req.hostname` 或 `Host` 头去掉端口），无则回退为「代理控制台」。
@@ -2642,6 +2663,23 @@ app.get("/", (req, res) => {
     .nineproxy-login-btn:hover {
       background: #1d4ed8;
     }
+    .nineproxy-logout-btn {
+      background: #fff;
+      color: #b91c1c;
+      padding: 6px 10px;
+      font-size: 12px;
+      border-radius: 6px;
+      border: 1px solid #fecaca;
+      cursor: pointer;
+    }
+    .nineproxy-logout-btn:hover {
+      background: #fef2f2;
+      border-color: #f87171;
+    }
+    .nineproxy-logout-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
     .nineproxy-refresh-btn {
       background: #f3f4f6;
       color: #374151;
@@ -2672,10 +2710,11 @@ app.get("/", (req, res) => {
           <div class="nineproxy-account-strip" id="nineProxyAccountStrip" aria-live="polite">
             <span class="nineproxy-bar-text" id="nineProxyBarText">9proxy 状态加载中…</span>
             <button type="button" class="nineproxy-login-btn" id="nineProxyLoginBtn" style="display:none">登录 9proxy</button>
+            <button type="button" class="nineproxy-logout-btn" id="nineProxyLogoutBtn" style="display:none">退出 9proxy</button>
             <button type="button" class="nineproxy-refresh-btn" id="nineProxyRefreshBtn">刷新</button>
           </div>
         </div>
-        <p class="user-hint">用户行来自 <code>route.rules</code> 的 <code>outbound</code>，与 <code>outbounds</code> 中<strong>同名 tag</strong> 的出站一一对应；右侧<strong>操作 · 切换</strong>可弹出列表选择今日代理或列表底部的<strong>直连</strong>（将该 tag 出站改为 <code>type: direct</code>，不经 SOCKS）。WiFi 名称写入 <code>proxy-user-meta.json</code> 的 <code>wifi_by_outbound</code>；点击<strong>铅笔</strong>展开编辑，<strong>关闭</strong>图标收起不保存。本机 <code>127.0.0.1</code> 类 SOCKS 的出口 IP、国家、州/省、城市由 <code>/api/port_status</code> 与地址匹配补齐；<strong>远端 SOCKS</strong>由服务端经 SOCKS 探测；出站为 <strong>直连</strong> 时由服务端<strong>不经代理</strong>访问 ipify 取本机出口 IP，并用 ipinfo 补齐国家、州/省、城市（与 SOCKS 列一致）；在线列显示「在线（直连）」或「离线」（探测失败时）。右上角为<strong>本机 9proxy CLI</strong>登录状态与剩余 IP（<code>9proxy setting -d</code> / <code>9proxy proxy -b</code>）。</p>
+        <p class="user-hint">用户行来自 <code>route.rules</code> 的 <code>outbound</code>，与 <code>outbounds</code> 中<strong>同名 tag</strong> 的出站一一对应；右侧<strong>操作 · 切换</strong>可弹出列表选择今日代理或列表底部的<strong>直连</strong>（将该 tag 出站改为 <code>type: direct</code>，不经 SOCKS）。WiFi 名称写入 <code>proxy-user-meta.json</code> 的 <code>wifi_by_outbound</code>；点击<strong>铅笔</strong>展开编辑，<strong>关闭</strong>图标收起不保存。本机 <code>127.0.0.1</code> 类 SOCKS 的出口 IP、国家、州/省、城市由 <code>/api/port_status</code> 与地址匹配补齐；<strong>远端 SOCKS</strong>由服务端经 SOCKS 探测；出站为 <strong>直连</strong> 时由服务端<strong>不经代理</strong>访问 ipify 取本机出口 IP，并用 ipinfo 补齐国家、州/省、城市（与 SOCKS 列一致）；在线列显示「在线（直连）」或「离线」（探测失败时）。右上角为<strong>本机 9proxy CLI</strong>登录状态与剩余 IP（<code>9proxy setting -d</code> / <code>9proxy proxy -b</code>）；已登录时可<strong>退出 9proxy</strong>（<code>9proxy auth -l</code>）。</p>
         <div class="toolbar">
           <button type="button" id="refreshUsersBtn">刷新用户</button>
           <span class="status" id="userStatusText">加载中...</span>
@@ -2872,6 +2911,7 @@ app.get("/", (req, res) => {
     const userAddCustomSocksBtn = document.getElementById("userAddCustomSocksBtn");
     const nineProxyBarText = document.getElementById("nineProxyBarText");
     const nineProxyLoginBtn = document.getElementById("nineProxyLoginBtn");
+    const nineProxyLogoutBtn = document.getElementById("nineProxyLogoutBtn");
     const nineProxyRefreshBtn = document.getElementById("nineProxyRefreshBtn");
     const nineProxyLoginDialog = document.getElementById("nineProxyLoginDialog");
     const nineProxyUserInput = document.getElementById("nineProxyUserInput");
@@ -2908,6 +2948,16 @@ app.get("/", (req, res) => {
       userStatusText.textContent = text;
     }
 
+    /** @param {"login"|"logout"|"none"} mode */
+    function setNineProxyAuthButtons(mode) {
+      if (nineProxyLoginBtn) {
+        nineProxyLoginBtn.style.display = mode === "login" ? "inline-block" : "none";
+      }
+      if (nineProxyLogoutBtn) {
+        nineProxyLogoutBtn.style.display = mode === "logout" ? "inline-block" : "none";
+      }
+    }
+
     function renderNineProxyAccountBar(data, httpOk) {
       if (!nineProxyBarText || !nineProxyLoginBtn) {
         return;
@@ -2918,14 +2968,14 @@ app.get("/", (req, res) => {
           escapeHtml(
             (data && (data.cli_error || data.msg)) || "状态接口不可用（HTTP 错误）"
           );
-        nineProxyLoginBtn.style.display = "inline-block";
+        setNineProxyAuthButtons("login");
         return;
       }
       if (data.setting_ok === false && data.cli_error) {
         nineProxyBarText.innerHTML =
           '<span class="np-danger">9proxy CLI</span>：' +
           escapeHtml(String(data.cli_error));
-        nineProxyLoginBtn.style.display = "inline-block";
+        setNineProxyAuthButtons("login");
         return;
       }
       if (data.logged === true) {
@@ -2944,17 +2994,17 @@ app.get("/", (req, res) => {
           escapeHtml(rip) +
           "</strong>" +
           extra;
-        nineProxyLoginBtn.style.display = "none";
+        setNineProxyAuthButtons("logout");
         return;
       }
       if (data.logged === false) {
         nineProxyBarText.innerHTML = '<span class="np-warn">未登录 9proxy</span>';
-        nineProxyLoginBtn.style.display = "inline-block";
+        setNineProxyAuthButtons("login");
         return;
       }
       nineProxyBarText.innerHTML =
         '<span class="np-danger">无法解析</span> <span class="np-muted">（<code>User Logged</code> 行缺失；请确认本机已安装 9proxy CLI）</span>';
-      nineProxyLoginBtn.style.display = "inline-block";
+      setNineProxyAuthButtons("login");
     }
 
     async function refreshNineProxyAccountBar() {
@@ -3860,6 +3910,25 @@ app.get("/", (req, res) => {
     if (nineProxyRefreshBtn) {
       nineProxyRefreshBtn.addEventListener("click", () => {
         void refreshNineProxyAccountBar();
+      });
+    }
+    if (nineProxyLogoutBtn) {
+      nineProxyLogoutBtn.addEventListener("click", async () => {
+        nineProxyLogoutBtn.disabled = true;
+        try {
+          const resp = await fetch("/api/9proxy-logout", { method: "POST" });
+          const data = await resp.json().catch(() => ({}));
+          if (!resp.ok || data.success === false) {
+            throw new Error(data.msg || data.error || "退出失败");
+          }
+          setUserStatus((data.msg || "已退出 9proxy") + " · 可刷新用户或代理列表");
+          await refreshNineProxyAccountBar();
+          await loadProxyList();
+        } catch (e) {
+          setUserStatus("9proxy 退出失败: " + (e.message || String(e)));
+        } finally {
+          nineProxyLogoutBtn.disabled = false;
+        }
       });
     }
     if (
