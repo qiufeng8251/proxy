@@ -3277,6 +3277,19 @@ app.get("/", (req, res) => {
           </div>
         </div>
       </dialog>
+      <dialog id="proxyRuleSwitchErrorDialog" class="dialog-proxy-pick">
+        <div class="modal-inner">
+          <h3 style="margin-top:0;">\u89c4\u5219\u5207\u6362\u5931\u8d25</h3>
+          <p
+            class="status"
+            id="proxyRuleSwitchErrorText"
+            style="white-space:pre-wrap;word-break:break-word;margin:0 0 12px;font-size:13px;color:#b91c1c;"
+          ></p>
+          <div class="modal-actions">
+            <button type="button" id="proxyRuleSwitchErrorOkBtn" class="switch-btn">\u786e\u5b9a</button>
+          </div>
+        </div>
+      </dialog>
     </main>
   </div>
 
@@ -3343,6 +3356,11 @@ app.get("/", (req, res) => {
     const nfFilterStatus = document.getElementById("nfFilterStatus");
     const nfCancelFilterBtn = document.getElementById("nfCancelFilterBtn");
     const nfSaveFilterBtn = document.getElementById("nfSaveFilterBtn");
+    const proxyRuleSwitchErrorDialog = document.getElementById(
+      "proxyRuleSwitchErrorDialog"
+    );
+    const proxyRuleSwitchErrorText = document.getElementById("proxyRuleSwitchErrorText");
+    const proxyRuleSwitchErrorOkBtn = document.getElementById("proxyRuleSwitchErrorOkBtn");
     const endpoint = "/api/proxy-list";
     let statesByCountry = {};
     /** 9proxy CLI 已登录（用于用户表「筛选规则」按钮） */
@@ -3378,6 +3396,24 @@ app.get("/", (req, res) => {
 
     function setUserStatus(text) {
       userStatusText.textContent = text;
+    }
+
+    function showProxyRuleSwitchErrorDialog(message) {
+      const text =
+        message != null && String(message).trim() !== ""
+          ? String(message)
+          : "\u8bf7\u6c42\u5931\u8d25";
+      if (proxyRuleSwitchErrorText) {
+        proxyRuleSwitchErrorText.textContent = text;
+      }
+      if (
+        proxyRuleSwitchErrorDialog &&
+        typeof proxyRuleSwitchErrorDialog.showModal === "function"
+      ) {
+        proxyRuleSwitchErrorDialog.showModal();
+      } else {
+        window.alert(text);
+      }
     }
 
     /** @param {"login"|"logout"|"none"} mode */
@@ -4936,8 +4972,35 @@ app.get("/", (req, res) => {
                 "/api/proxy?tag=" + encodeURIComponent(tagRs)
               );
               const data = await resp.json().catch(() => ({}));
+              let errMsg = "";
               if (!resp.ok || data.success === false) {
-                throw new Error(data.msg || data.error || "\u8bf7\u6c42\u5931\u8d25");
+                errMsg =
+                  (data.msg && String(data.msg)) ||
+                  (data.error && String(data.error)) ||
+                  "\u8bf7\u6c42\u5931\u8d25\uFF08HTTP " + String(resp.status) + "\uFF09";
+              } else {
+                const inner = data.data;
+                if (
+                  inner &&
+                  typeof inner === "object" &&
+                  (inner.error === true ||
+                    inner.success === false ||
+                    (typeof inner.error === "string" && inner.error.trim() !== ""))
+                ) {
+                  errMsg =
+                    inner.message != null && String(inner.message).trim() !== ""
+                      ? String(inner.message)
+                      : inner.msg != null && String(inner.msg).trim() !== ""
+                        ? String(inner.msg)
+                        : typeof inner.error === "string"
+                          ? inner.error.trim()
+                          : "9proxy \u8fd4\u56de\u9519\u8bef";
+                }
+              }
+              if (errMsg) {
+                setUserStatus("\u89c4\u5219\u5207\u6362\u5931\u8d25: " + errMsg);
+                showProxyRuleSwitchErrorDialog(errMsg);
+                return;
               }
               const detail =
                 data.data && data.data.message != null
@@ -4952,9 +5015,9 @@ app.get("/", (req, res) => {
               );
               await Promise.all([loadSingboxUsers(), loadProxyList()]);
             } catch (e) {
-              setUserStatus(
-                "\u89c4\u5219\u5207\u6362\u5931\u8d25: " + (e.message || String(e))
-              );
+              const errMsg = e.message || String(e);
+              setUserStatus("\u89c4\u5219\u5207\u6362\u5931\u8d25: " + errMsg);
+              showProxyRuleSwitchErrorDialog(errMsg);
             } finally {
               setAllRuleSwitchFlowBusy(false);
             }
@@ -5098,6 +5161,11 @@ app.get("/", (req, res) => {
     if (nfSaveFilterBtn) {
       nfSaveFilterBtn.addEventListener("click", function () {
         void nfSaveFilter();
+      });
+    }
+    if (proxyRuleSwitchErrorOkBtn && proxyRuleSwitchErrorDialog) {
+      proxyRuleSwitchErrorOkBtn.addEventListener("click", function () {
+        proxyRuleSwitchErrorDialog.close();
       });
     }
     loadLocationCodes();
