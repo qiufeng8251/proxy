@@ -4955,7 +4955,9 @@ app.get("/", (req, res) => {
             .toUpperCase()
         : "";
       if (!cc) {
-        nfFilterStatus.textContent = "\u8bf7\u9009\u62e9\u56fd\u5bb6\u540e\u518d\u4fdd\u5b58";
+        const tip = "\u8bf7\u9009\u62e9\u56fd\u5bb6\u540e\u518d\u4fdd\u5b58";
+        nfFilterStatus.textContent = tip;
+        setUserStatus("\u7b5b\u9009\u89c4\u5219\u4fdd\u5b58\u5931\u8d25: " + tip);
         return;
       }
       function normList(kind) {
@@ -5004,7 +5006,9 @@ app.get("/", (req, res) => {
           "\u7b5b\u9009\u89c4\u5219\u5df2\u4fdd\u5b58\uFF08" + nfCurrentTag + "\uFF09"
         );
       } catch (e) {
-        nfFilterStatus.textContent = e.message || String(e);
+        const tip = e.message || String(e);
+        nfFilterStatus.textContent = tip;
+        setUserStatus("\u7b5b\u9009\u89c4\u5219\u4fdd\u5b58\u5931\u8d25: " + tip);
       } finally {
         if (nfSaveFilterBtn) {
           nfSaveFilterBtn.disabled = false;
@@ -5196,7 +5200,9 @@ app.get("/", (req, res) => {
           useProxyFromUserDialog.close();
           await Promise.all([loadSingboxUsers(), loadProxyList()]);
         } catch (err) {
-          setUseProxyFromUserStatus(err.message || String(err));
+          const tip = err.message || String(err);
+          setUseProxyFromUserStatus(tip);
+          setUserStatus("\u5207\u6362\u5931\u8d25: " + tip);
         }
         return;
       }
@@ -5204,7 +5210,9 @@ app.get("/", (req, res) => {
       try {
         list = (await fetchProxyListData()).list;
       } catch (e) {
-        setUseProxyFromUserStatus("刷新代理列表失败: " + e.message);
+        const tip = "刷新代理列表失败: " + e.message;
+        setUseProxyFromUserStatus(tip);
+        setUserStatus(tip);
         return;
       }
       const selfRow = list.find((p) => String(p.id) === String(proxyId));
@@ -5284,7 +5292,9 @@ app.get("/", (req, res) => {
         useProxyFromUserDialog.close();
         await Promise.all([loadSingboxUsers(), loadProxyList()]);
       } catch (err) {
-        setUseProxyFromUserStatus(err.message || String(err));
+        const tip = err.message || String(err);
+        setUseProxyFromUserStatus(tip);
+        setUserStatus("\u5207\u6362\u5931\u8d25: " + tip);
       }
     }
 
@@ -5741,8 +5751,16 @@ app.get("/", (req, res) => {
     navProxies.addEventListener("click", () => showPanel("proxies"));
     refreshUsersBtn.addEventListener("click", loadSingboxUsers);
     if (nineProxyRefreshBtn) {
-      nineProxyRefreshBtn.addEventListener("click", () => {
-        void refreshNineProxyAccountBar();
+      nineProxyRefreshBtn.addEventListener("click", async () => {
+        setUserStatus("\u6b63\u5728\u5237\u65b0\u4ee3\u7406\u8d26\u53f7\u72b6\u6001…");
+        try {
+          await refreshNineProxyAccountBar();
+          setUserStatus("\u5df2\u5237\u65b0\u4ee3\u7406\u8d26\u53f7\u72b6\u6001");
+        } catch (e) {
+          setUserStatus(
+            "\u5237\u65b0\u4ee3\u7406\u8d26\u53f7\u72b6\u6001\u5931\u8d25: " + (e.message || String(e))
+          );
+        }
       });
     }
     if (nineProxyLogoutBtn) {
@@ -5834,8 +5852,11 @@ app.get("/", (req, res) => {
         setSwitchStatus(
           "已加入代理列表（顶部「自定义」）。当前仍为已选中的那条；新代理请到列表中点「使用」。"
         );
+        setStatus("自定义代理已保存");
       } catch (e) {
-        setSwitchStatus(e.message || String(e));
+        const tip = e.message || String(e);
+        setSwitchStatus(tip);
+        setStatus("保存自定义代理失败: " + tip);
       } finally {
         switchAddCustomSocksBtn.disabled = false;
       }
@@ -5866,7 +5887,9 @@ app.get("/", (req, res) => {
         setUseProxyFromUserStatus("已保存并选中，可点「确认切换」。");
         await loadProxyList();
       } catch (e) {
-        setUseProxyFromUserStatus(e.message || String(e));
+        const tip = e.message || String(e);
+        setUseProxyFromUserStatus(tip);
+        setUserStatus("保存自定义代理失败: " + tip);
       } finally {
         userAddCustomSocksBtn.disabled = false;
       }
