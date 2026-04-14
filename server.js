@@ -693,7 +693,7 @@ function normNineFilterPayload(f) {
         cities: Array.isArray(o.cities) ? o.cities.map((x) => String(x).trim()).filter(Boolean) : [],
         isps: Array.isArray(o.isps) ? o.isps.map((x) => String(x).trim()).filter(Boolean) : [],
         today: o.today === true || o.today === "true" || o.today === 1 || o.today === "1",
-        t: o.t === "1" || o.t === 1 ? "1" : "2"
+        t: "2"
     };
 }
 
@@ -2144,7 +2144,7 @@ app.get("/api/user-wifi", (req, res) => {
 
 /**
  * GET /api/user-nine-filter?tag=出站tag
- * 读取 `proxy-user-meta.json` 内按 tag 保存的筛选规则（country/state/city/isp/today/t 等，仅持久化）。
+ * 读取 `proxy-user-meta.json` 内按 tag 保存的筛选规则（country/state/city/isp/today；t 固定为 2，仅持久化）。
  */
 app.get("/api/user-nine-filter", (req, res) => {
     const tag = req.query.tag != null ? String(req.query.tag).trim() : "";
@@ -2160,7 +2160,7 @@ app.get("/api/user-nine-filter", (req, res) => {
 
 /**
  * POST /api/user-nine-filter
- * JSON：`{ "tag": "…", "filter": { "country", "states", "cities", "isps", "today", "t" } }`，写入 meta（仅保存，不请求 9proxy）。
+ * JSON：`{ "tag": "…", "filter": { "country", "states", "cities", "isps", "today" } }`（t 固定为 2，可省略），写入 meta（仅保存，不请求 9proxy）。
  */
 app.post("/api/user-nine-filter", (req, res) => {
     const tag = req.body?.tag != null ? String(req.body.tag).trim() : "";
@@ -3127,7 +3127,7 @@ app.get("/", (req, res) => {
         <div class="modal-inner nf-dialog-inner">
           <h3 style="margin-top:0;">9proxy 筛选规则 · <code id="nfTagLabel"></code></h3>
           <p class="nf-hint">
-            仅写入本机 <code>proxy-user-meta.json</code>：country、state、city、isp、today、t（1=txt，2=json）。流程：先选国家，再在该国家下添加州/市/ISP；若未选国家时先从全局列表添加了州/市/ISP，再选择国家将清空已选州/市/ISP。各列均可搜索。保存仅写磁盘，不发起创建或切换代理的请求。
+            仅写入本机 <code>proxy-user-meta.json</code>：country、state、city、isp、today（响应类型 t 固定为 JSON，对应值为 2，不在此配置）。流程：先选国家，再在该国家下添加州/市/ISP；若未选国家时先从全局列表添加了州/市/ISP，再选择国家将清空已选州/市/ISP。各列均可搜索。保存仅写磁盘，不发起创建或切换代理的请求。
           </p>
           <div class="nf-row">
             <label for="nfCountrySelect">country（国家代码）</label>
@@ -3168,13 +3168,6 @@ app.get("/", (req, res) => {
               <input type="checkbox" id="nfToday" />
               today（仅今日更新代理）
             </label>
-          </div>
-          <div class="nf-row">
-            <label for="nfTSelect">t（响应类型）</label>
-            <select id="nfTSelect">
-              <option value="2">2 — JSON</option>
-              <option value="1">1 — 文本 txt</option>
-            </select>
           </div>
           <div class="status" id="nfFilterStatus" style="min-height:1.2em;"></div>
           <div class="modal-actions">
@@ -3265,7 +3258,6 @@ app.get("/", (req, res) => {
     const nfIspPick = document.getElementById("nfIspPick");
     const nfIspAddBtn = document.getElementById("nfIspAddBtn");
     const nfToday = document.getElementById("nfToday");
-    const nfTSelect = document.getElementById("nfTSelect");
     const nfFilterStatus = document.getElementById("nfFilterStatus");
     const nfCancelFilterBtn = document.getElementById("nfCancelFilterBtn");
     const nfSaveFilterBtn = document.getElementById("nfSaveFilterBtn");
@@ -3905,9 +3897,6 @@ app.get("/", (req, res) => {
         if (nfToday) {
           nfToday.checked = f.today === true;
         }
-        if (nfTSelect) {
-          nfTSelect.value = f.t === "1" || f.t === 1 ? "1" : "2";
-        }
         nfRefreshStatePick();
         nfRefreshCityPick();
         nfRefreshIspPick();
@@ -3960,7 +3949,7 @@ app.get("/", (req, res) => {
               cities: normList("cities"),
               isps: normList("isps"),
               today: nfToday ? nfToday.checked : false,
-              t: nfTSelect ? nfTSelect.value : "2"
+              t: "2"
             }
           })
         });
