@@ -2332,12 +2332,6 @@ app.get("/", (req, res) => {
       margin: 0 0 16px;
       font-size: 24px;
     }
-    .user-hint {
-      font-size: 13px;
-      color: #6b7280;
-      margin-bottom: 12px;
-      line-height: 1.5;
-    }
     .auth-inline {
       display: block;
       font-size: 13px;
@@ -2714,7 +2708,6 @@ app.get("/", (req, res) => {
             <button type="button" class="nineproxy-refresh-btn" id="nineProxyRefreshBtn">刷新</button>
           </div>
         </div>
-        <p class="user-hint">用户行来自 <code>route.rules</code> 的 <code>outbound</code>，与 <code>outbounds</code> 中<strong>同名 tag</strong> 的出站一一对应；右侧<strong>操作 · 切换</strong>可弹出列表选择今日代理或列表底部的<strong>直连</strong>（将该 tag 出站改为 <code>type: direct</code>，不经 SOCKS）。WiFi 名称写入 <code>proxy-user-meta.json</code> 的 <code>wifi_by_outbound</code>；点击<strong>铅笔</strong>展开编辑，<strong>关闭</strong>图标收起不保存。本机 <code>127.0.0.1</code> 类 SOCKS 的出口 IP、国家、州/省、城市由 <code>/api/port_status</code> 与地址匹配补齐；<strong>远端 SOCKS</strong>由服务端经 SOCKS 探测；出站为 <strong>直连</strong> 时由服务端<strong>不经代理</strong>访问 ipify 取本机出口 IP，并用 ipinfo 补齐国家、州/省、城市（与 SOCKS 列一致）；在线列显示「在线（直连）」或「离线」（探测失败时）。右上角为<strong>本机 9proxy CLI</strong>登录状态与剩余 IP（<code>9proxy setting -d</code> / <code>9proxy proxy -b</code>）；已登录时可<strong>退出 9proxy</strong>（<code>9proxy auth -l</code>）。</p>
         <div class="toolbar">
           <button type="button" id="refreshUsersBtn">刷新用户</button>
           <span class="status" id="userStatusText">加载中...</span>
