@@ -69,6 +69,11 @@ const DEFAULT_LOCAL_SOCKS_PORT_NUM = 256;
 const NINE_PROXY_CLI = process.env.NINE_PROXY_CLI
     ? String(process.env.NINE_PROXY_CLI).trim()
     : "9proxy";
+/** 9proxy 最近一次成功登录账密（仅内存缓存，用于“重新登录”）。 */
+const NINE_PROXY_AUTH_CACHE = {
+    username: "",
+    password: ""
+};
 
 /**
  * 执行 9proxy 子进程（参数数组传入，避免 shell 注入）。
@@ -3313,13 +3318,22 @@ app.get("/api/9proxy-setting", handleProxySettingDump);
  * JSON：`{ "username": "…", "password": "…" }`，本机执行 `9proxy auth -u … -p …`。
  */
 app.post("/api/9proxy-login", async (req, res) => {
-    const username = String(req.body?.username ?? "").trim();
-    const password = String(req.body?.password ?? "");
-    if (!username) {
-        return res.status(400).json({ success: false, msg: "请输入账号" });
-    }
-    if (!password) {
-        return res.status(400).json({ success: false, msg: "请输入密码" });
+    const inputUsername = String(req.body?.username ?? "").trim();
+    const inputPassword = String(req.body?.password ?? "");
+    const useCached = !inputUsername && !inputPassword;
+    let username = inputUsername;
+    let password = inputPassword;
+    if (useCached) {
+        username = String(NINE_PROXY_AUTH_CACHE.username || "").trim();
+        password = String(NINE_PROXY_AUTH_CACHE.password || "");
+        if (!username || !password) {
+            return res.status(400).json({
+                success: false,
+                msg: "暂无可用的已保存账号密码，请先手动登录一次"
+            });
+        }
+    } else if (!inputUsername || !inputPassword) {
+        return res.status(400).json({ success: false, msg: "请填写账号和密码" });
     }
     if (username.length > 512 || password.length > 512) {
         return res.status(400).json({ success: false, msg: "账号或密码过长" });
@@ -3332,9 +3346,11 @@ app.post("/api/9proxy-login", async (req, res) => {
             out
         );
     if (loggedInOk && !authBad) {
+        NINE_PROXY_AUTH_CACHE.username = username;
+        NINE_PROXY_AUTH_CACHE.password = password;
         return res.json({
             success: true,
-            msg: "登录成功",
+            msg: useCached ? "重新登录成功" : "登录成功",
             detail: out.slice(0, 500)
         });
     }
@@ -4152,7 +4168,7 @@ app.get("/", (req, res) => {
       <dialog id="nineProxyLoginDialog">
         <div class="modal-inner">
           <h3 style="margin:0 0 12px;font-size:16px;">代理服务登录</h3>
-          <p class="status" style="margin:0 0 10px;font-size:12px;color:#6b7280;">本机执行 <code>auth -u … -p …</code>；账密仅用于本次请求，服务端不保存。</p>
+          <p class="status" style="margin:0 0 10px;font-size:12px;color:#6b7280;">本机执行 <code>auth -u … -p …</code>；首次成功后会在当前进程内存缓存账密，供“重新登录”复用。</p>
           <div class="modal-row">
             <label for="nineProxyUserInput">账号</label>
             <input type="text" id="nineProxyUserInput" class="wifi-name-input" autocomplete="username" />
@@ -4335,13 +4351,15 @@ app.get("/", (req, res) => {
       }
     }
 
-    /** @param {"login"|"logout"|"none"} mode */
+    /** @param {"login"|"logged"|"none"} mode */
     function setNineProxyAuthButtons(mode) {
       if (nineProxyLoginBtn) {
-        nineProxyLoginBtn.style.display = mode === "login" ? "inline-block" : "none";
+        nineProxyLoginBtn.style.display = mode === "none" ? "none" : "inline-block";
+        nineProxyLoginBtn.textContent =
+          mode === "logged" ? "重新登录代理服务" : "登录代理服务";
       }
       if (nineProxyLogoutBtn) {
-        nineProxyLogoutBtn.style.display = mode === "logout" ? "inline-block" : "none";
+        nineProxyLogoutBtn.style.display = mode === "logged" ? "inline-block" : "none";
       }
     }
 
@@ -4383,7 +4401,7 @@ app.get("/", (req, res) => {
           escapeHtml(rip) +
           "</strong>" +
           extra;
-        setNineProxyAuthButtons("logout");
+        setNineProxyAuthButtons("logged");
         return;
       }
       if (data.logged === false) {
@@ -5848,6 +5866,32 @@ app.get("/", (req, res) => {
       nineProxyLoginStatus
     ) {
       nineProxyLoginBtn.addEventListener("click", () => {
+        if (nineProxyLoggedGlobal) {
+          void (async () => {
+            nineProxyLoginBtn.disabled = true;
+            setUserStatus("正在重新登录代理服务…");
+            try {
+              const resp = await fetch("/api/9proxy-login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({})
+              });
+              const data = await resp.json().catch(() => ({}));
+              if (!resp.ok || data.success === false) {
+                throw new Error(data.msg || data.error || "重新登录失败");
+              }
+              setUserStatus((data.msg || "重新登录成功") + " · 已刷新状态");
+              await refreshNineProxyAccountBar();
+              await loadSingboxUsers();
+              await loadProxyList();
+            } catch (e) {
+              setUserStatus("重新登录失败: " + (e.message || String(e)));
+            } finally {
+              nineProxyLoginBtn.disabled = false;
+            }
+          })();
+          return;
+        }
         nineProxyLoginStatus.textContent = "";
         if (nineProxyUserInput) {
           nineProxyUserInput.value = "";
