@@ -2309,6 +2309,33 @@ app.get("/api/port_status", async (req, res) => {
 });
 
 /**
+ * GET /api/port-free
+ * 将本服务收到的 query 原样透传至 9proxy `GET /api/port_free`（例如 `?t=2&ports=60006`），响应体与 9proxy 一致。
+ */
+app.get("/api/port-free", async (req, res) => {
+    try {
+        const r = await axios.get(`${NINE_PROXY_BASE}/api/port_free`, {
+            ...AXIOS_OPTS_NO_PROXY,
+            params: req.query,
+            timeout: 15000
+        });
+        const st = typeof r.status === "number" && r.status > 0 ? r.status : 200;
+        res.status(st).json(r.data);
+    } catch (e) {
+        console.warn("[9proxy] /api/port-free route:", e.message || e);
+        if (e.response && e.response.data != null) {
+            return res.status(e.response.status || 502).json(e.response.data);
+        }
+        res.status(502).json({
+            error: true,
+            message: NINE_PROXY_UNAVAILABLE_HINT,
+            nine_proxy_available: false,
+            detail: e.message || String(e)
+        });
+    }
+});
+
+/**
  * GET /api/add-proxy
  * 将允许的 query 参数透传至 9proxy `GET /api/proxy` 以创建新代理（默认 num=1、port=60000、t=2）。
  */
