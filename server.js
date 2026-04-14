@@ -43,7 +43,7 @@ const NINE_PROXY_BASE = "http://127.0.0.1:8080";
 const AXIOS_OPTS_NO_PROXY = { proxy: false };
 /** 未安装或未启动 9proxy 时各接口降级提示（仍可用用户管理、直连、自定义 SOCKS5） */
 const NINE_PROXY_UNAVAILABLE_HINT =
-    "9proxy 未安装或未启动（本机端口无响应），今日代理与端口转发不可用；仍可使用用户管理、直连与自定义 SOCKS5。";
+    "代理服务未安装或未启动（本机端口无响应），今日代理与端口转发不可用；仍可使用用户管理、直连与自定义 SOCKS5。";
 /** 供 today_list 降级：与 mergeCustomProxiesIntoList 兼容的空列表体 */
 function emptyNineProxyTodayListBody() {
     return {
@@ -1986,7 +1986,7 @@ app.get("/api/switch-proxy", async (req, res) => {
             return res.status(400).json({
                 success: false,
                 msg:
-                    "无法解析代理公网 IP。未安装或未运行 9proxy 时不能按「今日代理 id」切换；自定义 SOCKS 请使用 GET /api/switch-proxy-custom，或在请求中附带 ip= 公网 IP 参数。"
+                    "无法解析代理公网 IP。未安装或未运行代理服务时不能按「今日代理 id」切换；自定义 SOCKS 请使用 GET /api/switch-proxy-custom，或在请求中附带 ip= 公网 IP 参数。"
             });
         }
 
@@ -2021,7 +2021,7 @@ app.get("/api/switch-proxy", async (req, res) => {
             return res.status(503).json({
                 success: false,
                 msg:
-                    "无可用本地转发端口（已用 9proxy port_check / port_status 在区间内选取）。未安装 9proxy 时请使用 GET /api/switch-proxy-custom 切换自定义 SOCKS。"
+                    "无可用本地转发端口（已用 port_check / port_status 在区间内选取）。未安装代理服务时请使用 GET /api/switch-proxy-custom 切换自定义 SOCKS。"
             });
         }
 
@@ -2049,7 +2049,7 @@ app.get("/api/switch-proxy", async (req, res) => {
             if (result.data?.error === true) {
                 return res.status(502).json({
                     success: false,
-                    msg: result.data?.message || "9proxy forward 失败",
+                    msg: result.data?.message || "forward 失败",
                     data: result.data
                 });
             }
@@ -2742,7 +2742,7 @@ app.get("/api/proxy", async (req, res) => {
         if (port == null) {
             return res.json({
                 success: false,
-                msg: "无可用本地 SOCKS 端口（已用 9proxy port_check / port_status 在区间内选取）"
+                msg: "无可用本地 SOCKS 端口（已用 port_check / port_status 在区间内选取）"
             });
         }
         const stateStr = buildNineProxyStateParam(f.country, f.states);
@@ -2783,7 +2783,7 @@ app.get("/api/proxy", async (req, res) => {
                 msg:
                     (nineBody.message && String(nineBody.message)) ||
                     (nineBody.msg && String(nineBody.msg)) ||
-                    "9proxy /api/proxy 返回失败",
+                    "/api/proxy 返回失败",
                 tag,
                 port,
                 filter: f,
@@ -2797,7 +2797,7 @@ app.get("/api/proxy", async (req, res) => {
         if (boundPort == null) {
             return res.status(502).json({
                 success: false,
-                msg: "无法确定 9proxy 绑定端口（请检查响应 data）",
+                msg: "无法确定绑定端口（请检查响应 data）",
                 tag,
                 port,
                 filter: f,
@@ -2821,7 +2821,7 @@ app.get("/api/proxy", async (req, res) => {
             return res.status(500).json({
                 success: false,
                 msg:
-                    "9proxy 已成功，但更新 sing-box 配置或重启失败: " +
+                    "代理请求已成功，但更新 sing-box 配置或重启失败: " +
                     (cfgErr.message || String(cfgErr)),
                 tag,
                 port: boundPort,
@@ -2873,7 +2873,7 @@ app.get("/api/9proxy-account", async (req, res) => {
         setting_snippet: settingText.trim().slice(0, 1200)
     };
     if (!setting.ok) {
-        payload.cli_error = setting.error || "执行 9proxy setting -d 失败";
+        payload.cli_error = setting.error || "执行 setting -d 失败";
     }
     if (logged === true) {
         const bal = await nineProxyExecFile(["proxy", "-b"], 18000);
@@ -2881,7 +2881,7 @@ app.get("/api/9proxy-account", async (req, res) => {
         const btext = bal.stdout + "\n" + bal.stderr;
         payload.remaining_ips = parseNineProxyRemainingIps(btext);
         if (!bal.ok) {
-            payload.balance_error = bal.error || bal.stderr.trim() || "执行 9proxy proxy -b 失败";
+            payload.balance_error = bal.error || bal.stderr.trim() || "执行 proxy -b 失败";
         } else if (payload.remaining_ips == null) {
             payload.balance_error = "未能从输出中解析剩余 IP 数量";
             payload.balance_snippet = btext.trim().slice(0, 1200);
@@ -2922,7 +2922,7 @@ app.post("/api/9proxy-login", async (req, res) => {
     }
     const firstLine =
         out.split(/\r?\n/).find((line) => String(line).trim() !== "") || "";
-    const msg = firstLine || r.error || (r.ok ? "登录未成功" : "9proxy auth 执行失败");
+    const msg = firstLine || r.error || (r.ok ? "登录未成功" : "auth 执行失败");
     return res.status(401).json({
         success: false,
         msg,
@@ -2940,13 +2940,13 @@ app.post("/api/9proxy-logout", async (req, res) => {
     if (!r.ok) {
         return res.status(503).json({
             success: false,
-            msg: r.error || out || "9proxy auth -l 执行失败",
+            msg: r.error || out || "auth -l 执行失败",
             detail: out.slice(0, 800)
         });
     }
     res.json({
         success: true,
-        msg: "已退出 9proxy 登录",
+        msg: "已退出代理服务登录",
         detail: out.slice(0, 500)
     });
 });
@@ -3507,9 +3507,9 @@ app.get("/", (req, res) => {
         <div class="users-top-row">
           <h1>用户管理</h1>
           <div class="nineproxy-account-strip" id="nineProxyAccountStrip" aria-live="polite">
-            <span class="nineproxy-bar-text" id="nineProxyBarText">9proxy 状态加载中…</span>
-            <button type="button" class="nineproxy-login-btn" id="nineProxyLoginBtn" style="display:none">登录 9proxy</button>
-            <button type="button" class="nineproxy-logout-btn" id="nineProxyLogoutBtn" style="display:none">退出 9proxy</button>
+            <span class="nineproxy-bar-text" id="nineProxyBarText">代理服务状态加载中…</span>
+            <button type="button" class="nineproxy-login-btn" id="nineProxyLoginBtn" style="display:none">登录代理服务</button>
+            <button type="button" class="nineproxy-logout-btn" id="nineProxyLogoutBtn" style="display:none">退出代理服务</button>
             <button type="button" class="nineproxy-refresh-btn" id="nineProxyRefreshBtn">刷新</button>
           </div>
         </div>
@@ -3651,7 +3651,7 @@ app.get("/", (req, res) => {
       </dialog>
       <dialog id="nineFilterRuleDialog" class="dialog-proxy-pick">
         <div class="modal-inner nf-dialog-inner">
-          <h3 style="margin-top:0;">9proxy 筛选规则 · <code id="nfTagLabel"></code></h3>
+          <h3 style="margin-top:0;">筛选规则 · <code id="nfTagLabel"></code></h3>
           <div class="nf-row">
             <label for="nfCountrySelect">country（国家代码）</label>
             <div class="nf-row-toolbar">
@@ -3701,8 +3701,8 @@ app.get("/", (req, res) => {
       </dialog>
       <dialog id="nineProxyLoginDialog">
         <div class="modal-inner">
-          <h3 style="margin:0 0 12px;font-size:16px;">9proxy 登录</h3>
-          <p class="status" style="margin:0 0 10px;font-size:12px;color:#6b7280;">本机执行 <code>9proxy auth -u … -p …</code>；账密仅用于本次请求，服务端不保存。</p>
+          <h3 style="margin:0 0 12px;font-size:16px;">代理服务登录</h3>
+          <p class="status" style="margin:0 0 10px;font-size:12px;color:#6b7280;">本机执行 <code>auth -u … -p …</code>；账密仅用于本次请求，服务端不保存。</p>
           <div class="modal-row">
             <label for="nineProxyUserInput">账号</label>
             <input type="text" id="nineProxyUserInput" class="wifi-name-input" autocomplete="username" />
@@ -3880,7 +3880,7 @@ app.get("/", (req, res) => {
       }
       if (!httpOk || !data || data.success === false) {
         nineProxyBarText.innerHTML =
-          '<span class="np-danger">9proxy</span>：' +
+          '<span class="np-danger">代理服务</span>：' +
           escapeHtml(
             (data && (data.cli_error || data.msg)) || "状态接口不可用（HTTP 错误）"
           );
@@ -3889,7 +3889,7 @@ app.get("/", (req, res) => {
       }
       if (data.setting_ok === false && data.cli_error) {
         nineProxyBarText.innerHTML =
-          '<span class="np-danger">9proxy CLI</span>：' +
+          '<span class="np-danger">本地 CLI</span>：' +
           escapeHtml(String(data.cli_error));
         setNineProxyAuthButtons("login");
         return;
@@ -3907,7 +3907,7 @@ app.get("/", (req, res) => {
             "）</span>";
         }
         nineProxyBarText.innerHTML =
-          '<span class="np-ok">已登录 9proxy</span> · 剩余 IP：<strong>' +
+          '<span class="np-ok">已登录代理服务</span> · 剩余 IP：<strong>' +
           escapeHtml(rip) +
           "</strong>" +
           extra;
@@ -3915,18 +3915,18 @@ app.get("/", (req, res) => {
         return;
       }
       if (data.logged === false) {
-        nineProxyBarText.innerHTML = '<span class="np-warn">未登录 9proxy</span>';
+        nineProxyBarText.innerHTML = '<span class="np-warn">未登录代理服务</span>';
         setNineProxyAuthButtons("login");
         return;
       }
       nineProxyBarText.innerHTML =
-        '<span class="np-danger">无法解析</span> <span class="np-muted">（<code>User Logged</code> 行缺失；请确认本机已安装 9proxy CLI）</span>';
+        '<span class="np-danger">无法解析</span> <span class="np-muted">（<code>User Logged</code> 行缺失；请确认本机已安装代理 CLI）</span>';
       setNineProxyAuthButtons("login");
     }
 
     async function refreshNineProxyAccountBar() {
       if (nineProxyBarText) {
-        nineProxyBarText.textContent = "正在刷新 9proxy 状态…";
+        nineProxyBarText.textContent = "正在刷新代理服务状态…";
       }
       try {
         const resp = await fetch("/api/9proxy-account");
@@ -5318,11 +5318,11 @@ app.get("/", (req, res) => {
           if (!resp.ok || data.success === false) {
             throw new Error(data.msg || data.error || "退出失败");
           }
-          setUserStatus((data.msg || "已退出 9proxy") + " · 可刷新用户或代理列表");
+          setUserStatus((data.msg || "已退出代理服务") + " · 可刷新用户或代理列表");
           await refreshNineProxyAccountBar();
           await loadProxyList();
         } catch (e) {
-          setUserStatus("9proxy 退出失败: " + (e.message || String(e)));
+          setUserStatus("退出失败: " + (e.message || String(e)));
         } finally {
           nineProxyLogoutBtn.disabled = false;
         }
@@ -5489,7 +5489,7 @@ app.get("/", (req, res) => {
                         ? String(inner.msg)
                         : typeof inner.error === "string"
                           ? inner.error.trim()
-                          : "9proxy \u8fd4\u56de\u9519\u8bef";
+                          : "\u4ee3\u7406\u670d\u52a1\u8fd4\u56de\u9519\u8bef";
                 }
               }
               if (errMsg) {
