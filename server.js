@@ -1619,6 +1619,32 @@ function pickFirstUnoccupiedPortInRange(occupied, range) {
 }
 
 /**
+ * 从 sing-box 配置中提取范围内“已设置的本地 SOCKS 端口”（server 为 127.0.0.1/localhost）。
+ * @param {object} config
+ * @param {{ start: number, end: number }} range
+ * @returns {Set<number>}
+ */
+function collectConfiguredLocalSocksPortsFromConfig(config, range) {
+    const used = new Set();
+    const outbounds = Array.isArray(config?.outbounds) ? config.outbounds : [];
+    for (let i = 0; i < outbounds.length; i += 1) {
+        const ob = outbounds[i];
+        if (!ob || ob.type !== "socks") {
+            continue;
+        }
+        const host = String(ob.server || "").trim().toLowerCase();
+        if (host !== "127.0.0.1" && host !== "localhost") {
+            continue;
+        }
+        const p = Number(ob.server_port);
+        if (Number.isInteger(p) && p >= range.start && p <= range.end) {
+            used.add(p);
+        }
+    }
+    return used;
+}
+
+/**
  * 生成 [start, end] 的连续端口数组。
  * @param {{ start: number, end: number }} range
  * @returns {number[]}
@@ -1647,6 +1673,25 @@ async function pickLocalIdleSocksPort(statusRows) {
     const rows = await rowsP;
     const occupied = collectOccupiedLocalPortsFromPortStatus(rows, range);
     return pickFirstUnoccupiedPortInRange(occupied, range);
+}
+
+/**
+ * 选取本机空闲端口；若 `setting -d + port_status` 未命中，则回退到「all ports - config 已设置端口」。
+ * @param {object} [config]
+ * @param {object[]|null|undefined} [statusRows]
+ * @returns {Promise<number|null>}
+ */
+async function pickLocalIdleSocksPortWithConfigFallback(config, statusRows) {
+    let chosen = await pickLocalIdleSocksPort(statusRows);
+    if (chosen != null) {
+        return chosen;
+    }
+    if (!config || typeof config !== "object") {
+        return null;
+    }
+    const range = await getConfiguredLocalPortRange();
+    const configuredUsed = collectConfiguredLocalSocksPortsFromConfig(config, range);
+    return pickFirstUnoccupiedPortInRange(configuredUsed, range);
 }
 
 /**
@@ -2030,13 +2075,13 @@ app.get("/api/switch-proxy", async (req, res) => {
         const matchedByPortStatus = chosen != null;
 
         if (chosen == null) {
-            chosen = await pickLocalIdleSocksPort(statusRows);
+            chosen = await pickLocalIdleSocksPortWithConfigFallback(config, statusRows);
         }
         if (chosen == null) {
             return res.status(503).json({
                 success: false,
                 msg:
-                    "无可用本地转发端口（已用 setting -d 与 port_status 在配置范围内选取）。未安装代理服务时请使用 GET /api/switch-proxy-custom 切换自定义 SOCKS。"
+                    "无可用本地转发端口（已尝试 setting -d + port_status，并已对比 config 已设置端口）。未安装代理服务时请使用 GET /api/switch-proxy-custom 切换自定义 SOCKS。"
             });
         }
 
@@ -2813,11 +2858,13 @@ app.get("/api/proxy", async (req, res) => {
     let nineProxyRequestUrl = null;
     let nineProxyRequestParams = null;
     try {
-        const port = await pickLocalIdleSocksPort();
+        const raw = fs.readFileSync(CONFIG_PATH, "utf8");
+        const cfgForPortPick = JSON.parse(raw);
+        const port = await pickLocalIdleSocksPortWithConfigFallback(cfgForPortPick);
         if (port == null) {
             return res.json({
                 success: false,
-                msg: "无可用本地 SOCKS 端口（已用 setting -d 与 port_status 在配置范围内选取）"
+                msg: "无可用本地 SOCKS 端口（已尝试 setting -d + port_status，并已对比 config 已设置端口）"
             });
         }
         const stateStr = buildNineProxyStateParam(f.country, f.states);
