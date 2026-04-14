@@ -3850,7 +3850,7 @@ app.get("/", (req, res) => {
     .action-toast {
       position: fixed;
       right: 16px;
-      bottom: 18px;
+      top: 18px;
       z-index: 9999;
       max-width: 420px;
       padding: 10px 12px;
