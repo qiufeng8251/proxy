@@ -3847,6 +3847,32 @@ app.get("/", (req, res) => {
       padding: 5px 8px;
       vertical-align: middle;
     }
+    .action-toast {
+      position: fixed;
+      right: 16px;
+      bottom: 18px;
+      z-index: 9999;
+      max-width: 420px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 13px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: none;
+    }
+    .action-toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .action-toast.success {
+      background: #16a34a;
+    }
+    .action-toast.error {
+      background: #dc2626;
+    }
     .user-refresh-offline-btn {
       margin-left: 8px;
       font-size: 12px;
@@ -4261,6 +4287,28 @@ app.get("/", (req, res) => {
 
     function setUserStatus(text) {
       userStatusText.textContent = text;
+    }
+
+    function showActionToast(text, type) {
+      const msg = String(text || "").trim();
+      if (!msg) {
+        return;
+      }
+      const el = document.createElement("div");
+      el.className = "action-toast " + (type === "error" ? "error" : "success");
+      el.textContent = msg;
+      document.body.appendChild(el);
+      requestAnimationFrame(() => {
+        el.classList.add("show");
+      });
+      setTimeout(() => {
+        el.classList.remove("show");
+        setTimeout(() => {
+          if (el.parentNode) {
+            el.parentNode.removeChild(el);
+          }
+        }, 220);
+      }, 1800);
     }
 
     function showProxyRuleSwitchErrorDialog(message, data) {
@@ -5005,10 +5053,12 @@ app.get("/", (req, res) => {
         setUserStatus(
           "\u7b5b\u9009\u89c4\u5219\u5df2\u4fdd\u5b58\uFF08" + nfCurrentTag + "\uFF09"
         );
+        showActionToast("\u7b5b\u9009\u89c4\u5219\u5df2\u4fdd\u5b58", "success");
       } catch (e) {
         const tip = e.message || String(e);
         nfFilterStatus.textContent = tip;
         setUserStatus("\u7b5b\u9009\u89c4\u5219\u4fdd\u5b58\u5931\u8d25: " + tip);
+        showActionToast("\u7b5b\u9009\u89c4\u5219\u4fdd\u5b58\u5931\u8d25: " + tip, "error");
       } finally {
         if (nfSaveFilterBtn) {
           nfSaveFilterBtn.disabled = false;
@@ -5197,12 +5247,14 @@ app.get("/", (req, res) => {
             throw new Error(data.msg || data.error || "切换失败");
           }
           setUserStatus((data.msg || "已切换为直连") + " · " + tag);
+          showActionToast(data.msg || "已切换为直连", "success");
           useProxyFromUserDialog.close();
           await Promise.all([loadSingboxUsers(), loadProxyList()]);
         } catch (err) {
           const tip = err.message || String(err);
           setUseProxyFromUserStatus(tip);
           setUserStatus("\u5207\u6362\u5931\u8d25: " + tip);
+          showActionToast("\u5207\u6362\u5931\u8d25: " + tip, "error");
         }
         return;
       }
@@ -5289,12 +5341,14 @@ app.get("/", (req, res) => {
               : "";
         const detailMsg = data?.data?.message ? "（" + data.data.message + "）" : "";
         setUserStatus("切换成功" + portHint + detailMsg);
+        showActionToast("切换成功" + portHint, "success");
         useProxyFromUserDialog.close();
         await Promise.all([loadSingboxUsers(), loadProxyList()]);
       } catch (err) {
         const tip = err.message || String(err);
         setUseProxyFromUserStatus(tip);
         setUserStatus("\u5207\u6362\u5931\u8d25: " + tip);
+        showActionToast("\u5207\u6362\u5931\u8d25: " + tip, "error");
       }
     }
 
@@ -5681,10 +5735,12 @@ app.get("/", (req, res) => {
               : "";
         const detailMsg = data?.data?.message ? "（" + data.data.message + "）" : "";
         setStatus("使用成功" + portHint + detailMsg);
+        showActionToast("使用成功" + portHint, "success");
         switchProxyDialog.close();
         await Promise.all([loadProxyList(), loadSingboxUsers()]);
       } catch (err) {
         setSwitchStatus("使用失败: " + err.message);
+        showActionToast("使用失败: " + err.message, "error");
       }
     }
 
@@ -5722,10 +5778,12 @@ app.get("/", (req, res) => {
         }
         const detail = data?.data?.message || "Success";
         setAddStatus("新增成功（" + detail + "）");
+        showActionToast("新增成功", "success");
         await loadProxyList();
         addProxyDialog.close();
       } catch (err) {
         setAddStatus("新增失败: " + err.message);
+        showActionToast("新增失败: " + err.message, "error");
       }
     }
 
@@ -5922,9 +5980,11 @@ app.get("/", (req, res) => {
               String(tagRf) +
               (data.port != null ? " · 本地端口 " + String(data.port) : "")
           );
+          showActionToast(data.msg || "刷新成功", "success");
           await Promise.all([loadSingboxUsers(), loadProxyList()]);
         } catch (e) {
           setUserStatus("刷新失败: " + (e.message || String(e)));
+          showActionToast("刷新失败: " + (e.message || String(e)), "error");
         } finally {
           refreshOfflineBtn.disabled = false;
         }
@@ -6002,10 +6062,12 @@ app.get("/", (req, res) => {
                   portHint +
                   (detail ? " " + detail : "")
               );
+              showActionToast("\u89c4\u5219\u5207\u6362\u6210\u529f" + portHint, "success");
               await Promise.all([loadSingboxUsers(), loadProxyList()]);
             } catch (e) {
               const errMsg = e.message || String(e);
               setUserStatus("\u89c4\u5219\u5207\u6362\u5931\u8d25: " + errMsg);
+              showActionToast("\u89c4\u5219\u5207\u6362\u5931\u8d25: " + errMsg, "error");
               showProxyRuleSwitchErrorDialog(errMsg, null);
             } finally {
               setAllRuleSwitchFlowBusy(false);
