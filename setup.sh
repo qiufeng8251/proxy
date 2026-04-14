@@ -25,13 +25,13 @@ else
     sudo apt install -y wget curl git jq || die "安装基础依赖失败"
 fi
 
-echo "========== Step 1: 9proxy（可选）=========="
+echo "========== Step 1: 9proxy（默认安装）=========="
 
-INSTALL_NINEPROXY=0
-read -r -p "是否安装并配置 9proxy（下载 deb、登录、监听 8080 API）？[y/N] " _nine_ans
+INSTALL_NINEPROXY=1
+read -r -p "是否安装并配置 9proxy（下载 deb、监听 8080 API；无需账号登录）？[Y/n] " _nine_ans
 case "${_nine_ans//$'\r'/}" in
-    [yY]|[yY][eE][sS]) INSTALL_NINEPROXY=1 ;;
-    *) INSTALL_NINEPROXY=0 ;;
+    [nN]|[nN][oO]) INSTALL_NINEPROXY=0 ;;
+    *) INSTALL_NINEPROXY=1 ;;
 esac
 
 if [ "$INSTALL_NINEPROXY" -eq 1 ]; then
@@ -56,66 +56,7 @@ if [ "$INSTALL_NINEPROXY" -eq 1 ]; then
     echo "启用并启动 9proxy 服务（systemctl enable --now 9proxyd）..."
     sudo systemctl enable --now 9proxyd || die "systemctl enable --now 9proxyd 失败（开机自启 + 当前启动）"
 
-    AUTH_STATE_FILE="${HOME}/.9proxy_auth_state"
-
-    mark_auth_state() {
-        local username="$1"
-        cat >"$AUTH_STATE_FILE" <<EOF
-authenticated=1
-username=$username
-updated_at=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-EOF
-    }
-
-    login_9proxy() {
-        local username
-        local password
-        echo "请手动输入 9proxy 账号密码进行登录："
-        read -r -p "Username: " username
-        read -r -s -p "Password: " password
-        echo
-        9proxy auth -u "$username" -p "$password" || die "9proxy 登录失败"
-        mark_auth_state "$username"
-    }
-
-    # `9proxy setting -d` 中的 User Logged 为实际登录态（优于仅看本地标记文件）
-    parse_9proxy_user_logged() {
-        echo "$1" | awk -F: '
-            $1 ~ /User Logged/ {
-                v = $2
-                gsub(/^[[:space:]]+|[[:space:]]+$/, "", v)
-                print tolower(v)
-                exit
-            }
-        '
-    }
-
-    echo "检查 9proxy 登录状态（9proxy setting -d）..."
-    NINE_SETTING_OUT="$(9proxy setting -d 2>&1 || true)"
-    echo "$NINE_SETTING_OUT"
-    USER_LOGGED_VAL="$(parse_9proxy_user_logged "$NINE_SETTING_OUT")"
-
-    if [ "$USER_LOGGED_VAL" = "true" ]; then
-        echo "9proxy 报告 User Logged: true（已登录）。"
-        if [ ! -f "$AUTH_STATE_FILE" ]; then
-            echo "提示: 未找到 $AUTH_STATE_FILE；若以其它方式登录可忽略，以 9proxy 为准。"
-        fi
-    else
-        if [ -n "$USER_LOGGED_VAL" ]; then
-            echo "9proxy 报告 User Logged: ${USER_LOGGED_VAL}（未登录），需要执行 9proxy auth。"
-        else
-            echo "未能从输出中解析 User Logged 行，将引导登录。"
-        fi
-        if [ -f "$AUTH_STATE_FILE" ]; then
-            echo "注意: 存在 $AUTH_STATE_FILE 但 9proxy 未处于登录态，将忽略该文件并重新登录。"
-        fi
-        login_9proxy
-        echo "登录后再次检查（9proxy setting -d）..."
-        NINE_SETTING_OUT="$(9proxy setting -d 2>&1 || true)"
-        echo "$NINE_SETTING_OUT"
-        USER_LOGGED_VAL="$(parse_9proxy_user_logged "$NINE_SETTING_OUT")"
-        [ "$USER_LOGGED_VAL" = "true" ] || die "登录后 User Logged 仍为 false 或无法解析，请手动执行 9proxy auth 后重试本脚本。"
-    fi
+    echo "跳过 9proxy 账号登录（按需可手动执行: 9proxy auth -u USER -p PASS）。"
 
     echo "检查 API 状态..."
     API_STATUS_OUTPUT="$(9proxy api -d 2>&1 || true)"
