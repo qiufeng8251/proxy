@@ -2975,8 +2975,14 @@ app.get("/", (req, res) => {
     }
     .user-actions-cell .switch-btn,
     .user-actions-cell .nine-filter-rule-btn,
-    .user-actions-cell .nine-rule-switch-btn {
+    .user-actions-cell .nine-rule-switch-btn,
+    .user-actions-cell .nine-filter-actions {
       flex-shrink: 0;
+    }
+    .nine-filter-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 20px;
     }
     .nine-filter-rule-btn,
     .nine-rule-switch-btn {
@@ -3627,12 +3633,14 @@ app.get("/", (req, res) => {
           tagAttr +
           '">切换</button>' +
           (showFilter
-            ? '<button type="button" class="switch-btn nine-rule-switch-btn" data-outbound="' +
+            ? '<span class="nine-filter-actions">' +
+              '<button type="button" class="switch-btn nine-rule-switch-btn" data-outbound="' +
               tagAttr +
               '">\u89c4\u5219\u5207\u6362</button>' +
               '<button type="button" class="cancel-btn nine-filter-rule-btn" data-outbound="' +
               tagAttr +
-              '">筛选规则</button>'
+              '">筛选规则</button>' +
+              "</span>"
             : "") +
           "</td>" +
           "</tr>"
