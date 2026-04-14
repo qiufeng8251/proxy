@@ -52,10 +52,10 @@ function emptyNineProxyTodayListBody() {
         nine_proxy_message: NINE_PROXY_UNAVAILABLE_HINT
     };
 }
-/** 本地 SOCKS5 转发端口可选区间下界（与 `port_check` / `port_status` 选取空闲端口配合） */
-const LOCAL_SOCKS_SCAN_MIN = 60000;
-/** 本地 SOCKS5 转发端口可选区间上界 */
-const LOCAL_SOCKS_SCAN_MAX = 60255;
+/** 当 setting -d 解析失败时使用的默认本地端口起点 */
+const DEFAULT_LOCAL_SOCKS_PORT = 60000;
+/** 当 setting -d 解析失败时使用的默认端口数量 */
+const DEFAULT_LOCAL_SOCKS_PORT_NUM = 256;
 
 /**
  * 本机 9proxy CLI 路径（`setting -d`、`auth`、`proxy -b`）。
@@ -121,6 +121,69 @@ function parseNineProxyRemainingIps(text) {
     }
     const n = Number(String(m[1]).replace(/\s/g, ""));
     return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * 将 `setting -d` 输出解析为键值表（如 `Start port`、`Num Port`）。
+ * @param {string} text
+ * @returns {Record<string, string>}
+ */
+function parseSettingDumpLines(text) {
+    const out = {};
+    const lines = String(text || "").split(/\r?\n/);
+    for (let i = 0; i < lines.length; i += 1) {
+        const line = String(lines[i] || "").trim();
+        if (!line) {
+            continue;
+        }
+        const idx = line.indexOf(":");
+        if (idx <= 0) {
+            continue;
+        }
+        const key = line.slice(0, idx).trim();
+        const val = line.slice(idx + 1).trim();
+        if (key) {
+            out[key] = val;
+        }
+    }
+    return out;
+}
+
+/**
+ * 自 `setting -d` 文本解析本地端口范围。
+ * @param {string} text
+ * @returns {{ start: number, end: number, count: number }|null}
+ */
+function parsePortRangeFromSettingDump(text) {
+    const kv = parseSettingDumpLines(text);
+    const start = Number(kv["Start port"]);
+    const count = Number(kv["Num Port"]);
+    if (!Number.isInteger(start) || !Number.isInteger(count) || start <= 0 || count <= 0) {
+        return null;
+    }
+    const end = start + count - 1;
+    if (end > 65535) {
+        return null;
+    }
+    return { start, end, count };
+}
+
+/**
+ * 读取 `setting -d` 并返回端口范围；失败时回退默认范围。
+ * @returns {Promise<{ start: number, end: number, count: number }>}
+ */
+async function getConfiguredLocalPortRange() {
+    const fallback = {
+        start: DEFAULT_LOCAL_SOCKS_PORT,
+        end: DEFAULT_LOCAL_SOCKS_PORT + DEFAULT_LOCAL_SOCKS_PORT_NUM - 1,
+        count: DEFAULT_LOCAL_SOCKS_PORT_NUM
+    };
+    const r = await nineProxyExecFile(["setting", "-d"], 15000);
+    if (!r.ok) {
+        return fallback;
+    }
+    const text = `${String(r.stdout || "")}\n${String(r.stderr || "")}`;
+    return parsePortRangeFromSettingDump(text) || fallback;
 }
 
 /**
@@ -1489,7 +1552,7 @@ function ensureOutboundIsSocksShellForTag(config, tag) {
                 type: "socks",
                 tag: t,
                 server: "127.0.0.1",
-                server_port: LOCAL_SOCKS_SCAN_MIN
+                server_port: DEFAULT_LOCAL_SOCKS_PORT
             };
             return;
         }
@@ -1517,72 +1580,12 @@ async function nineProxyPortStatusRows() {
 }
 
 /**
- * 请求 9proxy `GET /api/port_check`，返回 `data` 行数组（每项含 `port`、`online` 等）。
- * @param {string} [ports] 单个端口、`all` 等，默认 `all`
- * @returns {Promise<object[]>}
- */
-async function nineProxyPortCheckRows(ports) {
-    const portsParam =
-        ports != null && String(ports).trim() !== "" ? String(ports).trim() : "all";
-    try {
-        const r = await axios.get(`${NINE_PROXY_BASE}/api/port_check`, {
-            ...AXIOS_OPTS_NO_PROXY,
-            params: { t: 2, ports: portsParam },
-            timeout: 15000
-        });
-        if (r.data && r.data.error === true) {
-            console.warn("[9proxy] port_check:", r.data.message || "error");
-            return [];
-        }
-        return Array.isArray(r.data?.data) ? r.data.data : [];
-    } catch (e) {
-        console.warn("[9proxy] port_check:", e.message || e);
-        return [];
-    }
-}
-
-/**
- * 在 [LOCAL_SOCKS_SCAN_MIN, LOCAL_SOCKS_SCAN_MAX] 内，取 port_check 中 **online === false** 的最小端口（视为空闲）。
- * @param {object[]} checkRows
- * @returns {number|null}
- */
-function pickFirstOfflinePortInRangeFromPortCheck(checkRows) {
-    if (!Array.isArray(checkRows) || checkRows.length === 0) {
-        return null;
-    }
-    const onlineByPort = new Map();
-    for (let i = 0; i < checkRows.length; i += 1) {
-        const row = checkRows[i];
-        if (!row || typeof row !== "object") {
-            continue;
-        }
-        const port = Number(row.port);
-        if (
-            !Number.isFinite(port)
-            || port < LOCAL_SOCKS_SCAN_MIN
-            || port > LOCAL_SOCKS_SCAN_MAX
-        ) {
-            continue;
-        }
-        if (!Object.prototype.hasOwnProperty.call(row, "online")) {
-            continue;
-        }
-        onlineByPort.set(port, row.online === true);
-    }
-    for (let p = LOCAL_SOCKS_SCAN_MIN; p <= LOCAL_SOCKS_SCAN_MAX; p += 1) {
-        if (onlineByPort.has(p) && onlineByPort.get(p) === false) {
-            return p;
-        }
-    }
-    return null;
-}
-
-/**
- * 从 port_status 各行 `address` 解析出区间内已占用端口集合。
+ * 从 port_status 各行 `address` 解析出范围内已占用端口集合。
  * @param {object[]} statusRows
+ * @param {{ start: number, end: number, count: number }} range
  * @returns {Set<number>}
  */
-function collectOccupiedLocalPortsFromPortStatus(statusRows) {
+function collectOccupiedLocalPortsFromPortStatus(statusRows, range) {
     const used = new Set();
     if (!Array.isArray(statusRows)) {
         return used;
@@ -1591,8 +1594,8 @@ function collectOccupiedLocalPortsFromPortStatus(statusRows) {
         const port = parsePortFromBindingAddress(statusRows[i]?.address);
         if (
             port != null
-            && port >= LOCAL_SOCKS_SCAN_MIN
-            && port <= LOCAL_SOCKS_SCAN_MAX
+            && port >= range.start
+            && port <= range.end
         ) {
             used.add(port);
         }
@@ -1601,12 +1604,13 @@ function collectOccupiedLocalPortsFromPortStatus(statusRows) {
 }
 
 /**
- * 在区间内取第一个不在 `occupied` 中的端口（与 port_check 互补）。
+ * 在范围内取第一个不在 `occupied` 中的端口。
  * @param {Set<number>} occupied
+ * @param {{ start: number, end: number, count: number }} range
  * @returns {number|null}
  */
-function pickFirstUnoccupiedPortInRange(occupied) {
-    for (let p = LOCAL_SOCKS_SCAN_MIN; p <= LOCAL_SOCKS_SCAN_MAX; p += 1) {
+function pickFirstUnoccupiedPortInRange(occupied, range) {
+    for (let p = range.start; p <= range.end; p += 1) {
         if (!occupied.has(p)) {
             return p;
         }
@@ -1615,23 +1619,34 @@ function pickFirstUnoccupiedPortInRange(occupied) {
 }
 
 /**
- * 选取本机转发用空闲端口：并行拉取 `GET /api/port_check?t=2&ports=all` 与（可选）已有 port_status 行；
- * 优先取区间内 **online === false** 的最小端口；否则用 port_status 已列 `address` 之补集取最小候选。
+ * 生成 [start, end] 的连续端口数组。
+ * @param {{ start: number, end: number }} range
+ * @returns {number[]}
+ */
+function buildAllPortsFromRange(range) {
+    const out = [];
+    if (!range || !Number.isInteger(range.start) || !Number.isInteger(range.end)) {
+        return out;
+    }
+    for (let p = range.start; p <= range.end; p += 1) {
+        out.push(p);
+    }
+    return out;
+}
+
+/**
+ * 选取本机转发用空闲端口：先读 `setting -d` 获取起始端口与数量，再基于 `port_status` 已占用地址求补集。
  * @param {object[]|null|undefined} [statusRows] 若已持有 `port_status` 的 `data` 可传入以避免重复请求
  * @returns {Promise<number|null>}
  */
 async function pickLocalIdleSocksPort(statusRows) {
-    const checkP = nineProxyPortCheckRows("all");
+    const range = await getConfiguredLocalPortRange();
     const rowsP = Array.isArray(statusRows)
         ? Promise.resolve(statusRows)
         : nineProxyPortStatusRows();
-    const [checkRows, rows] = await Promise.all([checkP, rowsP]);
-    const fromCheck = pickFirstOfflinePortInRangeFromPortCheck(checkRows);
-    if (fromCheck != null) {
-        return fromCheck;
-    }
-    const occupied = collectOccupiedLocalPortsFromPortStatus(rows);
-    return pickFirstUnoccupiedPortInRange(occupied);
+    const rows = await rowsP;
+    const occupied = collectOccupiedLocalPortsFromPortStatus(rows, range);
+    return pickFirstUnoccupiedPortInRange(occupied, range);
 }
 
 /**
@@ -1950,7 +1965,7 @@ app.get("/api/switch-proxy-custom", handleSwitchProxyCustom);
  * 自定义 SOCKS 请使用 `GET /api/switch-proxy-custom`。
  * 规则：解析公网 IP（query `ip` 优先，否则 today_list）→ 请求 9proxy `GET /api/port_status`，
  * 按该 IP 匹配行的 `public_ip`：若命中则**仅**把该 tag 的 SOCKS 写为 127.0.0.1:该端口、保存 CONFIG_PATH 并重启 sing-box（**不**调用 `/api/forward`）；
- * 若未命中则通过 `GET /api/port_check`（`ports=all`）与 `port_status` 在区间内选取空闲端口，再 `GET /api/forward` 绑定今日代理 `id`，随后同样写入 CONFIG_PATH 并重启 sing-box。
+ * 若未命中则通过 `setting -d` + `port_status` 在配置端口范围内选取空闲端口，再 `GET /api/forward` 绑定今日代理 `id`，随后同样写入 CONFIG_PATH 并重启 sing-box。
  */
 app.get("/api/switch-proxy", async (req, res) => {
     const id = req.query.id;
@@ -2021,7 +2036,7 @@ app.get("/api/switch-proxy", async (req, res) => {
             return res.status(503).json({
                 success: false,
                 msg:
-                    "无可用本地转发端口（已用 port_check / port_status 在区间内选取）。未安装代理服务时请使用 GET /api/switch-proxy-custom 切换自定义 SOCKS。"
+                    "无可用本地转发端口（已用 setting -d 与 port_status 在配置范围内选取）。未安装代理服务时请使用 GET /api/switch-proxy-custom 切换自定义 SOCKS。"
             });
         }
 
@@ -2422,6 +2437,36 @@ app.get("/api/port-check", handlePortCheckProxy);
 app.get("/api/port_check", handlePortCheckProxy);
 
 /**
+ * GET /api/idle-port（兼容 /api/idle_port）
+ * 返回一个空闲端口、配置范围内所有端口、以及 `/api/port_status` 原始数据。
+ */
+async function handleIdlePort(req, res) {
+    try {
+        const [range, statusRows] = await Promise.all([
+            getConfiguredLocalPortRange(),
+            nineProxyPortStatusRows()
+        ]);
+        const occupied = collectOccupiedLocalPortsFromPortStatus(statusRows, range);
+        const idlePort = pickFirstUnoccupiedPortInRange(occupied, range);
+        return res.json({
+            success: true,
+            idle_port: idlePort,
+            all_ports: buildAllPortsFromRange(range),
+            port_range: range,
+            port_status: statusRows
+        });
+    } catch (e) {
+        return res.status(500).json({
+            success: false,
+            msg: "获取空闲端口失败",
+            error: e.message || String(e)
+        });
+    }
+}
+app.get("/api/idle-port", handleIdlePort);
+app.get("/api/idle_port", handleIdlePort);
+
+/**
  * GET /api/port-free
  * 将本服务收到的 query 原样透传至 9proxy 的 GET /api/port_free（释放/回收本地端口等资源，不是「查空闲」）。
  * 参数名与取值以 9proxy 文档为准（常见如 `t`、`ports`），响应体与 HTTP 状态与 9proxy 一致。
@@ -2746,7 +2791,7 @@ function parsePortFromNineProxyProxyResponse(body, fallbackPort) {
 
 /**
  * GET /api/proxy?tag=出站tag
- * 读取该 tag 已保存的筛选规则，在本地端口区间内通过 9proxy `GET /api/port_check` 与 `GET /api/port_status` 选取空闲端口，
+ * 读取该 tag 已保存的筛选规则，通过 `setting -d` 与 `GET /api/port_status` 选取空闲端口，
  * 再以 num=1、t=2 及筛选字段调用 9proxy `GET /api/proxy`（isp/city/state 由内建表转为展示名，query 键顺序固定）。
  * 9proxy 返回 `error: false` 且（可选）从 `data` 解析端口后：将该 tag 的 SOCKS 出站写为 `127.0.0.1:port`，保存 CONFIG_PATH 并 `systemctl restart sing-box`。
  */
@@ -2772,7 +2817,7 @@ app.get("/api/proxy", async (req, res) => {
         if (port == null) {
             return res.json({
                 success: false,
-                msg: "无可用本地 SOCKS 端口（已用 port_check / port_status 在区间内选取）"
+                msg: "无可用本地 SOCKS 端口（已用 setting -d 与 port_status 在配置范围内选取）"
             });
         }
         const stateStr = buildNineProxyStateParam(f.country, f.states);
@@ -2919,6 +2964,33 @@ app.get("/api/9proxy-account", async (req, res) => {
     }
     res.json(payload);
 });
+
+/**
+ * GET /api/proxy-setting（兼容 /api/9proxy-setting）
+ * 本机执行 `setting -d`，返回原始输出与结构化字段。
+ */
+async function handleProxySettingDump(req, res) {
+    const setting = await nineProxyExecFile(["setting", "-d"], 18000);
+    const text = `${String(setting.stdout || "")}\n${String(setting.stderr || "")}`.trim();
+    const parsed = parseSettingDumpLines(text);
+    const range = parsePortRangeFromSettingDump(text);
+    const payload = {
+        success: setting.ok,
+        setting_ok: setting.ok,
+        raw: text,
+        parsed,
+        user_logged: parseNineProxyUserLogged(text),
+        port_range: range
+    };
+    if (!setting.ok) {
+        payload.msg = setting.error || "执行 setting -d 失败";
+        payload.error = setting.error || "setting -d failed";
+        return res.status(503).json(payload);
+    }
+    return res.json(payload);
+}
+app.get("/api/proxy-setting", handleProxySettingDump);
+app.get("/api/9proxy-setting", handleProxySettingDump);
 
 /**
  * POST /api/9proxy-login
