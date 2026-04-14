@@ -1,8856 +1,8796 @@
 const STATE_CODE_ROWS = [
   {
-    "country_code": "US",
-    "state_code": "new_jersey"
+    country_code: "HU",
+    state_code: "zala"
   },
   {
-    "country_code": "IL",
-    "state_code": "al_awsat"
+    country_code: "IN",
+    state_code: "tripura"
   },
   {
-    "country_code": "VE",
-    "state_code": "falcon"
+    country_code: "DE",
+    state_code: "hesse"
   },
   {
-    "country_code": "VN",
-    "state_code": "lao_cai"
+    country_code: "PL",
+    state_code: "pomerania"
   },
   {
-    "country_code": "LS",
-    "state_code": "quthing"
+    country_code: "GB",
+    state_code: "wales"
   },
   {
-    "country_code": "IN",
-    "state_code": "uttarakhand"
+    country_code: "FR",
+    state_code: "occitanie"
   },
   {
-    "country_code": "SB",
-    "state_code": "capital_territory"
+    country_code: "TH",
+    state_code: "nakhon_ratchasima"
   },
   {
-    "country_code": "TZ",
-    "state_code": "kusini_unguja"
+    country_code: "CL",
+    state_code: "valparaiso"
   },
   {
-    "country_code": "MY",
-    "state_code": "kuala_lumpur"
+    country_code: "NG",
+    state_code: "kano_state"
   },
   {
-    "country_code": "DK",
-    "state_code": "nordjylland"
+    country_code: "MK",
+    state_code: "bitola"
   },
   {
-    "country_code": "KE",
-    "state_code": "homa_bay_county"
+    country_code: "KE",
+    state_code: "machakos_county"
   },
   {
-    "country_code": "CN",
-    "state_code": "shanghai_shi"
+    country_code: "RO",
+    state_code: "constanta"
   },
   {
-    "country_code": "MX",
-    "state_code": "san_luis_potosi"
+    country_code: "MA",
+    state_code: "rabatsalekenitra"
   },
   {
-    "country_code": "PH",
-    "state_code": "zamboanga_peninsula"
+    country_code: "CH",
+    state_code: "valais"
   },
   {
-    "country_code": "GH",
-    "state_code": "volta"
+    country_code: "GD",
+    state_code: "carriacou_and_petite_martinique"
   },
   {
-    "country_code": "US",
-    "state_code": "guam"
+    country_code: "FI",
+    state_code: "southwest_finland"
   },
   {
-    "country_code": "AE",
-    "state_code": "ras_al_khaymah"
+    country_code: "CL",
+    state_code: "region_of_magallanes"
   },
   {
-    "country_code": "HR",
-    "state_code": "zagrebacka_zupanija"
+    country_code: "ME",
+    state_code: "tivat"
   },
   {
-    "country_code": "BR",
-    "state_code": "rio_grande_do_norte"
+    country_code: "MK",
+    state_code: "cucer_sandevo"
   },
   {
-    "country_code": "MZ",
-    "state_code": "maputo_city"
+    country_code: "BZ",
+    state_code: "belize"
   },
   {
-    "country_code": "PR",
-    "state_code": "guayanilla"
+    country_code: "VN",
+    state_code: "ho_chi_minh_city_hcmc"
   },
   {
-    "country_code": "PG",
-    "state_code": "east_new_britain_province"
+    country_code: "EE",
+    state_code: "viljandimaa"
   },
   {
-    "country_code": "RO",
-    "state_code": "gorj"
+    country_code: "TZ",
+    state_code: "mara"
   },
   {
-    "country_code": "CN",
-    "state_code": "tianjin"
+    country_code: "NG",
+    state_code: "kaduna_state"
   },
   {
-    "country_code": "NG",
-    "state_code": "enugu"
+    country_code: "PL",
+    state_code: "slaskie"
   },
   {
-    "country_code": "DZ",
-    "state_code": "msila"
+    country_code: "MX",
+    state_code: "baja_california"
   },
   {
-    "country_code": "US",
-    "state_code": "washington"
+    country_code: "RS",
+    state_code: "prizrenski_okrug"
   },
   {
-    "country_code": "AU",
-    "state_code": "victoria"
+    country_code: "KE",
+    state_code: "busia_county"
   },
   {
-    "country_code": "MK",
-    "state_code": "gostivar"
+    country_code: "LR",
+    state_code: "montserrado"
   },
   {
-    "country_code": "VE",
-    "state_code": "merida"
+    country_code: "NZ",
+    state_code: "northland"
   },
   {
-    "country_code": "MY",
-    "state_code": "selangor"
+    country_code: "FR",
+    state_code: "normandy"
   },
   {
-    "country_code": "RW",
-    "state_code": "city_of_kigali"
+    country_code: "BZ",
+    state_code: "belize_district"
   },
   {
-    "country_code": "TZ",
-    "state_code": "kilimanjaro"
+    country_code: "IL",
+    state_code: "tel_aviv"
   },
   {
-    "country_code": "NG",
-    "state_code": "rivers_state"
+    country_code: "KR",
+    state_code: "chungcheongbukdo"
   },
   {
-    "country_code": "TT",
-    "state_code": "tobago"
+    country_code: "BA",
+    state_code: "federation_of_bosnia_and_herzegovina"
   },
   {
-    "country_code": "PH",
-    "state_code": "davao_de_oro"
+    country_code: "IN",
+    state_code: "uttarakhand"
   },
   {
-    "country_code": "SE",
-    "state_code": "vastra_gotalands_lan"
+    country_code: "US",
+    state_code: "oregon"
   },
   {
-    "country_code": "IT",
-    "state_code": "puglia"
+    country_code: "KE",
+    state_code: "mandera"
   },
   {
-    "country_code": "PR",
-    "state_code": "vega_baja"
+    country_code: "SE",
+    state_code: "kronobergs_lan"
   },
   {
-    "country_code": "NA",
-    "state_code": "oshana_region"
+    country_code: "MX",
+    state_code: "campeche"
   },
   {
-    "country_code": "CM",
-    "state_code": "centre"
+    country_code: "US",
+    state_code: "maryland"
   },
   {
-    "country_code": "KE",
-    "state_code": "kwale"
+    country_code: "GR",
+    state_code: "peloponnese"
   },
   {
-    "country_code": "AR",
-    "state_code": "corrientes"
+    country_code: "CH",
+    state_code: "fribourg"
   },
   {
-    "country_code": "IL",
-    "state_code": "al_janubi"
+    country_code: "GY",
+    state_code: "pomeroonsupenaam"
   },
   {
-    "country_code": "PH",
-    "state_code": "palawan"
+    country_code: "ET",
+    state_code: "afar"
   },
   {
-    "country_code": "AL",
-    "state_code": "elbasan"
+    country_code: "IN",
+    state_code: "himachal_pradesh"
   },
   {
-    "country_code": "MK",
-    "state_code": "gevgelija"
+    country_code: "KE",
+    state_code: "trans_nzoia"
   },
   {
-    "country_code": "CK",
-    "state_code": "rarotonga"
+    country_code: "FR",
+    state_code: "centreval_de_loire"
   },
   {
-    "country_code": "KI",
-    "state_code": "gilbert_islands"
+    country_code: "PR",
+    state_code: "juncos"
   },
   {
-    "country_code": "OM",
-    "state_code": "zufar"
+    country_code: "PH",
+    state_code: "central_visayas"
   },
   {
-    "country_code": "PH",
-    "state_code": "south_cotabato"
+    country_code: "MT",
+    state_code: "rabat_gozo"
   },
   {
-    "country_code": "FR",
-    "state_code": "grandest"
+    country_code: "CO",
+    state_code: "valle_del_cauca_department"
   },
   {
-    "country_code": "SC",
-    "state_code": "beau_vallon"
+    country_code: "IT",
+    state_code: "friulivenezia_giulia"
   },
   {
-    "country_code": "IN",
-    "state_code": "karnataka"
+    country_code: "GR",
+    state_code: "notio_aigaio"
   },
   {
-    "country_code": "SE",
-    "state_code": "ostergotlands_lan"
+    country_code: "ID",
+    state_code: "south_kalimantan"
   },
   {
-    "country_code": "AR",
-    "state_code": "buenos_aires"
+    country_code: "IN",
+    state_code: "mizoram"
   },
   {
-    "country_code": "KE",
-    "state_code": "isiolo"
+    country_code: "CR",
+    state_code: "provincia_de_san_jose"
   },
   {
-    "country_code": "SE",
-    "state_code": "gotland"
+    country_code: "AT",
+    state_code: "upper_austria"
   },
   {
-    "country_code": "RS",
-    "state_code": "beograd"
+    country_code: "SY",
+    state_code: "damascus_governorate"
   },
   {
-    "country_code": "VN",
-    "state_code": "quang_nam"
+    country_code: "MX",
+    state_code: "veracruz"
   },
   {
-    "country_code": "BA",
-    "state_code": "srpska"
+    country_code: "BY",
+    state_code: "gorod_minsk"
   },
   {
-    "country_code": "SC",
-    "state_code": "baie_sainte_anne"
+    country_code: "RS",
+    state_code: "sremski_okrug"
   },
   {
-    "country_code": "RO",
-    "state_code": "valcea"
+    country_code: "HU",
+    state_code: "jasznagykunszolnok"
   },
   {
-    "country_code": "SR",
-    "state_code": "commewijne_district"
+    country_code: "MX",
+    state_code: "nuevo_leon"
   },
   {
-    "country_code": "DZ",
-    "state_code": "bechar"
+    country_code: "FI",
+    state_code: "pohjoissavo"
   },
   {
-    "country_code": "PR",
-    "state_code": "adjuntas"
+    country_code: "BR",
+    state_code: "santa_catarina"
   },
   {
-    "country_code": "DZ",
-    "state_code": "jijel"
+    country_code: "NC",
+    state_code: "south_province"
   },
   {
-    "country_code": "SI",
-    "state_code": "municipality_of_sevnica"
+    country_code: "LB",
+    state_code: "beqaa"
   },
   {
-    "country_code": "KE",
-    "state_code": "mombasa_county"
+    country_code: "NG",
+    state_code: "edo_state"
   },
   {
-    "country_code": "BD",
-    "state_code": "chattogram"
+    country_code: "SK",
+    state_code: "nitra_region"
   },
   {
-    "country_code": "LB",
-    "state_code": "libansud"
+    country_code: "PH",
+    state_code: "davao"
   },
   {
-    "country_code": "CL",
-    "state_code": "coquimbo"
+    country_code: "LS",
+    state_code: "mafeteng"
   },
   {
-    "country_code": "HR",
-    "state_code": "sisackomoslavacka_zupanija"
+    country_code: "HT",
+    state_code: "departement_de_louest"
   },
   {
-    "country_code": "EE",
-    "state_code": "harjumaa"
+    country_code: "AR",
+    state_code: "tierra_del_fuego"
   },
   {
-    "country_code": "PH",
-    "state_code": "cebu"
+    country_code: "JO",
+    state_code: "aqaba"
   },
   {
-    "country_code": "GT",
-    "state_code": "jalapa"
+    country_code: "EG",
+    state_code: "cairo"
   },
   {
-    "country_code": "ES",
-    "state_code": "nafarroako_foru_komunitatea"
+    country_code: "SK",
+    state_code: "trenciansky_kraj"
   },
   {
-    "country_code": "US",
-    "state_code": "michigan"
+    country_code: "US",
+    state_code: "indiana"
   },
   {
-    "country_code": "CZ",
-    "state_code": "moravskoslezsky_kraj"
+    country_code: "SI",
+    state_code: "litija"
   },
   {
-    "country_code": "FR",
-    "state_code": "polynesie_francaise"
+    country_code: "HN",
+    state_code: "francisco_morazan_department"
   },
   {
-    "country_code": "BR",
-    "state_code": "sao_paulo"
+    country_code: "SZ",
+    state_code: "manzini"
   },
   {
-    "country_code": "PH",
-    "state_code": "misamis_occidental"
+    country_code: "RO",
+    state_code: "iasi"
   },
   {
-    "country_code": "BA",
-    "state_code": "federation_of_bh"
+    country_code: "EG",
+    state_code: "port_said"
   },
   {
-    "country_code": "SE",
-    "state_code": "stockholms_lan"
+    country_code: "SR",
+    state_code: "coronie_district"
   },
   {
-    "country_code": "KE",
-    "state_code": "uasin_gishu"
+    country_code: "BD",
+    state_code: "sylhet"
   },
   {
-    "country_code": "ZA",
-    "state_code": "kwazulunatal"
+    country_code: "US",
+    state_code: "west_virginia"
   },
   {
-    "country_code": "IE",
-    "state_code": "wexford"
+    country_code: "RU",
+    state_code: "moskovskaya_oblast"
   },
   {
-    "country_code": "RO",
-    "state_code": "neamt"
+    country_code: "GY",
+    state_code: "upper_demeraraberbice"
   },
   {
-    "country_code": "SE",
-    "state_code": "norrbotten"
+    country_code: "GH",
+    state_code: "upper_east"
   },
   {
-    "country_code": "JP",
-    "state_code": "fukui"
+    country_code: "KE",
+    state_code: "bomet"
   },
   {
-    "country_code": "CO",
-    "state_code": "bogota_dc"
+    country_code: "NZ",
+    state_code: "otago"
   },
   {
-    "country_code": "DZ",
-    "state_code": "relizane"
+    country_code: "NL",
+    state_code: "north_holland"
   },
   {
-    "country_code": "TH",
-    "state_code": "chiang_rai"
+    country_code: "BB",
+    state_code: "christ_church"
   },
   {
-    "country_code": "JP",
-    "state_code": "saitama"
+    country_code: "LT",
+    state_code: "kaunas"
   },
   {
-    "country_code": "MY",
-    "state_code": "perlis"
+    country_code: "HU",
+    state_code: "pest"
   },
   {
-    "country_code": "IL",
-    "state_code": "yerushalayim"
+    country_code: "VI",
+    state_code: "saint_thomas_island"
   },
   {
-    "country_code": "ME",
-    "state_code": "herceg_novi"
+    country_code: "BG",
+    state_code: "pazardzhik"
   },
   {
-    "country_code": "ID",
-    "state_code": "kepulauan_riau"
+    country_code: "SA",
+    state_code: "asir_region"
   },
   {
-    "country_code": "ML",
-    "state_code": "bamako"
+    country_code: "NG",
+    state_code: "edo"
   },
   {
-    "country_code": "VE",
-    "state_code": "zulia"
+    country_code: "MY",
+    state_code: "sarawak"
   },
   {
-    "country_code": "RO",
-    "state_code": "galati_county"
+    country_code: "DE",
+    state_code: "bayern"
   },
   {
-    "country_code": "MY",
-    "state_code": "kelantan"
+    country_code: "US",
+    state_code: "mississippi"
   },
   {
-    "country_code": "FR",
-    "state_code": "auvergnerhonealpes"
+    country_code: "TR",
+    state_code: "hatay"
   },
   {
-    "country_code": "SI",
-    "state_code": "kranj"
+    country_code: "PT",
+    state_code: "madeira"
   },
   {
-    "country_code": "KW",
-    "state_code": "al_ahmadi"
+    country_code: "VG",
+    state_code: "virgin_islands_british"
   },
   {
-    "country_code": "UG",
-    "state_code": "mubende"
+    country_code: "RO",
+    state_code: "valcea_county"
   },
   {
-    "country_code": "PL",
-    "state_code": "lubusz"
+    country_code: "DZ",
+    state_code: "khenchela"
   },
   {
-    "country_code": "FR",
-    "state_code": "nouvelleaquitaine"
+    country_code: "KE",
+    state_code: "nyeri_county"
   },
   {
-    "country_code": "SE",
-    "state_code": "gavleborgs_lan"
+    country_code: "KW",
+    state_code: "al_jahra_governorate"
   },
   {
-    "country_code": "IN",
-    "state_code": "telangana"
+    country_code: "LB",
+    state_code: "beqaa"
   },
   {
-    "country_code": "TW",
-    "state_code": "takao"
+    country_code: "MN",
+    state_code: "tov"
   },
   {
-    "country_code": "VN",
-    "state_code": "da_nang_city"
+    country_code: "IT",
+    state_code: "piedmont"
   },
   {
-    "country_code": "CI",
-    "state_code": "abidjan_autonomous_district"
+    country_code: "HR",
+    state_code: "splitskodalmatinska_zupanija"
   },
   {
-    "country_code": "PT",
-    "state_code": "portalegre"
+    country_code: "KR",
+    state_code: "gyeonggido"
   },
   {
-    "country_code": "IN",
-    "state_code": "delhi"
+    country_code: "CA",
+    state_code: "manitoba"
   },
   {
-    "country_code": "NG",
-    "state_code": "niger"
+    country_code: "PH",
+    state_code: "mindoro_oriental"
   },
   {
-    "country_code": "PR",
-    "state_code": "aguada"
+    country_code: "BN",
+    state_code: "bruneimuara"
   },
   {
-    "country_code": "RO",
-    "state_code": "iasi"
+    country_code: "LC",
+    state_code: "vieuxfort"
   },
   {
-    "country_code": "SC",
-    "state_code": "saint_louis"
+    country_code: "JP",
+    state_code: "osaka"
   },
   {
-    "country_code": "MK",
-    "state_code": "prilep"
+    country_code: "AO",
+    state_code: "luanda_province"
   },
   {
-    "country_code": "EE",
-    "state_code": "laanevirumaa"
+    country_code: "TN",
+    state_code: "bizerte"
   },
   {
-    "country_code": "KH",
-    "state_code": "kampot"
+    country_code: "PL",
+    state_code: "malopolskie"
   },
   {
-    "country_code": "MW",
-    "state_code": "lilongwe"
+    country_code: "SE",
+    state_code: "jamtlands_lan"
   },
   {
-    "country_code": "DZ",
-    "state_code": "tiaret"
+    country_code: "CV",
+    state_code: "ilhas_de_sotavento"
   },
   {
-    "country_code": "US",
-    "state_code": "minnesota"
+    country_code: "FI",
+    state_code: "paijathame"
   },
   {
-    "country_code": "PH",
-    "state_code": "negros_occidental"
+    country_code: "PH",
+    state_code: "lanao_del_norte"
   },
   {
-    "country_code": "AR",
-    "state_code": "tucuman"
+    country_code: "FI",
+    state_code: "satakunta"
   },
   {
-    "country_code": "NP",
-    "state_code": "sudurpashchim_pradesh"
+    country_code: "DZ",
+    state_code: "djelfa"
   },
   {
-    "country_code": "NO",
-    "state_code": "vestfold_og_telemark"
+    country_code: "IS",
+    state_code: "hofudborgarsvaedi"
   },
   {
-    "country_code": "PK",
-    "state_code": "gilgitbaltistan"
+    country_code: "DO",
+    state_code: "la_altagracia_province"
   },
   {
-    "country_code": "PR",
-    "state_code": "penuelas"
+    country_code: "PH",
+    state_code: "autonomous_region_in_muslim_mindanao"
   },
   {
-    "country_code": "VN",
-    "state_code": "can_tho_city"
+    country_code: "MT",
+    state_code: "mosta"
   },
   {
-    "country_code": "TH",
-    "state_code": "phitsanulok"
+    country_code: "AT",
+    state_code: "vorarlberg"
   },
   {
-    "country_code": "HU",
-    "state_code": "bacskiskun"
+    country_code: "ES",
+    state_code: "murcia_region_de"
   },
   {
-    "country_code": "BD",
-    "state_code": "khulna"
+    country_code: "NG",
+    state_code: "lagos"
   },
   {
-    "country_code": "ZM",
-    "state_code": "lusaka"
+    country_code: "BD",
+    state_code: "rangpur"
   },
   {
-    "country_code": "RO",
-    "state_code": "bucuresti"
+    country_code: "GU",
+    state_code: "dededo"
   },
   {
-    "country_code": "ID",
-    "state_code": "southwest_papua"
+    country_code: "IQ",
+    state_code: "baghdad"
   },
   {
-    "country_code": "BN",
-    "state_code": "bruneimuara_district"
+    country_code: "TH",
+    state_code: "samut_prakan"
   },
   {
-    "country_code": "BE",
-    "state_code": "brussels_capital"
+    country_code: "NZ",
+    state_code: "greater_wellington"
   },
   {
-    "country_code": "EC",
-    "state_code": "manabi"
+    country_code: "SE",
+    state_code: "orebro"
   },
   {
-    "country_code": "BN",
-    "state_code": "belait"
+    country_code: "NO",
+    state_code: "telemark"
   },
   {
-    "country_code": "TH",
-    "state_code": "udon_thani"
+    country_code: "RS",
+    state_code: "raska"
   },
   {
-    "country_code": "DE",
-    "state_code": "lower_saxony"
+    country_code: "JP",
+    state_code: "kagawa"
   },
   {
-    "country_code": "US",
-    "state_code": "virginia"
+    country_code: "SA",
+    state_code: "makkah_al_mukarramah"
   },
   {
-    "country_code": "ES",
-    "state_code": "santa_cruz_de_tenerife"
+    country_code: "PE",
+    state_code: "lima"
   },
   {
-    "country_code": "NG",
-    "state_code": "katsina"
+    country_code: "IQ",
+    state_code: "al_basrah"
   },
   {
-    "country_code": "PT",
-    "state_code": "azores"
+    country_code: "VI",
+    state_code: "saint_croix_island"
   },
   {
-    "country_code": "NZ",
-    "state_code": "gisborne"
+    country_code: "AE",
+    state_code: "ash_shariqah"
   },
   {
-    "country_code": "LT",
-    "state_code": "klaipeda_county"
+    country_code: "IN",
+    state_code: "chhattisgarh"
   },
   {
-    "country_code": "MY",
-    "state_code": "wilayah_persekutuan_kuala_lumpur"
+    country_code: "DO",
+    state_code: "espaillat_province"
   },
   {
-    "country_code": "PT",
-    "state_code": "braga"
+    country_code: "PH",
+    state_code: "isabela"
   },
   {
-    "country_code": "DZ",
-    "state_code": "naama"
+    country_code: "SI",
+    state_code: "municipality_of_brezice"
   },
   {
-    "country_code": "NG",
-    "state_code": "abuja_federal_capital_territory"
+    country_code: "NP",
+    state_code: "koshi"
   },
   {
-    "country_code": "NO",
-    "state_code": "buskerud"
+    country_code: "HR",
+    state_code: "zadarska_zupanija"
   },
   {
-    "country_code": "ET",
-    "state_code": "south_ethiopia_regional_state"
+    country_code: "IE",
+    state_code: "dublin"
   },
   {
-    "country_code": "TC",
-    "state_code": "turks_and_caicos_islands"
+    country_code: "DZ",
+    state_code: "batna"
   },
   {
-    "country_code": "AE",
-    "state_code": "sharjah"
+    country_code: "CL",
+    state_code: "arica_y_parinacota_region"
   },
   {
-    "country_code": "GU",
-    "state_code": "hagatna"
+    country_code: "TR",
+    state_code: "balıkesir"
   },
   {
-    "country_code": "PH",
-    "state_code": "leyte"
+    country_code: "PH",
+    state_code: "batangas"
   },
   {
-    "country_code": "PR",
-    "state_code": "bayamon"
+    country_code: "HR",
+    state_code: "county_of_osijekbaranja"
   },
   {
-    "country_code": "CA",
-    "state_code": "ontario"
+    country_code: "DZ",
+    state_code: "in_salah"
   },
   {
-    "country_code": "OM",
-    "state_code": "shamal_al_batinah"
+    country_code: "NG",
+    state_code: "taraba"
   },
   {
-    "country_code": "PR",
-    "state_code": "barceloneta"
+    country_code: "SX",
+    state_code: "sint_maarten"
   },
   {
-    "country_code": "SE",
-    "state_code": "kronobergs_lan"
+    country_code: "GH",
+    state_code: "ashanti"
   },
   {
-    "country_code": "IN",
-    "state_code": "goa"
+    country_code: "AU",
+    state_code: "northern_territory"
   },
   {
-    "country_code": "RO",
-    "state_code": "bacau_county"
+    country_code: "IN",
+    state_code: "bihar"
   },
   {
-    "country_code": "BD",
-    "state_code": "habiganj"
+    country_code: "IN",
+    state_code: "gujarat"
   },
   {
-    "country_code": "FR",
-    "state_code": "bourgogne"
+    country_code: "TW",
+    state_code: "kaohsiung"
   },
   {
-    "country_code": "EC",
-    "state_code": "guayas"
+    country_code: "HR",
+    state_code: "zagreb_county"
   },
   {
-    "country_code": "UG",
-    "state_code": "mukono"
+    country_code: "SY",
+    state_code: "rif_dimashq"
   },
   {
-    "country_code": "ZA",
-    "state_code": "mpumalanga"
+    country_code: "LC",
+    state_code: "gros_islet"
   },
   {
-    "country_code": "NG",
-    "state_code": "osun"
+    country_code: "TH",
+    state_code: "phuket"
   },
   {
-    "country_code": "TH",
-    "state_code": "nonthaburi"
+    country_code: "MU",
+    state_code: "rodrigues_islands"
   },
   {
-    "country_code": "PH",
-    "state_code": "eastern_visayas"
+    country_code: "TT",
+    state_code: "port_of_spain"
   },
   {
-    "country_code": "AL",
-    "state_code": "diber"
+    country_code: "DK",
+    state_code: "midtjylland"
   },
   {
-    "country_code": "BY",
-    "state_code": "mahilyowskaya_voblasts"
+    country_code: "AR",
+    state_code: "santiago_del_estero"
   },
   {
-    "country_code": "DE",
-    "state_code": "state_of_berlin"
+    country_code: "SK",
+    state_code: "banska_bystrica_region"
   },
   {
-    "country_code": "NZ",
-    "state_code": "manawatuwanganui"
+    country_code: "VN",
+    state_code: "khanh_hoa"
   },
   {
-    "country_code": "UA",
-    "state_code": "ternopil"
+    country_code: "SE",
+    state_code: "vasternorrlands_lan"
   },
   {
-    "country_code": "JM",
-    "state_code": "trelawny_parish"
+    country_code: "BO",
+    state_code: "la_paz_department"
   },
   {
-    "country_code": "TH",
-    "state_code": "nakhon_pathom"
+    country_code: "TR",
+    state_code: "konya"
   },
   {
-    "country_code": "MY",
-    "state_code": "negeri_sembilan"
+    country_code: "ZW",
+    state_code: "matabeleland_south"
   },
   {
-    "country_code": "KR",
-    "state_code": "seoulteukbyeolsi"
+    country_code: "PH",
+    state_code: "marinduque"
   },
   {
-    "country_code": "SE",
-    "state_code": "skane_lan"
+    country_code: "PT",
+    state_code: "guarda"
   },
   {
-    "country_code": "KE",
-    "state_code": "narok_county"
+    country_code: "KR",
+    state_code: "gwangju"
   },
   {
-    "country_code": "TZ",
-    "state_code": "mbeya"
+    country_code: "RS",
+    state_code: "moravicki_okrug"
   },
   {
-    "country_code": "KE",
-    "state_code": "marsabit"
+    country_code: "IQ",
+    state_code: "dhi_qar"
   },
   {
-    "country_code": "DE",
-    "state_code": "saxony"
+    country_code: "BE",
+    state_code: "oostvlaanderen"
   },
   {
-    "country_code": "DK",
-    "state_code": "sjaelland"
+    country_code: "KE",
+    state_code: "embu_county"
   },
   {
-    "country_code": "CA",
-    "state_code": "nova_scotia"
+    country_code: "BM",
+    state_code: "warwick"
   },
   {
-    "country_code": "FI",
-    "state_code": "pirkanmaa"
+    country_code: "IL",
+    state_code: "southern_district"
   },
   {
-    "country_code": "NG",
-    "state_code": "fct"
+    country_code: "RO",
+    state_code: "giurgiu_county"
   },
   {
-    "country_code": "CN",
-    "state_code": "guizhou"
+    country_code: "PH",
+    state_code: "laguna"
   },
   {
-    "country_code": "KE",
-    "state_code": "baringo"
+    country_code: "AO",
+    state_code: "luanda"
   },
   {
-    "country_code": "BD",
-    "state_code": "noakhali"
+    country_code: "PK",
+    state_code: "balochistan"
   },
   {
-    "country_code": "DE",
-    "state_code": "bavaria"
+    country_code: "AL",
+    state_code: "durres"
   },
   {
-    "country_code": "TN",
-    "state_code": "la_manouba"
+    country_code: "KW",
+    state_code: "al_ahmadi"
   },
   {
-    "country_code": "VN",
-    "state_code": "thanh_hoa"
+    country_code: "SE",
+    state_code: "vasternorrlands_lan"
   },
   {
-    "country_code": "MK",
-    "state_code": "centar"
+    country_code: "KE",
+    state_code: "kilifi_county"
   },
   {
-    "country_code": "GM",
-    "state_code": "banjul"
+    country_code: "SR",
+    state_code: "brokopondo_district"
   },
   {
-    "country_code": "ID",
-    "state_code": "bengkulu"
+    country_code: "CL",
+    state_code: "region_metropolitana_de_santiago"
   },
   {
-    "country_code": "US",
-    "state_code": "california"
+    country_code: "FI",
+    state_code: "central_ostrobothnia"
   },
   {
-    "country_code": "NP",
-    "state_code": "lumbini_province"
+    country_code: "IQ",
+    state_code: "erbil"
   },
   {
-    "country_code": "NA",
-    "state_code": "zambezi"
+    country_code: "GI",
+    state_code: "gibraltar"
   },
   {
-    "country_code": "MX",
-    "state_code": "sonora"
+    country_code: "JP",
+    state_code: "aichi"
   },
   {
-    "country_code": "NP",
-    "state_code": "sudurpashchim"
+    country_code: "TZ",
+    state_code: "dodoma"
   },
   {
-    "country_code": "IN",
-    "state_code": "puducherry"
+    country_code: "FR",
+    state_code: "brittany"
   },
   {
-    "country_code": "SN",
-    "state_code": "dakar"
+    country_code: "IT",
+    state_code: "emiliaromagna"
   },
   {
-    "country_code": "AL",
-    "state_code": "kukes"
+    country_code: "ZM",
+    state_code: "western"
   },
   {
-    "country_code": "DE",
-    "state_code": "thuringia"
+    country_code: "MK",
+    state_code: "stip"
   },
   {
-    "country_code": "KE",
-    "state_code": "kajiado"
+    country_code: "CH",
+    state_code: "lucerne"
   },
   {
-    "country_code": "IL",
-    "state_code": "hefa"
+    country_code: "VC",
+    state_code: "charlotte"
   },
   {
-    "country_code": "SG",
-    "state_code": "singapore"
+    country_code: "MT",
+    state_code: "paola"
   },
   {
-    "country_code": "EE",
-    "state_code": "hiiumaa"
+    country_code: "EG",
+    state_code: "al_jizah"
   },
   {
-    "country_code": "US",
-    "state_code": "rhode_island"
+    country_code: "VN",
+    state_code: "đong_nai"
   },
   {
-    "country_code": "CL",
-    "state_code": "maule"
+    country_code: "SE",
+    state_code: "skane_lan"
   },
   {
-    "country_code": "IN",
-    "state_code": "telangana"
+    country_code: "SI",
+    state_code: "maribor"
   },
   {
-    "country_code": "MX",
-    "state_code": "mexico"
+    country_code: "AR",
+    state_code: "san_luis"
   },
   {
-    "country_code": "GG",
-    "state_code": "castel"
+    country_code: "MT",
+    state_code: "ilmosta"
   },
   {
-    "country_code": "AU",
-    "state_code": "new_south_wales"
+    country_code: "BT",
+    state_code: "paro"
   },
   {
-    "country_code": "MH",
-    "state_code": "ratak_chain"
+    country_code: "US",
+    state_code: "new_jersey"
   },
   {
-    "country_code": "AE",
-    "state_code": "ajman"
+    country_code: "IL",
+    state_code: "al_awsat"
   },
   {
-    "country_code": "MW",
-    "state_code": "machinga"
+    country_code: "SK",
+    state_code: "bratislava_region"
   },
   {
-    "country_code": "PE",
-    "state_code": "cusco"
+    country_code: "TR",
+    state_code: "osmaniye"
   },
   {
-    "country_code": "DM",
-    "state_code": "saint_george_parish"
+    country_code: "FI",
+    state_code: "uusimaa"
   },
   {
-    "country_code": "DE",
-    "state_code": "sachsen"
+    country_code: "SI",
+    state_code: "urban_municipality_of_velenje"
   },
   {
-    "country_code": "XK",
-    "state_code": "ferizaj"
+    country_code: "CO",
+    state_code: "magdalena_department"
   },
   {
-    "country_code": "CO",
-    "state_code": "risaralda_department"
+    country_code: "CR",
+    state_code: "alajuela_province"
   },
   {
-    "country_code": "RO",
-    "state_code": "ilfov"
+    country_code: "BB",
+    state_code: "saint_peter"
   },
   {
-    "country_code": "PL",
-    "state_code": "mazowieckie"
+    country_code: "IQ",
+    state_code: "arbil"
   },
   {
-    "country_code": "AL",
-    "state_code": "shkoder_county"
+    country_code: "MX",
+    state_code: "ciudad_de_mexico"
   },
   {
-    "country_code": "BD",
-    "state_code": "chittagong"
+    country_code: "AE",
+    state_code: "al_fujayrah"
   },
   {
-    "country_code": "LV",
-    "state_code": "riga"
+    country_code: "MV",
+    state_code: "north_thiladhunmathi"
   },
   {
-    "country_code": "MV",
-    "state_code": "shaviyani_atholhu"
+    country_code: "CZ",
+    state_code: "kralovehradecky_kraj"
   },
   {
-    "country_code": "HR",
-    "state_code": "istarska_zupanija"
+    country_code: "LT",
+    state_code: "vilnius"
   },
   {
-    "country_code": "CW",
-    "state_code": "curacao"
+    country_code: "TH",
+    state_code: "loei"
   },
   {
-    "country_code": "KE",
-    "state_code": "makueni"
+    country_code: "TR",
+    state_code: "mersin"
   },
   {
-    "country_code": "ET",
-    "state_code": "tigrai"
+    country_code: "ZM",
+    state_code: "northwestern"
   },
   {
-    "country_code": "IS",
-    "state_code": "reykjavikurborg"
+    country_code: "TT",
+    state_code: "arima"
   },
   {
-    "country_code": "CH",
-    "state_code": "zurich"
+    country_code: "SZ",
+    state_code: "manzini_region"
   },
   {
-    "country_code": "LY",
-    "state_code": "an_nuqat_al_khams"
+    country_code: "UZ",
+    state_code: "toshkent"
   },
   {
-    "country_code": "EG",
-    "state_code": "damietta"
+    country_code: "RO",
+    state_code: "tulcea"
   },
   {
-    "country_code": "BM",
-    "state_code": "sandys"
+    country_code: "MK",
+    state_code: "karpos"
   },
   {
-    "country_code": "PH",
-    "state_code": "albay"
+    country_code: "JM",
+    state_code: "clarendon"
   },
   {
-    "country_code": "TW",
-    "state_code": "taichung"
+    country_code: "GB",
+    state_code: "northern_ireland"
   },
   {
-    "country_code": "LK",
-    "state_code": "central_province"
+    country_code: "AI",
+    state_code: "the_valley"
   },
   {
-    "country_code": "RW",
-    "state_code": "est"
+    country_code: "PT",
+    state_code: "lisboa"
   },
   {
-    "country_code": "US",
-    "state_code": "oklahoma"
+    country_code: "IT",
+    state_code: "torino"
   },
   {
-    "country_code": "MU",
-    "state_code": "black_river"
+    country_code: "SA",
+    state_code: "mecca_region"
   },
   {
-    "country_code": "GP",
-    "state_code": "guadeloupe"
+    country_code: "IT",
+    state_code: "liguria"
   },
   {
-    "country_code": "FR",
-    "state_code": "provencealpescote_dazur"
+    country_code: "ET",
+    state_code: "sidama_region"
   },
   {
-    "country_code": "MA",
-    "state_code": "fesmeknes"
+    country_code: "TN",
+    state_code: "lariana"
   },
   {
-    "country_code": "UA",
-    "state_code": "ternopil_oblast"
+    country_code: "ES",
+    state_code: "madrid_comunidad_de"
   },
   {
-    "country_code": "US",
-    "state_code": "district_of_columbia"
+    country_code: "PT",
+    state_code: "braganca"
   },
   {
-    "country_code": "PH",
-    "state_code": "bicol"
+    country_code: "NZ",
+    state_code: "nelson"
   },
   {
-    "country_code": "ET",
-    "state_code": "dire_dawa"
+    country_code: "FI",
+    state_code: "kymenlaakso"
   },
   {
-    "country_code": "BB",
-    "state_code": "saint_thomas"
+    country_code: "KE",
+    state_code: "mombasa"
   },
   {
-    "country_code": "JP",
-    "state_code": "okinawa"
+    country_code: "SZ",
+    state_code: "hhohho_region"
   },
   {
-    "country_code": "EG",
-    "state_code": "alexandria"
+    country_code: "MK",
+    state_code: "struga"
   },
   {
-    "country_code": "US",
-    "state_code": "new_hampshire"
+    country_code: "NG",
+    state_code: "akwa_ibom"
   },
   {
-    "country_code": "GR",
-    "state_code": "kentriki_makedonia"
+    country_code: "BM",
+    state_code: "hamilton_city"
   },
   {
-    "country_code": "MZ",
-    "state_code": "sofala"
+    country_code: "RO",
+    state_code: "arad_county"
   },
   {
-    "country_code": "LC",
-    "state_code": "micoud"
+    country_code: "RO",
+    state_code: "salaj"
   },
   {
-    "country_code": "SO",
-    "state_code": "mudug"
+    country_code: "KE",
+    state_code: "kitui_county"
   },
   {
-    "country_code": "RU",
-    "state_code": "bashkortostan_republic"
+    country_code: "SE",
+    state_code: "gavleborg"
   },
   {
-    "country_code": "PH",
-    "state_code": "catanduanes"
+    country_code: "PA",
+    state_code: "panama"
   },
   {
-    "country_code": "TR",
-    "state_code": "mugla"
+    country_code: "JM",
+    state_code: "westmoreland"
   },
   {
-    "country_code": "ET",
-    "state_code": "addis_ababa"
+    country_code: "OM",
+    state_code: "dhofar"
   },
   {
-    "country_code": "EG",
-    "state_code": "luxor"
+    country_code: "ZM",
+    state_code: "lusaka_province"
   },
   {
-    "country_code": "SZ",
-    "state_code": "shiselweni"
+    country_code: "LV",
+    state_code: "riga"
   },
   {
-    "country_code": "ET",
-    "state_code": "amhara"
+    country_code: "DE",
+    state_code: "sachsenanhalt"
   },
   {
-    "country_code": "DZ",
-    "state_code": "chlef"
+    country_code: "PL",
+    state_code: "lublin"
   },
   {
-    "country_code": "FI",
-    "state_code": "north_savo"
+    country_code: "FR",
+    state_code: "martinique"
   },
   {
-    "country_code": "MA",
-    "state_code": "laayounesakia_el_hamra"
+    country_code: "KZ",
+    state_code: "almaty"
   },
   {
-    "country_code": "US",
-    "state_code": "vermont"
+    country_code: "CM",
+    state_code: "littoral"
   },
   {
-    "country_code": "GT",
-    "state_code": "chiquimula"
+    country_code: "MT",
+    state_code: "zabbar"
   },
   {
-    "country_code": "SI",
-    "state_code": "municipality_of_straza"
+    country_code: "CG",
+    state_code: "brazzaville"
   },
   {
-    "country_code": "TR",
-    "state_code": "aksaray"
+    country_code: "TN",
+    state_code: "monastir"
   },
   {
-    "country_code": "AE",
-    "state_code": "abu_zaby"
+    country_code: "RO",
+    state_code: "salaj"
   },
   {
-    "country_code": "MM",
-    "state_code": "yangon"
+    country_code: "MN",
+    state_code: "hovsgol"
   },
   {
-    "country_code": "NZ",
-    "state_code": "canterbury"
+    country_code: "PL",
+    state_code: "lodzkie"
   },
   {
-    "country_code": "SI",
-    "state_code": "grosuplje"
+    country_code: "RS",
+    state_code: "juznobacki_okrug"
   },
   {
-    "country_code": "BG",
-    "state_code": "varna"
+    country_code: "SK",
+    state_code: "banskobystricky_kraj"
   },
   {
-    "country_code": "PL",
-    "state_code": "mazovia"
+    country_code: "IE",
+    state_code: "waterford"
   },
   {
-    "country_code": "SI",
-    "state_code": "municipality_of_domzale"
+    country_code: "CN",
+    state_code: "shaanxi"
   },
   {
-    "country_code": "KW",
-    "state_code": "hawalli"
+    country_code: "ID",
+    state_code: "maluku"
   },
   {
-    "country_code": "ZW",
-    "state_code": "bulawayo"
+    country_code: "LK",
+    state_code: "western_province"
   },
   {
-    "country_code": "MU",
-    "state_code": "flacq"
+    country_code: "ES",
+    state_code: "andalucia"
   },
   {
-    "country_code": "LC",
-    "state_code": "castries"
+    country_code: "BG",
+    state_code: "vratsa"
   },
   {
-    "country_code": "US",
-    "state_code": "massachusetts"
+    country_code: "BD",
+    state_code: "rajshahi_division"
   },
   {
-    "country_code": "PH",
-    "state_code": "sorsogon"
+    country_code: "BQ",
+    state_code: "saba"
   },
   {
-    "country_code": "GR",
-    "state_code": "peloponnisos"
+    country_code: "CN",
+    state_code: "hebei"
   },
   {
-    "country_code": "ES",
-    "state_code": "aragon"
+    country_code: "IE",
+    state_code: "kilkenny"
   },
   {
-    "country_code": "UG",
-    "state_code": "western_region"
+    country_code: "DE",
+    state_code: "thuringen"
   },
   {
-    "country_code": "HN",
-    "state_code": "francisco_morazan"
+    country_code: "FR",
+    state_code: "paysdelaloire"
   },
   {
-    "country_code": "TR",
-    "state_code": "gaziantep"
+    country_code: "RU",
+    state_code: "moscow"
   },
   {
-    "country_code": "ID",
-    "state_code": "nusa_tenggara"
+    country_code: "JO",
+    state_code: "zarqa"
   },
   {
-    "country_code": "AU",
-    "state_code": "queensland"
+    country_code: "YE",
+    state_code: "aden"
   },
   {
-    "country_code": "TH",
-    "state_code": "maha_sarakham"
+    country_code: "PR",
+    state_code: "aguadilla"
   },
   {
-    "country_code": "AR",
-    "state_code": "jujuy"
+    country_code: "MK",
+    state_code: "centar"
   },
   {
-    "country_code": "AL",
-    "state_code": "korce_county"
+    country_code: "QA",
+    state_code: "ash_shamal"
   },
   {
-    "country_code": "KE",
-    "state_code": "kajiado_county"
+    country_code: "IT",
+    state_code: "marche"
   },
   {
-    "country_code": "JP",
-    "state_code": "hokkaido"
+    country_code: "PT",
+    state_code: "evora"
   },
   {
-    "country_code": "KN",
-    "state_code": "saint_james_windward"
+    country_code: "BR",
+    state_code: "mato_grosso"
   },
   {
-    "country_code": "NG",
-    "state_code": "imo"
+    country_code: "NZ",
+    state_code: "auckland"
   },
   {
-    "country_code": "SI",
-    "state_code": "urban_municipality_of_celje"
+    country_code: "PH",
+    state_code: "aklan"
   },
   {
-    "country_code": "KE",
-    "state_code": "machakos"
+    country_code: "NA",
+    state_code: "karas_region"
   },
   {
-    "country_code": "NP",
-    "state_code": "gandaki_pradesh"
+    country_code: "DZ",
+    state_code: "mila"
   },
   {
-    "country_code": "BD",
-    "state_code": "jashore"
+    country_code: "GR",
+    state_code: "west_macedonia"
   },
   {
-    "country_code": "MU",
-    "state_code": "moka"
+    country_code: "CH",
+    state_code: "geneva"
   },
   {
-    "country_code": "MT",
-    "state_code": "ilgzira"
+    country_code: "RO",
+    state_code: "arges"
   },
   {
-    "country_code": "SI",
-    "state_code": "radovljica"
+    country_code: "KR",
+    state_code: "seoul"
   },
   {
-    "country_code": "VN",
-    "state_code": "an_giang"
+    country_code: "ES",
+    state_code: "a_coruna"
   },
   {
-    "country_code": "UA",
-    "state_code": "kharkivska_oblast"
+    country_code: "MA",
+    state_code: "rabatsalekenitra"
   },
   {
-    "country_code": "FR",
-    "state_code": "hautsdefrance"
+    country_code: "BG",
+    state_code: "stara_zagora"
   },
   {
-    "country_code": "GF",
-    "state_code": "guyane"
+    country_code: "SI",
+    state_code: "ljutomer"
   },
   {
-    "country_code": "BE",
-    "state_code": "westvlaanderen"
+    country_code: "PH",
+    state_code: "cordillera_administrative_region"
   },
   {
-    "country_code": "PL",
-    "state_code": "łodzkie"
+    country_code: "PL",
+    state_code: "zachodniopomorskie"
   },
   {
-    "country_code": "US",
-    "state_code": "kansas"
+    country_code: "AL",
+    state_code: "elbasan_county"
   },
   {
-    "country_code": "TR",
-    "state_code": "samsun"
+    country_code: "HR",
+    state_code: "grad_zagreb"
   },
   {
-    "country_code": "KW",
-    "state_code": "al_farwaniyah"
+    country_code: "MX",
+    state_code: "aguascalientes"
   },
   {
-    "country_code": "KE",
-    "state_code": "kiambu_county"
+    country_code: "SI",
+    state_code: "murska_sobota"
   },
   {
-    "country_code": "OM",
-    "state_code": "ad_dakhiliyah"
+    country_code: "LA",
+    state_code: "vientiane_prefecture"
   },
   {
-    "country_code": "PH",
-    "state_code": "southern_leyte"
+    country_code: "JM",
+    state_code: "saint_james_parish"
   },
   {
-    "country_code": "NA",
-    "state_code": "erongo_region"
+    country_code: "BZ",
+    state_code: "cayo_district"
   },
   {
-    "country_code": "KE",
-    "state_code": "muranga"
+    country_code: "AR",
+    state_code: "neuquen"
   },
   {
-    "country_code": "CO",
-    "state_code": "cordoba"
+    country_code: "EE",
+    state_code: "tartumaa"
   },
   {
-    "country_code": "SI",
-    "state_code": "municipality_of_racefram"
+    country_code: "OM",
+    state_code: "masqat"
   },
   {
-    "country_code": "VN",
-    "state_code": "gia_lai"
+    country_code: "IN",
+    state_code: "nagaland"
   },
   {
-    "country_code": "BD",
-    "state_code": "rangpur_division"
+    country_code: "JO",
+    state_code: "al_aqabah"
   },
   {
-    "country_code": "US",
-    "state_code": "north_carolina"
+    country_code: "NO",
+    state_code: "nordland"
   },
   {
-    "country_code": "PR",
-    "state_code": "vega_alta"
+    country_code: "BT",
+    state_code: "sarpang_district"
   },
   {
-    "country_code": "VN",
-    "state_code": "hai_phong"
+    country_code: "SE",
+    state_code: "stockholm"
   },
   {
-    "country_code": "MU",
-    "state_code": "port_louis"
+    country_code: "ID",
+    state_code: "jambi"
   },
   {
-    "country_code": "IN",
-    "state_code": "andaman_and_nicobar_islands"
+    country_code: "RS",
+    state_code: "nisavski_okrug"
   },
   {
-    "country_code": "JP",
-    "state_code": "okayama"
+    country_code: "IT",
+    state_code: "sicilia"
   },
   {
-    "country_code": "NL",
-    "state_code": "utrecht"
+    country_code: "BG",
+    state_code: "haskovo"
   },
   {
-    "country_code": "HK",
-    "state_code": "kwai_tsing_district"
+    country_code: "IE",
+    state_code: "cavan"
   },
   {
-    "country_code": "BW",
-    "state_code": "ghanzi"
+    country_code: "MX",
+    state_code: "nuevo_leon"
   },
   {
-    "country_code": "BW",
-    "state_code": "kgatleng_district"
+    country_code: "RS",
+    state_code: "borski_okrug"
   },
   {
-    "country_code": "GE",
-    "state_code": "guria"
+    country_code: "AR",
+    state_code: "misiones"
   },
   {
-    "country_code": "BB",
-    "state_code": "saint_james"
+    country_code: "RU",
+    state_code: "rostov"
   },
   {
-    "country_code": "AT",
-    "state_code": "lower_austria"
+    country_code: "US",
+    state_code: "maine"
   },
   {
-    "country_code": "DK",
-    "state_code": "north_denmark"
+    country_code: "SA",
+    state_code: "asir"
   },
   {
-    "country_code": "EG",
-    "state_code": "suez"
+    country_code: "RO",
+    state_code: "satu_mare"
   },
   {
-    "country_code": "CN",
-    "state_code": "shandong_sheng"
+    country_code: "CY",
+    state_code: "larnaka"
   },
   {
-    "country_code": "IE",
-    "state_code": "kerry"
+    country_code: "VI",
+    state_code: "virgin_islands_us"
   },
   {
-    "country_code": "PY",
-    "state_code": "asuncion"
+    country_code: "HR",
+    state_code: "city_of_zagreb"
   },
   {
-    "country_code": "IE",
-    "state_code": "leinster"
+    country_code: "US",
+    state_code: "nebraska"
   },
   {
-    "country_code": "ES",
-    "state_code": "navarre"
+    country_code: "MX",
+    state_code: "puebla"
   },
   {
-    "country_code": "BR",
-    "state_code": "para"
+    country_code: "PR",
+    state_code: "mayaguez"
   },
   {
-    "country_code": "VE",
-    "state_code": "lara"
+    country_code: "MX",
+    state_code: "coahuila"
   },
   {
-    "country_code": "HR",
-    "state_code": "karlovac"
+    country_code: "PL",
+    state_code: "swietokrzyskie"
   },
   {
-    "country_code": "SB",
-    "state_code": "honiara"
+    country_code: "CY",
+    state_code: "limassol"
   },
   {
-    "country_code": "XK",
-    "state_code": "pec"
+    country_code: "SZ",
+    state_code: "lubombo"
   },
   {
-    "country_code": "RO",
-    "state_code": "arges"
+    country_code: "SR",
+    state_code: "paramaribo"
   },
   {
-    "country_code": "XK",
-    "state_code": "mitrovica"
+    country_code: "PH",
+    state_code: "romblon"
   },
   {
-    "country_code": "CO",
-    "state_code": "cundinamarca"
+    country_code: "GR",
+    state_code: "thessalia"
   },
   {
-    "country_code": "KE",
-    "state_code": "tharakanithi"
+    country_code: "RO",
+    state_code: "suceava"
   },
   {
-    "country_code": "PA",
-    "state_code": "colon"
+    country_code: "IE",
+    state_code: "cork"
   },
   {
-    "country_code": "IM",
-    "state_code": "douglas"
+    country_code: "FR",
+    state_code: "pays_de_la_loire"
   },
   {
-    "country_code": "JM",
-    "state_code": "kingston"
+    country_code: "DZ",
+    state_code: "tizi_ouzou"
   },
   {
-    "country_code": "PH",
-    "state_code": "bulacan"
+    country_code: "BE",
+    state_code: "liege"
   },
   {
-    "country_code": "KE",
-    "state_code": "busia"
+    country_code: "NO",
+    state_code: "møre_og_romsdal"
   },
   {
-    "country_code": "KE",
-    "state_code": "tana_river_county"
+    country_code: "ZA",
+    state_code: "northwest"
   },
   {
-    "country_code": "RO",
-    "state_code": "teleorman_county"
+    country_code: "ID",
+    state_code: "east_java"
   },
   {
-    "country_code": "RO",
-    "state_code": "dambovita"
+    country_code: "CR",
+    state_code: "limon_province"
   },
   {
-    "country_code": "AO",
-    "state_code": "benguela"
+    country_code: "NL",
+    state_code: "curacao"
   },
   {
-    "country_code": "AR",
-    "state_code": "neuquen"
+    country_code: "TZ",
+    state_code: "tabora"
   },
   {
-    "country_code": "JO",
-    "state_code": "irbid"
+    country_code: "BH",
+    state_code: "manama"
   },
   {
-    "country_code": "SE",
-    "state_code": "dalarna"
+    country_code: "US",
+    state_code: "illinois"
   },
   {
-    "country_code": "ET",
-    "state_code": "somali"
+    country_code: "LT",
+    state_code: "klaipedos_apskritis"
   },
   {
-    "country_code": "MT",
-    "state_code": "irrabat"
+    country_code: "NL",
+    state_code: "flevoland"
   },
   {
-    "country_code": "JM",
-    "state_code": "saint_mary"
+    country_code: "TN",
+    state_code: "tunis"
   },
   {
-    "country_code": "DE",
-    "state_code": "badenwurttemberg"
+    country_code: "CN",
+    state_code: "guangdong"
   },
   {
-    "country_code": "RO",
-    "state_code": "maramures"
+    country_code: "GY",
+    state_code: "essequibo_islandswest_demerara"
   },
   {
-    "country_code": "SV",
-    "state_code": "san_salvador"
+    country_code: "BW",
+    state_code: "gaborone"
   },
   {
-    "country_code": "ID",
-    "state_code": "lampung"
+    country_code: "PL",
+    state_code: "opole_voivodeship"
   },
   {
-    "country_code": "NP",
-    "state_code": "madhesh"
+    country_code: "US",
+    state_code: "georgia"
   },
   {
-    "country_code": "BW",
-    "state_code": "ngwaketsi"
+    country_code: "BE",
+    state_code: "limburg"
   },
   {
-    "country_code": "ES",
-    "state_code": "euskal_herria"
+    country_code: "DZ",
+    state_code: "alger"
   },
   {
-    "country_code": "LI",
-    "state_code": "triesenberg"
+    country_code: "CH",
+    state_code: "baselstadt"
   },
   {
-    "country_code": "LT",
-    "state_code": "vilniaus_apskritis"
+    country_code: "PT",
+    state_code: "leiria"
   },
   {
-    "country_code": "KE",
-    "state_code": "kisumu"
+    country_code: "ZA",
+    state_code: "limpopo"
   },
   {
-    "country_code": "HR",
-    "state_code": "virovitickopodravska_zupanija"
+    country_code: "KN",
+    state_code: "saint_anne_sandy_point"
   },
   {
-    "country_code": "IL",
-    "state_code": "hatsafon"
+    country_code: "HR",
+    state_code: "istria"
   },
   {
-    "country_code": "LS",
-    "state_code": "qachas_nek"
+    country_code: "MC",
+    state_code: "municipality_of_monaco"
   },
   {
-    "country_code": "VE",
-    "state_code": "distrito_capital"
+    country_code: "GR",
+    state_code: "east_macedonia_and_thrace"
   },
   {
-    "country_code": "PR",
-    "state_code": "coamo"
+    country_code: "EG",
+    state_code: "al_iskandariyah"
   },
   {
-    "country_code": "KW",
-    "state_code": "al_jahra"
+    country_code: "MK",
+    state_code: "ohrid"
   },
   {
-    "country_code": "VN",
-    "state_code": "đa_nang"
+    country_code: "LB",
+    state_code: "south_governorate"
   },
   {
-    "country_code": "KE",
-    "state_code": "samburu_county"
+    country_code: "TT",
+    state_code: "siparia_regional_corporation"
   },
   {
-    "country_code": "ID",
-    "state_code": "north_sumatra"
+    country_code: "IE",
+    state_code: "galway"
   },
   {
-    "country_code": "TH",
-    "state_code": "surat_thani"
+    country_code: "RO",
+    state_code: "buzau_county"
   },
   {
-    "country_code": "SY",
-    "state_code": "halab"
+    country_code: "NL",
+    state_code: "aruba"
   },
   {
-    "country_code": "MU",
-    "state_code": "plaines_wilhems"
+    country_code: "PE",
+    state_code: "lima_region"
   },
   {
-    "country_code": "US",
-    "state_code": "missouri"
+    country_code: "NL",
+    state_code: "zeeland"
   },
   {
-    "country_code": "TZ",
-    "state_code": "geita"
+    country_code: "PR",
+    state_code: "san_german"
   },
   {
-    "country_code": "NL",
-    "state_code": "friesland"
+    country_code: "GH",
+    state_code: "bono"
   },
   {
-    "country_code": "US",
-    "state_code": "north_dakota"
+    country_code: "ID",
+    state_code: "east_nusa_tenggara"
   },
   {
-    "country_code": "UA",
-    "state_code": "vinnytsia"
+    country_code: "PL",
+    state_code: "podlasie"
   },
   {
-    "country_code": "PL",
-    "state_code": "warminskomazurskie"
+    country_code: "KE",
+    state_code: "kisii"
   },
   {
-    "country_code": "PR",
-    "state_code": "utuado"
+    country_code: "BE",
+    state_code: "vlaams_gewest"
   },
   {
-    "country_code": "BR",
-    "state_code": "rio_de_janeiro"
+    country_code: "BE",
+    state_code: "antwerpen"
   },
   {
-    "country_code": "BH",
-    "state_code": "southern_governorate"
+    country_code: "IE",
+    state_code: "tipperary"
   },
   {
-    "country_code": "AE",
-    "state_code": "abu_dhabi"
+    country_code: "CA",
+    state_code: "prince_edward_island"
   },
   {
-    "country_code": "TW",
-    "state_code": "new_taipei"
+    country_code: "AE",
+    state_code: "emirate_of_ras_al_khaimah"
   },
   {
-    "country_code": "AL",
-    "state_code": "tirane"
+    country_code: "LY",
+    state_code: "misratah"
   },
   {
-    "country_code": "GB",
-    "state_code": "england"
+    country_code: "BR",
+    state_code: "goias"
   },
   {
-    "country_code": "MY",
-    "state_code": "putrajaya"
+    country_code: "KE",
+    state_code: "nairobi_city"
   },
   {
-    "country_code": "IN",
-    "state_code": "lakshadweep"
+    country_code: "ES",
+    state_code: "castillela_mancha"
   },
   {
-    "country_code": "SI",
-    "state_code": "urban_municipality_of_kranj"
+    country_code: "SX",
+    state_code: "sint_maarten_dutch_part"
   },
   {
-    "country_code": "KE",
-    "state_code": "garissa"
+    country_code: "KE",
+    state_code: "kilifi"
   },
   {
-    "country_code": "CZ",
-    "state_code": "moravskoslezsky"
+    country_code: "AR",
+    state_code: "santa_fe"
   },
   {
-    "country_code": "JP",
-    "state_code": "shiga"
+    country_code: "CH",
+    state_code: "zurich"
   },
   {
-    "country_code": "HK",
-    "state_code": "tuen_mun"
+    country_code: "EG",
+    state_code: "al_qahirah"
   },
   {
-    "country_code": "PH",
-    "state_code": "zambales"
+    country_code: "MK",
+    state_code: "veles"
   },
   {
-    "country_code": "JP",
-    "state_code": "niigata"
+    country_code: "ES",
+    state_code: "balearic_islands"
   },
   {
-    "country_code": "TR",
-    "state_code": "kayseri"
+    country_code: "TT",
+    state_code: "chaguanas"
   },
   {
-    "country_code": "RO",
-    "state_code": "dolj"
+    country_code: "MT",
+    state_code: "limgarr"
   },
   {
-    "country_code": "HU",
-    "state_code": "zala_county"
+    country_code: "BD",
+    state_code: "mymensingh"
   },
   {
-    "country_code": "AE",
-    "state_code": "ajman"
+    country_code: "NI",
+    state_code: "rivas_department"
   },
   {
-    "country_code": "IE",
-    "state_code": "wicklow"
+    country_code: "AL",
+    state_code: "fier_county"
   },
   {
-    "country_code": "NZ",
-    "state_code": "hawkes_bay"
+    country_code: "DK",
+    state_code: "south_denmark"
   },
   {
-    "country_code": "BB",
-    "state_code": "saint_michael"
+    country_code: "GR",
+    state_code: "anatoliki_makedonia_kai_thraki"
   },
   {
-    "country_code": "PH",
-    "state_code": "cavite"
+    country_code: "TR",
+    state_code: "istanbul"
   },
   {
-    "country_code": "KH",
-    "state_code": "phnum_penh"
+    country_code: "IE",
+    state_code: "limerick"
   },
   {
-    "country_code": "LY",
-    "state_code": "banghazi"
+    country_code: "SE",
+    state_code: "skane"
   },
   {
-    "country_code": "CR",
-    "state_code": "san_jose"
+    country_code: "MZ",
+    state_code: "maputo"
   },
   {
-    "country_code": "KE",
-    "state_code": "siaya"
+    country_code: "KW",
+    state_code: "al_asimah"
   },
   {
-    "country_code": "UY",
-    "state_code": "montevideo"
+    country_code: "JM",
+    state_code: "saint_mary_parish"
   },
   {
-    "country_code": "MD",
-    "state_code": "chisinau"
+    country_code: "SL",
+    state_code: "western_area"
   },
   {
-    "country_code": "GR",
-    "state_code": "kentriki_makedonia"
+    country_code: "VE",
+    state_code: "distrito_federal"
   },
   {
-    "country_code": "BO",
-    "state_code": "santa_cruz"
+    country_code: "SG",
+    state_code: "north_east"
   },
   {
-    "country_code": "DK",
-    "state_code": "zealand"
+    country_code: "ES",
+    state_code: "araba"
   },
   {
-    "country_code": "SC",
-    "state_code": "la_riviere_anglaise"
+    country_code: "CH",
+    state_code: "geneve"
   },
   {
-    "country_code": "MA",
-    "state_code": "benimellalkhenifra"
+    country_code: "ET",
+    state_code: "sidama"
   },
   {
-    "country_code": "BD",
-    "state_code": "dhaka_division"
+    country_code: "KE",
+    state_code: "embu"
   },
   {
-    "country_code": "PH",
-    "state_code": "ilocos"
+    country_code: "NL",
+    state_code: "gelderland"
   },
   {
-    "country_code": "CO",
-    "state_code": "cauca"
+    country_code: "ES",
+    state_code: "cantabria"
   },
   {
-    "country_code": "BD",
-    "state_code": "coxs_bazar"
+    country_code: "KE",
+    state_code: "nyandarua_county"
   },
   {
-    "country_code": "JO",
-    "state_code": "az_zarqa"
+    country_code: "RS",
+    state_code: "sumadijski_okrug"
   },
   {
-    "country_code": "BY",
-    "state_code": "minsk_city"
+    country_code: "IN",
+    state_code: "gujarat"
   },
   {
-    "country_code": "CU",
-    "state_code": "la_habana"
+    country_code: "MV",
+    state_code: "faafu_atholhu"
   },
   {
-    "country_code": "PH",
-    "state_code": "siquijor"
+    country_code: "VN",
+    state_code: "đak_lak"
   },
   {
-    "country_code": "AR",
-    "state_code": "ciudad_autonoma_de_buenos_aires"
+    country_code: "EG",
+    state_code: "giza"
   },
   {
-    "country_code": "PH",
-    "state_code": "pampanga"
+    country_code: "FR",
+    state_code: "iledefrance"
   },
   {
-    "country_code": "IN",
-    "state_code": "assam"
+    country_code: "KW",
+    state_code: "al_farwaniyah"
   },
   {
-    "country_code": "FI",
-    "state_code": ""
+    country_code: "IE",
+    state_code: "carlow"
   },
   {
-    "country_code": "FR",
-    "state_code": "provencealpescotedazur"
+    country_code: "PR",
+    state_code: "moca"
   },
   {
-    "country_code": "JM",
-    "state_code": "portland_parish"
+    country_code: "PK",
+    state_code: "islamabad"
   },
   {
-    "country_code": "PH",
-    "state_code": "metro_manila"
+    country_code: "BG",
+    state_code: "pleven"
   },
   {
-    "country_code": "KE",
-    "state_code": "kwale_county"
+    country_code: "JM",
+    state_code: "st_elizabeth"
   },
   {
-    "country_code": "SE",
-    "state_code": "gavleborgs_lan"
+    country_code: "LR",
+    state_code: "montserrado_county"
   },
   {
-    "country_code": "ZA",
-    "state_code": "northern_cape"
+    country_code: "NP",
+    state_code: "lumbini"
   },
   {
-    "country_code": "IN",
-    "state_code": "jammu_and_kashmir"
+    country_code: "GD",
+    state_code: "saint_mark_parish"
   },
   {
-    "country_code": "PH",
-    "state_code": "agusan_del_norte"
+    country_code: "BN",
+    state_code: "tutong"
   },
   {
-    "country_code": "NG",
-    "state_code": "ogun"
+    country_code: "IT",
+    state_code: "calabria"
   },
   {
-    "country_code": "GY",
-    "state_code": "demeraramahaica"
+    country_code: "PR",
+    state_code: "barranquitas"
   },
   {
-    "country_code": "RO",
-    "state_code": "timis"
+    country_code: "KE",
+    state_code: "nakuru_county"
   },
   {
-    "country_code": "AE",
-    "state_code": "ash_shariqah"
+    country_code: "TT",
+    state_code: "diego_martin"
   },
   {
-    "country_code": "NA",
-    "state_code": "oshikoto_region"
+    country_code: "FK",
+    state_code: "falkland_islands_malvinas"
   },
   {
-    "country_code": "BW",
-    "state_code": "southeast"
+    country_code: "MX",
+    state_code: "mexico"
   },
   {
-    "country_code": "IE",
-    "state_code": "clare"
+    country_code: "DZ",
+    state_code: "algiers"
   },
   {
-    "country_code": "SK",
-    "state_code": "trencin_region"
+    country_code: "KE",
+    state_code: "nyandarua"
   },
   {
-    "country_code": "CH",
-    "state_code": "bern"
+    country_code: "ES",
+    state_code: "valenciana"
   },
   {
-    "country_code": "BD",
-    "state_code": "mymensingh_division"
+    country_code: "SI",
+    state_code: "urban_municipality_of_koper"
   },
   {
-    "country_code": "RO",
-    "state_code": "buzau"
+    country_code: "NA",
+    state_code: "khomas_region"
   },
   {
-    "country_code": "EG",
-    "state_code": "sohag"
+    country_code: "VG",
+    state_code: "tortola"
   },
   {
-    "country_code": "MX",
-    "state_code": "guerrero"
+    country_code: "NO",
+    state_code: "rogaland"
   },
   {
-    "country_code": "SI",
-    "state_code": "tolmin"
+    country_code: "BR",
+    state_code: "espirito_santo"
   },
   {
-    "country_code": "KZ",
-    "state_code": "astana"
+    country_code: "HK",
+    state_code: "islands"
   },
   {
-    "country_code": "PR",
-    "state_code": "canovanas"
+    country_code: "US",
+    state_code: "kentucky"
   },
   {
-    "country_code": "PT",
-    "state_code": "castelo_branco"
+    country_code: "CH",
+    state_code: "aargau"
   },
   {
-    "country_code": "MH",
-    "state_code": "majuro_atoll"
+    country_code: "LK",
+    state_code: "north_western_province"
   },
   {
-    "country_code": "MK",
-    "state_code": "grad_skopje"
+    country_code: "TW",
+    state_code: "hsinchu"
   },
   {
-    "country_code": "IL",
-    "state_code": "hadarom"
+    country_code: "PA",
+    state_code: "herrera_province"
   },
   {
-    "country_code": "IL",
-    "state_code": "ash_shamali"
+    country_code: "SI",
+    state_code: "municipality_of_zagorje_ob_savi"
   },
   {
-    "country_code": "FI",
-    "state_code": "north_ostrobothnia"
+    country_code: "RW",
+    state_code: "ville_de_kigali"
   },
   {
-    "country_code": "SA",
-    "state_code": "eastern_province"
+    country_code: "ID",
+    state_code: "sumatera_utara"
   },
   {
-    "country_code": "IN",
-    "state_code": "haryana"
+    country_code: "SV",
+    state_code: "la_libertad_department"
   },
   {
-    "country_code": "KW",
-    "state_code": "mubarak_al_kabir"
+    country_code: "IN",
+    state_code: "jharkhand"
   },
   {
-    "country_code": "DK",
-    "state_code": "capital_region"
+    country_code: "US",
+    state_code: "new_mexico"
   },
   {
-    "country_code": "PA",
-    "state_code": "chiriqui_province"
+    country_code: "ID",
+    state_code: "central_java"
   },
   {
-    "country_code": "RS",
-    "state_code": "kosovometohija"
+    country_code: "HR",
+    state_code: "varazdin"
   },
   {
-    "country_code": "SA",
-    "state_code": "ash_sharqiyah"
+    country_code: "SE",
+    state_code: "vasterbottens_lan"
   },
   {
-    "country_code": "VN",
-    "state_code": "lang_son"
+    country_code: "BR",
+    state_code: "alagoas"
   },
   {
-    "country_code": "RO",
-    "state_code": "timis_county"
+    country_code: "VN",
+    state_code: "ha_noi"
   },
   {
-    "country_code": "CR",
-    "state_code": "san_jose"
+    country_code: "RU",
+    state_code: "smolensk_oblast"
   },
   {
-    "country_code": "CN",
-    "state_code": "macao_sar"
+    country_code: "BR",
+    state_code: "mato_grosso_do_sul"
   },
   {
-    "country_code": "PH",
-    "state_code": "ilocos_sur"
+    country_code: "DZ",
+    state_code: "constantine"
   },
   {
-    "country_code": "RO",
-    "state_code": "vaslui_county"
+    country_code: "RO",
+    state_code: "iasi_county"
   },
   {
-    "country_code": "ID",
-    "state_code": "jakarta_raya"
+    country_code: "KE",
+    state_code: "taita_taveta"
   },
   {
-    "country_code": "DZ",
-    "state_code": "bejaia"
+    country_code: "CO",
+    state_code: "santander_department"
   },
   {
-    "country_code": "VN",
-    "state_code": "nghe_an"
+    country_code: "TT",
+    state_code: "mayarorio_claro"
   },
   {
-    "country_code": "DE",
-    "state_code": "bremen"
+    country_code: "AR",
+    state_code: "la_pampa"
   },
   {
-    "country_code": "MK",
-    "state_code": "studenicani"
+    country_code: "BG",
+    state_code: "pernik"
   },
   {
-    "country_code": "NZ",
-    "state_code": "tasman"
+    country_code: "BH",
+    state_code: "ash_shamaliyah"
   },
   {
-    "country_code": "ES",
-    "state_code": "murcia"
+    country_code: "QA",
+    state_code: "baladiyat_ar_rayyan"
   },
   {
-    "country_code": "TT",
-    "state_code": "penaldebe"
+    country_code: "RO",
+    state_code: "prahova"
   },
   {
-    "country_code": "EG",
-    "state_code": "cairo_governorate"
+    country_code: "AL",
+    state_code: "lezhe_county"
   },
   {
-    "country_code": "JP",
-    "state_code": "chiba"
+    country_code: "PR",
+    state_code: "luquillo"
   },
   {
-    "country_code": "VC",
-    "state_code": "grenadines_parish"
+    country_code: "TN",
+    state_code: "tozeur"
   },
   {
-    "country_code": "MT",
-    "state_code": "bormla"
+    country_code: "RO",
+    state_code: "bihor_county"
   },
   {
-    "country_code": "UA",
-    "state_code": "kharkivska_oblast"
+    country_code: "DO",
+    state_code: "valverde_province"
   },
   {
-    "country_code": "LT",
-    "state_code": "alytus"
+    country_code: "PK",
+    state_code: "punjab"
   },
   {
-    "country_code": "SA",
-    "state_code": "ar_riyad"
+    country_code: "ID",
+    state_code: "jakarta"
   },
   {
-    "country_code": "PR",
-    "state_code": "hatillo"
+    country_code: "FI",
+    state_code: "south_ostrobothnia"
   },
   {
-    "country_code": "MK",
-    "state_code": "tetovo"
+    country_code: "RO",
+    state_code: "hunedoara_county"
   },
   {
-    "country_code": "PH",
-    "state_code": "pangasinan"
+    country_code: "JE",
+    state_code: "jersey"
   },
   {
-    "country_code": "IN",
-    "state_code": "uttar_pradesh"
+    country_code: "SI",
+    state_code: "municipality_of_crna_na_koroskem"
   },
   {
-    "country_code": "CO",
-    "state_code": "valle_del_cauca"
+    country_code: "PH",
+    state_code: "negros_oriental"
   },
   {
-    "country_code": "LY",
-    "state_code": "tripoli"
+    country_code: "PR",
+    state_code: "camuy"
   },
   {
-    "country_code": "PH",
-    "state_code": "cotabato"
+    country_code: "PE",
+    state_code: "cajamarca"
   },
   {
-    "country_code": "PH",
-    "state_code": "mimaropa"
+    country_code: "LC",
+    state_code: "laborie"
   },
   {
-    "country_code": "MX",
-    "state_code": "quintana_roo"
+    country_code: "ZA",
+    state_code: "gauteng"
   },
   {
-    "country_code": "ID",
-    "state_code": "aceh"
+    country_code: "RO",
+    state_code: "salaj_county"
   },
   {
-    "country_code": "BH",
-    "state_code": "al_muharraq"
+    country_code: "AT",
+    state_code: "steiermark"
   },
   {
-    "country_code": "LY",
-    "state_code": "al_butnan"
+    country_code: "AL",
+    state_code: "vlore"
   },
   {
-    "country_code": "MT",
-    "state_code": "tarxien"
+    country_code: "BZ",
+    state_code: "stann_creek"
   },
   {
-    "country_code": "JP",
-    "state_code": "shizuoka"
+    country_code: "TH",
+    state_code: "chiang_mai"
   },
   {
-    "country_code": "SI",
-    "state_code": "urban_municipality_of_maribor"
+    country_code: "GE",
+    state_code: "ajaria"
   },
   {
-    "country_code": "TZ",
-    "state_code": "pwani"
+    country_code: "MU",
+    state_code: "riviere_du_rempart"
   },
   {
-    "country_code": "SC",
-    "state_code": "cascade"
+    country_code: "CO",
+    state_code: "caldas_department"
   },
   {
-    "country_code": "VC",
-    "state_code": "charlotte_parish"
+    country_code: "ID",
+    state_code: "kalimantan_tengah"
   },
   {
-    "country_code": "MD",
-    "state_code": "chisinau_municipality"
+    country_code: "AF",
+    state_code: "kabul"
   },
   {
-    "country_code": "BE",
-    "state_code": "vlaamsbrabant"
+    country_code: "TR",
+    state_code: "eskisehir"
   },
   {
-    "country_code": "ID",
-    "state_code": "east_kalimantan"
+    country_code: "BJ",
+    state_code: "atlantique"
   },
   {
-    "country_code": "HN",
-    "state_code": "cortes"
+    country_code: "GR",
+    state_code: "dytiki_ellada"
   },
   {
-    "country_code": "BD",
-    "state_code": "rajshahi"
+    country_code: "TR",
+    state_code: "izmir_province"
   },
   {
-    "country_code": "IE",
-    "state_code": "ulster"
+    country_code: "BZ",
+    state_code: "orange_walk"
   },
   {
-    "country_code": "CO",
-    "state_code": "departamento_de_bolivar"
+    country_code: "HR",
+    state_code: "primorjegorski_kotar"
   },
   {
-    "country_code": "MT",
-    "state_code": "birkirkara"
+    country_code: "BD",
+    state_code: "kushtia"
   },
   {
-    "country_code": "KN",
-    "state_code": "saint_george_basseterre"
+    country_code: "AE",
+    state_code: "ras_al_khaymah"
   },
   {
-    "country_code": "KG",
-    "state_code": "chuy"
+    country_code: "UG",
+    state_code: "kampala"
   },
   {
-    "country_code": "JM",
-    "state_code": "saint_andrew_parish"
+    country_code: "GH",
+    state_code: "eastern"
   },
   {
-    "country_code": "DK",
-    "state_code": "hovedstaden"
+    country_code: "IN",
+    state_code: "tamil_nadu"
   },
   {
-    "country_code": "US",
-    "state_code": "nevada"
+    country_code: "BM",
+    state_code: "hamilton"
   },
   {
-    "country_code": "SC",
-    "state_code": "grand_anse_mahe"
+    country_code: "JE",
+    state_code: "st_helier"
   },
   {
-    "country_code": "BE",
-    "state_code": "brussels_hoofdstedelijk_gewest"
+    country_code: "MY",
+    state_code: "johor"
   },
   {
-    "country_code": "SE",
-    "state_code": "ostergotland"
+    country_code: "KE",
+    state_code: "elgeyomarakwet"
   },
   {
-    "country_code": "KE",
-    "state_code": "west_pokot"
+    country_code: "NI",
+    state_code: "managua_department"
   },
   {
-    "country_code": "RO",
-    "state_code": "covasna_county"
+    country_code: "NZ",
+    state_code: "bay_of_plenty"
   },
   {
-    "country_code": "JP",
-    "state_code": "gunma"
+    country_code: "DO",
+    state_code: "santo_domingo_province"
   },
   {
-    "country_code": "TG",
-    "state_code": "maritime"
+    country_code: "PL",
+    state_code: "opolskie"
   },
   {
-    "country_code": "PR",
-    "state_code": "san_sebastian"
+    country_code: "TN",
+    state_code: "sfax"
   },
   {
-    "country_code": "AG",
-    "state_code": "saint_john_parish"
+    country_code: "US",
+    state_code: "alabama"
   },
   {
-    "country_code": "DZ",
-    "state_code": "sidi_bel_abbes"
+    country_code: "MA",
+    state_code: "marrakechsafi"
   },
   {
-    "country_code": "KR",
-    "state_code": "daegugwangyeoksi"
+    country_code: "FR",
+    state_code: "rhonealpes"
   },
   {
-    "country_code": "DE",
-    "state_code": "city_state_bremen"
+    country_code: "DZ",
+    state_code: "el_oued"
   },
   {
-    "country_code": "JO",
-    "state_code": "az_zarqa"
+    country_code: "SO",
+    state_code: "nugaal"
   },
   {
-    "country_code": "LS",
-    "state_code": "maseru"
+    country_code: "ID",
+    state_code: "kalimantan_selatan"
   },
   {
-    "country_code": "ID",
-    "state_code": "sumatera_barat"
+    country_code: "MT",
+    state_code: "tassliema"
   },
   {
-    "country_code": "KE",
-    "state_code": "nyeri"
+    country_code: "BB",
+    state_code: "saint_george"
   },
   {
-    "country_code": "FI",
-    "state_code": "ostrobothnia"
+    country_code: "US",
+    state_code: "virgin_islands"
   },
   {
-    "country_code": "DZ",
-    "state_code": "tipaza"
+    country_code: "DZ",
+    state_code: "laghouat"
   },
   {
-    "country_code": "DE",
-    "state_code": "north_rhinewestphalia"
+    country_code: "SG",
+    state_code: "north_west"
   },
   {
-    "country_code": "PK",
-    "state_code": "sindh"
+    country_code: "ID",
+    state_code: "south_sumatra"
   },
   {
-    "country_code": "TR",
-    "state_code": "aydın"
+    country_code: "PS",
+    state_code: "west_bank"
   },
   {
-    "country_code": "MX",
-    "state_code": "nayarit"
+    country_code: "CA",
+    state_code: "northwest_territories"
   },
   {
-    "country_code": "SE",
-    "state_code": "orebro_lan"
+    country_code: "EG",
+    state_code: "suhaj"
   },
   {
-    "country_code": "ID",
-    "state_code": "papua"
+    country_code: "PR",
+    state_code: "comerio"
   },
   {
-    "country_code": "MX",
-    "state_code": "michoacan"
+    country_code: "GE",
+    state_code: "samegrelo_and_zemo_svaneti"
   },
   {
-    "country_code": "CV",
-    "state_code": "praia"
+    country_code: "MA",
+    state_code: "fes_meknes"
   },
   {
-    "country_code": "US",
-    "state_code": "montana"
+    country_code: "FJ",
+    state_code: "central"
   },
   {
-    "country_code": "MD",
-    "state_code": "soroca"
+    country_code: "EG",
+    state_code: "al_jizah"
   },
   {
-    "country_code": "BD",
-    "state_code": "gopalganj"
+    country_code: "TZ",
+    state_code: "mwanza"
   },
   {
-    "country_code": "SI",
-    "state_code": "celje"
+    country_code: "HU",
+    state_code: "tolna"
   },
   {
-    "country_code": "MK",
-    "state_code": "radovish"
+    country_code: "PR",
+    state_code: "arecibo"
   },
   {
-    "country_code": "ES",
-    "state_code": "illes_balears"
+    country_code: "KE",
+    state_code: "kericho_county"
   },
   {
-    "country_code": "MD",
-    "state_code": "chisinau"
+    country_code: "KY",
+    state_code: "cayman_islands"
   },
   {
-    "country_code": "CL",
-    "state_code": "biobio"
+    country_code: "NP",
+    state_code: "bagmati"
   },
   {
-    "country_code": "DE",
-    "state_code": "nordrheinwestfalen"
+    country_code: "SN",
+    state_code: "thies"
   },
   {
-    "country_code": "NO",
-    "state_code": "viken"
+    country_code: "EG",
+    state_code: "gharbia"
   },
   {
-    "country_code": "IT",
-    "state_code": "lombardy"
+    country_code: "ID",
+    state_code: "west_sumatra"
   },
   {
-    "country_code": "HK",
-    "state_code": "kowloon"
+    country_code: "IL",
+    state_code: "hamerkaz"
   },
   {
-    "country_code": "PH",
-    "state_code": "davao_del_norte"
+    country_code: "PR",
+    state_code: "ponce"
   },
   {
-    "country_code": "VN",
-    "state_code": "thua_thienhue"
+    country_code: "SE",
+    state_code: "skane_county"
   },
   {
-    "country_code": "CN",
-    "state_code": "shanxi"
+    country_code: "IT",
+    state_code: "molise"
   },
   {
-    "country_code": "SI",
-    "state_code": "municipality_of_cerknica"
+    country_code: "RO",
+    state_code: "braila_county"
   },
   {
-    "country_code": "RO",
-    "state_code": "ialomita_county"
+    country_code: "AL",
+    state_code: "durres_county"
   },
   {
-    "country_code": "SV",
-    "state_code": "san_salvador_department"
+    country_code: "IE",
+    state_code: "sligo"
   },
   {
-    "country_code": "TR",
-    "state_code": "izmir"
+    country_code: "GD",
+    state_code: "saint_patrick_parish"
   },
   {
-    "country_code": "PG",
-    "state_code": "national_capital"
+    country_code: "CA",
+    state_code: "saskatchewan"
   },
   {
-    "country_code": "KE",
-    "state_code": "uasin_gishu_county"
+    country_code: "AT",
+    state_code: "niederosterreich"
   },
   {
-    "country_code": "US",
-    "state_code": "iowa"
+    country_code: "BS",
+    state_code: "new_providence"
   },
   {
-    "country_code": "HU",
-    "state_code": "bacskiskun"
+    country_code: "DZ",
+    state_code: "bouira"
   },
   {
-    "country_code": "JM",
-    "state_code": "manchester"
+    country_code: "PR",
+    state_code: "dorado"
   },
   {
-    "country_code": "MO",
-    "state_code": "macao"
+    country_code: "SC",
+    state_code: "bel_ombre"
   },
   {
-    "country_code": "HN",
-    "state_code": "francisco_morazan"
+    country_code: "FR",
+    state_code: "corsica"
   },
   {
-    "country_code": "MA",
-    "state_code": "oriental"
+    country_code: "MU",
+    state_code: "plaines_wilhems_district"
   },
   {
-    "country_code": "NG",
-    "state_code": "enugu_state"
+    country_code: "TT",
+    state_code: "tunapunapiarco"
   },
   {
-    "country_code": "BS",
-    "state_code": "freeport"
+    country_code: "EE",
+    state_code: "idavirumaa"
   },
   {
-    "country_code": "NR",
-    "state_code": "yaren"
+    country_code: "PH",
+    state_code: "calabarzon"
   },
   {
-    "country_code": "LS",
-    "state_code": "leribe"
+    country_code: "AL",
+    state_code: "berat_county"
   },
   {
-    "country_code": "TH",
-    "state_code": "bangkok"
+    country_code: "GR",
+    state_code: "north_aegean"
   },
   {
-    "country_code": "PR",
-    "state_code": "yauco"
+    country_code: "CO",
+    state_code: "distrito_capital_de_bogota"
   },
   {
-    "country_code": "PT",
-    "state_code": "coimbra"
+    country_code: "DE",
+    state_code: "niedersachsen"
   },
   {
-    "country_code": "IQ",
-    "state_code": "basra"
+    country_code: "FK",
+    state_code: "falkland_islands"
   },
   {
-    "country_code": "PH",
-    "state_code": "benguet"
+    country_code: "KN",
+    state_code: "saint_kitts"
   },
   {
-    "country_code": "PH",
-    "state_code": "ifugao"
+    country_code: "VN",
+    state_code: "can_tho"
   },
   {
-    "country_code": "UY",
-    "state_code": "montevideo_department"
+    country_code: "SI",
+    state_code: "municipality_of_slovenska_bistrica"
   },
   {
-    "country_code": "KE",
-    "state_code": "nyamira"
+    country_code: "TZ",
+    state_code: "arusha"
   },
   {
-    "country_code": "MX",
-    "state_code": "yucatan"
+    country_code: "MA",
+    state_code: "beni_mellalkhenifra"
   },
   {
-    "country_code": "PR",
-    "state_code": "guaynabo"
+    country_code: "GG",
+    state_code: "st_martin"
   },
   {
-    "country_code": "QA",
-    "state_code": "al_khawr_wa_adh_dhakhirah"
+    country_code: "GD",
+    state_code: "saint_david_parish"
   },
   {
-    "country_code": "NG",
-    "state_code": "kaduna"
+    country_code: "AG",
+    state_code: "saint_john"
   },
   {
-    "country_code": "AL",
-    "state_code": "fier"
+    country_code: "PE",
+    state_code: "arequipa"
   },
   {
-    "country_code": "KE",
-    "state_code": "taitataveta"
+    country_code: "SI",
+    state_code: "urban_municipality_of_krsko"
   },
   {
-    "country_code": "KE",
-    "state_code": "lamu"
+    country_code: "RE",
+    state_code: "reunion"
   },
   {
-    "country_code": "SE",
-    "state_code": "stockholm_county"
+    country_code: "QA",
+    state_code: "umm_salal"
   },
   {
-    "country_code": "CO",
-    "state_code": "atlantico"
+    country_code: "PL",
+    state_code: "wielkopolskie"
   },
   {
-    "country_code": "HN",
-    "state_code": "cortes_department"
+    country_code: "PR",
+    state_code: "fajardo"
   },
   {
-    "country_code": "AT",
-    "state_code": "niederosterreich"
+    country_code: "DZ",
+    state_code: "tlemcen"
   },
   {
-    "country_code": "MX",
-    "state_code": "zacatecas"
+    country_code: "CY",
+    state_code: "lefkosia"
   },
   {
-    "country_code": "SC",
-    "state_code": "english_river"
+    country_code: "SK",
+    state_code: "bratislavsky_kraj"
   },
   {
-    "country_code": "DZ",
-    "state_code": "illizi"
+    country_code: "TT",
+    state_code: "borough_of_arima"
   },
   {
-    "country_code": "SA",
-    "state_code": "medina_region"
+    country_code: "TR",
+    state_code: "adiyaman"
   },
   {
-    "country_code": "DZ",
-    "state_code": "tebessa"
+    country_code: "IN",
+    state_code: "rajasthan"
   },
   {
-    "country_code": "EG",
-    "state_code": "asyut"
+    country_code: "ID",
+    state_code: "riau"
   },
   {
-    "country_code": "SA",
-    "state_code": "ar_riyad"
+    country_code: "BT",
+    state_code: "thimphu"
   },
   {
-    "country_code": "KE",
-    "state_code": "kiambu"
+    country_code: "BR",
+    state_code: "maranhao"
   },
   {
-    "country_code": "IN",
-    "state_code": "jharkhand"
+    country_code: "BE",
+    state_code: "wallonia"
   },
   {
-    "country_code": "AU",
-    "state_code": "tasmania"
+    country_code: "TR",
+    state_code: "adana"
   },
   {
-    "country_code": "LU",
-    "state_code": "eschsuralzette"
+    country_code: "BD",
+    state_code: "sylhet_division"
   },
   {
-    "country_code": "HR",
-    "state_code": "međimurska_zupanija"
+    country_code: "TR",
+    state_code: "antalya"
   },
   {
-    "country_code": "IE",
-    "state_code": "connacht"
+    country_code: "NG",
+    state_code: "kano"
   },
   {
-    "country_code": "BF",
-    "state_code": "kadiogo"
+    country_code: "IL",
+    state_code: "central_district"
   },
   {
-    "country_code": "LY",
-    "state_code": "misratah"
+    country_code: "PT",
+    state_code: "viana_do_castelo"
   },
   {
-    "country_code": "RO",
-    "state_code": "alba_county"
+    country_code: "SD",
+    state_code: "khartoum"
   },
   {
-    "country_code": "US",
-    "state_code": "arkansas"
+    country_code: "SE",
+    state_code: "jamtland"
   },
   {
-    "country_code": "BE",
-    "state_code": "flanders"
+    country_code: "SE",
+    state_code: "vastmanlands_lan"
   },
   {
-    "country_code": "TH",
-    "state_code": "chon_buri"
+    country_code: "BS",
+    state_code: "central_abaco"
   },
   {
-    "country_code": "CO",
-    "state_code": "risaralda"
+    country_code: "PL",
+    state_code: "dolnoslaskie"
   },
   {
-    "country_code": "ID",
-    "state_code": "west_nusa_tenggara"
+    country_code: "AR",
+    state_code: "chaco"
   },
   {
-    "country_code": "ES",
-    "state_code": "madrid"
+    country_code: "DJ",
+    state_code: "djibouti"
   },
   {
-    "country_code": "ID",
-    "state_code": "sulawesi_selatan"
+    country_code: "DZ",
+    state_code: "oran"
   },
   {
-    "country_code": "PH",
-    "state_code": "caraga"
+    country_code: "DZ",
+    state_code: "saida"
   },
   {
-    "country_code": "TH",
-    "state_code": "yala"
+    country_code: "KE",
+    state_code: "homa_bay"
   },
   {
-    "country_code": "PL",
-    "state_code": "silesia"
+    country_code: "IN",
+    state_code: "kerala"
   },
   {
-    "country_code": "NG",
-    "state_code": "delta"
+    country_code: "TN",
+    state_code: "ariana_governorate"
   },
   {
-    "country_code": "IE",
-    "state_code": "meath"
+    country_code: "VE",
+    state_code: "trujillo"
   },
   {
-    "country_code": "PH",
-    "state_code": "nueva_vizcaya"
+    country_code: "BW",
+    state_code: "southern"
   },
   {
-    "country_code": "LB",
-    "state_code": "beyrouth"
+    country_code: "RE",
+    state_code: "reunion"
   },
   {
-    "country_code": "AU",
-    "state_code": "australian_capital_territory"
+    country_code: "NG",
+    state_code: "kogi"
   },
   {
-    "country_code": "TW",
-    "state_code": "taipei"
+    country_code: "DZ",
+    state_code: "bejaia"
   },
   {
-    "country_code": "TZ",
-    "state_code": "dar_es_salaam_region"
+    country_code: "CH",
+    state_code: "vaud"
   },
   {
-    "country_code": "KR",
-    "state_code": "busan"
+    country_code: "TT",
+    state_code: "diego_martin_regional_corporation"
   },
   {
-    "country_code": "PE",
-    "state_code": "ica"
+    country_code: "MN",
+    state_code: "ulaanbaatar"
   },
   {
-    "country_code": "PG",
-    "state_code": "national_capital_district"
+    country_code: "LC",
+    state_code: "anse_la_raye"
   },
   {
-    "country_code": "IQ",
-    "state_code": "duhok"
+    country_code: "PR",
+    state_code: "morovis"
   },
   {
-    "country_code": "RS",
-    "state_code": "vojvodina"
+    country_code: "PL",
+    state_code: "podkarpackie"
   },
   {
-    "country_code": "CA",
-    "state_code": "new_brunswick"
+    country_code: "DZ",
+    state_code: "bechar"
   },
   {
-    "country_code": "HR",
-    "state_code": "koprivnicakrizevci"
+    country_code: "MT",
+    state_code: "saint_pauls_bay"
   },
   {
-    "country_code": "RO",
-    "state_code": "valcea"
+    country_code: "AR",
+    state_code: "rio_negro"
   },
   {
-    "country_code": "DE",
-    "state_code": "badenwurttemberg"
+    country_code: "BB",
+    state_code: "saint_philip"
   },
   {
-    "country_code": "MW",
-    "state_code": "southern_region"
+    country_code: "PA",
+    state_code: "cocle"
   },
   {
-    "country_code": "HR",
-    "state_code": "primorskogoranska_zupanija"
+    country_code: "VN",
+    state_code: "thanh_hoa_province"
   },
   {
-    "country_code": "MG",
-    "state_code": "antananarivo"
+    country_code: "DE",
+    state_code: "saarland"
   },
   {
-    "country_code": "MX",
-    "state_code": "mexico_city"
+    country_code: "SK",
+    state_code: "zilinsky_kraj"
   },
   {
-    "country_code": "JP",
-    "state_code": "tokushima"
+    country_code: "AR",
+    state_code: "ciudad_autonoma_de_buenos_aires"
   },
   {
-    "country_code": "PH",
-    "state_code": "cordillera"
+    country_code: "AE",
+    state_code: "abu_zaby"
   },
   {
-    "country_code": "SE",
-    "state_code": "kalmar"
+    country_code: "ES",
+    state_code: "galicia"
   },
   {
-    "country_code": "LT",
-    "state_code": "siauliai"
+    country_code: "MT",
+    state_code: "gharb"
   },
   {
-    "country_code": "SE",
-    "state_code": "stockholms_lan"
+    country_code: "ME",
+    state_code: "opstina_niksic"
   },
   {
-    "country_code": "NL",
-    "state_code": "zuidholland"
+    country_code: "IN",
+    state_code: "rajasthan"
   },
   {
-    "country_code": "BZ",
-    "state_code": "corozal_district"
+    country_code: "KE",
+    state_code: "migori"
   },
   {
-    "country_code": "CZ",
-    "state_code": "praha_hlavni_mesto"
+    country_code: "NA",
+    state_code: "kavango_east"
   },
   {
-    "country_code": "PH",
-    "state_code": "sultan_kudarat"
+    country_code: "MV",
+    state_code: "south_miladhunmadulu"
   },
   {
-    "country_code": "MT",
-    "state_code": "birzebbuga"
+    country_code: "IE",
+    state_code: "laois"
   },
   {
-    "country_code": "SR",
-    "state_code": "commewijne"
+    country_code: "LC",
+    state_code: "dennery"
   },
   {
-    "country_code": "BT",
-    "state_code": "thimphu_district"
+    country_code: "LT",
+    state_code: "kauno_apskritis"
   },
   {
-    "country_code": "DZ",
-    "state_code": "msila"
+    country_code: "ID",
+    state_code: "central_sulawesi"
   },
   {
-    "country_code": "AF",
-    "state_code": "kabul"
+    country_code: "TH",
+    state_code: "buriram"
   },
   {
-    "country_code": "BN",
-    "state_code": "temburong"
+    country_code: "SK",
+    state_code: "trnava_region"
   },
   {
-    "country_code": "RO",
-    "state_code": "satu_mare_county"
+    country_code: "IL",
+    state_code: "hefa"
   },
   {
-    "country_code": "EG",
-    "state_code": "al_qahirah"
+    country_code: "IN",
+    state_code: "andhra_pradesh"
   },
   {
-    "country_code": "BG",
-    "state_code": "ruse"
+    country_code: "PR",
+    state_code: "trujillo_alto"
   },
   {
-    "country_code": "US",
-    "state_code": "connecticut"
+    country_code: "LY",
+    state_code: "al_marqab"
   },
   {
-    "country_code": "ES",
-    "state_code": "extremadura"
+    country_code: "FR",
+    state_code: "normandie"
   },
   {
-    "country_code": "GA",
-    "state_code": "estuaire"
+    country_code: "TH",
+    state_code: "prachuap_khiri_khan"
   },
   {
-    "country_code": "MY",
-    "state_code": "perak"
+    country_code: "PH",
+    state_code: "bataan"
   },
   {
-    "country_code": "BH",
-    "state_code": "al_asimah"
+    country_code: "MX",
+    state_code: "chiapas"
   },
   {
-    "country_code": "KE",
-    "state_code": "laikipia"
+    country_code: "SE",
+    state_code: "vasternorrland"
   },
   {
-    "country_code": "PR",
-    "state_code": "humacao"
+    country_code: "US",
+    state_code: "delaware"
   },
   {
-    "country_code": "PG",
-    "state_code": "national_capital_district_port_moresby"
+    country_code: "KR",
+    state_code: "busangwangyeoksi"
   },
   {
-    "country_code": "IQ",
-    "state_code": "heremi_kurdistan"
+    country_code: "AL",
+    state_code: "shkoder"
   },
   {
-    "country_code": "TN",
-    "state_code": "sfax_governorate"
+    country_code: "IN",
+    state_code: "west_bengal"
   },
   {
-    "country_code": "NO",
-    "state_code": "agder"
+    country_code: "BO",
+    state_code: "cochabamba"
   },
   {
-    "country_code": "SE",
-    "state_code": "jonkoping"
+    country_code: "PL",
+    state_code: "slaskie"
   },
   {
-    "country_code": "MR",
-    "state_code": "mauritania"
+    country_code: "RU",
+    state_code: "samara_oblast"
   },
   {
-    "country_code": "HN",
-    "state_code": "bay_islands"
+    country_code: "CH",
+    state_code: "basellandschaft"
   },
   {
-    "country_code": "GE",
-    "state_code": "tbilisi"
+    country_code: "AT",
+    state_code: "oberosterreich"
   },
   {
-    "country_code": "IN",
-    "state_code": "manipur"
+    country_code: "PT",
+    state_code: "viseu"
   },
   {
-    "country_code": "MK",
-    "state_code": "saraj"
+    country_code: "ID",
+    state_code: "north_sulawesi"
   },
   {
-    "country_code": "CR",
-    "state_code": "heredia_province"
+    country_code: "AU",
+    state_code: "south_australia"
   },
   {
-    "country_code": "NO",
-    "state_code": "vestfold"
+    country_code: "PH",
+    state_code: "soccsksargen"
   },
   {
-    "country_code": "NA",
-    "state_code": "hardap_region"
+    country_code: "GY",
+    state_code: "mahaicaberbice"
   },
   {
-    "country_code": "TH",
-    "state_code": "phetchaburi"
+    country_code: "BG",
+    state_code: "blagoevgrad"
   },
   {
-    "country_code": "US",
-    "state_code": "new_york"
+    country_code: "BS",
+    state_code: "new_providence_district"
   },
   {
-    "country_code": "VE",
-    "state_code": "tachira"
+    country_code: "IL",
+    state_code: "jerusalem"
   },
   {
-    "country_code": "BD",
-    "state_code": "bagerhat"
+    country_code: "MF",
+    state_code: "saint_martin_french_part"
   },
   {
-    "country_code": "MA",
-    "state_code": "tangertetouanal_hoceima"
+    country_code: "BR",
+    state_code: "ceara"
   },
   {
-    "country_code": "VE",
-    "state_code": "merida"
+    country_code: "IE",
+    state_code: "offaly"
   },
   {
-    "country_code": "CU",
-    "state_code": "matanzas"
+    country_code: "BZ",
+    state_code: "orange_walk_district"
   },
   {
-    "country_code": "MV",
-    "state_code": "male"
+    country_code: "PH",
+    state_code: "cagayan_valley"
   },
   {
-    "country_code": "PH",
-    "state_code": "bukidnon"
+    country_code: "MK",
+    state_code: "shtip"
   },
   {
-    "country_code": "DE",
-    "state_code": "schleswigholstein"
+    country_code: "UG",
+    state_code: "soroti"
   },
   {
-    "country_code": "JP",
-    "state_code": "miyagi"
+    country_code: "PT",
+    state_code: "vila_real"
   },
   {
-    "country_code": "AR",
-    "state_code": "cordoba"
+    country_code: "AE",
+    state_code: "dubai"
   },
   {
-    "country_code": "QA",
-    "state_code": "ad_dawhah"
+    country_code: "CL",
+    state_code: "antofagasta"
   },
   {
-    "country_code": "BG",
-    "state_code": "shumen"
+    country_code: "TH",
+    state_code: "phra_nakhon_si_ayutthaya"
   },
   {
-    "country_code": "MV",
-    "state_code": "haa_alifu_atholhu"
+    country_code: "HK",
+    state_code: "yuen_long"
   },
   {
-    "country_code": "MF",
-    "state_code": "saint_martin"
+    country_code: "VE",
+    state_code: "carabobo"
   },
   {
-    "country_code": "MV",
-    "state_code": "south_nilandhe_atoll"
+    country_code: "PH",
+    state_code: "misamis_oriental"
   },
   {
-    "country_code": "SE",
-    "state_code": "varmlands_lan"
+    country_code: "JP",
+    state_code: "ibaraki"
   },
   {
-    "country_code": "RO",
-    "state_code": "braila"
+    country_code: "US",
+    state_code: "texas"
   },
   {
-    "country_code": "ID",
-    "state_code": "south_sulawesi"
+    country_code: "RO",
+    state_code: "mures"
   },
   {
-    "country_code": "BS",
-    "state_code": "north_andros"
+    country_code: "PR",
+    state_code: "carolina"
   },
   {
-    "country_code": "IN",
-    "state_code": "odisha"
+    country_code: "ES",
+    state_code: "castillala_mancha"
   },
   {
-    "country_code": "BE",
-    "state_code": "hainaut"
+    country_code: "EC",
+    state_code: "pichincha"
   },
   {
-    "country_code": "RO",
-    "state_code": "cluj_county"
+    country_code: "SE",
+    state_code: "sodermanlands_lan"
   },
   {
-    "country_code": "HR",
-    "state_code": "zagreb"
+    country_code: "CL",
+    state_code: "biobio"
   },
   {
-    "country_code": "ID",
-    "state_code": "sulawesi_utara"
+    country_code: "TR",
+    state_code: "yalova"
   },
   {
-    "country_code": "NG",
-    "state_code": "adamawa"
+    country_code: "MX",
+    state_code: "colima"
   },
   {
-    "country_code": "IQ",
-    "state_code": "sulaymaniyah"
+    country_code: "CN",
+    state_code: "jilin"
   },
   {
-    "country_code": "HU",
-    "state_code": "heves"
+    country_code: "SI",
+    state_code: "municipality_of_crnomelj"
   },
   {
-    "country_code": "HU",
-    "state_code": "csongrad"
+    country_code: "MK",
+    state_code: "sveti_nikole"
   },
   {
-    "country_code": "PR",
-    "state_code": "santa_isabel"
+    country_code: "MT",
+    state_code: "valletta"
   },
   {
-    "country_code": "NG",
-    "state_code": "oyo_state"
+    country_code: "NZ",
+    state_code: "manawatuwhanganui"
   },
   {
-    "country_code": "TZ",
-    "state_code": "kagera"
+    country_code: "GL",
+    state_code: "sermersooq"
   },
   {
-    "country_code": "RO",
-    "state_code": "sibiu_county"
+    country_code: "TT",
+    state_code: "sangre_grande_regional_corporation"
   },
   {
-    "country_code": "JM",
-    "state_code": "saint_elizabeth"
+    country_code: "QA",
+    state_code: "baladiyat_ad_dawhah"
   },
   {
-    "country_code": "NZ",
-    "state_code": "nelson_region"
+    country_code: "LY",
+    state_code: "al_jabal_al_akhdar"
   },
   {
-    "country_code": "ID",
-    "state_code": "jawa_barat"
+    country_code: "NI",
+    state_code: "managua"
   },
   {
-    "country_code": "KR",
-    "state_code": "jeollabukdo"
+    country_code: "GH",
+    state_code: "greater_accra_region"
   },
   {
-    "country_code": "BG",
-    "state_code": "plovdiv"
+    country_code: "PL",
+    state_code: "lower_silesia"
   },
   {
-    "country_code": "ID",
-    "state_code": "gorontalo"
+    country_code: "PT",
+    state_code: "aveiro"
   },
   {
-    "country_code": "RO",
-    "state_code": "olt"
+    country_code: "MD",
+    state_code: "drochia"
   },
   {
-    "country_code": "MT",
-    "state_code": "ħazzabbar"
+    country_code: "PL",
+    state_code: "kujawskopomorskie"
   },
   {
-    "country_code": "ES",
-    "state_code": "valenciana_comunidad"
+    country_code: "NL",
+    state_code: "drenthe"
   },
   {
-    "country_code": "PR",
-    "state_code": "anasco"
+    country_code: "KE",
+    state_code: "kericho"
   },
   {
-    "country_code": "HU",
-    "state_code": "fejer"
+    country_code: "CO",
+    state_code: "huila"
   },
   {
-    "country_code": "AR",
-    "state_code": "entre_rios"
+    country_code: "JP",
+    state_code: "nagasaki"
   },
   {
-    "country_code": "HR",
-    "state_code": "zadar"
+    country_code: "PT",
+    state_code: "setubal"
   },
   {
-    "country_code": "GU",
-    "state_code": "yigo"
+    country_code: "SE",
+    state_code: "blekinge"
   },
   {
-    "country_code": "MM",
-    "state_code": "nay_pyi_taw"
+    country_code: "BG",
+    state_code: "burgas"
   },
   {
-    "country_code": "DO",
-    "state_code": "nacional"
+    country_code: "AR",
+    state_code: "tucuman"
   },
   {
-    "country_code": "IE",
-    "state_code": "mayo"
+    country_code: "NZ",
+    state_code: "taranaki"
   },
   {
-    "country_code": "ID",
-    "state_code": "kalimantan_timur"
+    country_code: "GR",
+    state_code: "attica"
   },
   {
-    "country_code": "FM",
-    "state_code": "pohnpei"
+    country_code: "KW",
+    state_code: "mubarak_al_kabir"
   },
   {
-    "country_code": "DE",
-    "state_code": "brandenburg"
+    country_code: "CL",
+    state_code: "libertador_general_bernardo_ohiggins"
   },
   {
-    "country_code": "MK",
-    "state_code": "kumanovo"
+    country_code: "SE",
+    state_code: "vastra_gotaland_county"
   },
   {
-    "country_code": "NZ",
-    "state_code": "wellington_region"
+    country_code: "UA",
+    state_code: "kyiv"
   },
   {
-    "country_code": "JM",
-    "state_code": "saint_thomas_parish"
+    country_code: "TN",
+    state_code: "manouba"
   },
   {
-    "country_code": "HK",
-    "state_code": "wong_tai_sin_district"
+    country_code: "ET",
+    state_code: "oromiya"
   },
   {
-    "country_code": "SE",
-    "state_code": "ostergotlands_lan"
+    country_code: "GR",
+    state_code: "thessaly"
   },
   {
-    "country_code": "JE",
-    "state_code": "trinity"
+    country_code: "IT",
+    state_code: "lazio"
   },
   {
-    "country_code": "SE",
-    "state_code": "varmland"
+    country_code: "CI",
+    state_code: "abidjan"
   },
   {
-    "country_code": "MY",
-    "state_code": "penang"
+    country_code: "JP",
+    state_code: "hyogo"
   },
   {
-    "country_code": "SO",
-    "state_code": "awdal"
+    country_code: "CR",
+    state_code: "cartago_province"
   },
   {
-    "country_code": "SE",
-    "state_code": "uppsala"
+    country_code: "IL",
+    state_code: "northern_district"
   },
   {
-    "country_code": "NO",
-    "state_code": "østfold"
+    country_code: "UZ",
+    state_code: "tashkent"
   },
   {
-    "country_code": "RS",
-    "state_code": "nisavski_okrug"
+    country_code: "MK",
+    state_code: "strumica"
   },
   {
-    "country_code": "HR",
-    "state_code": "koprivnickokrizevacka_zupanija"
+    country_code: "JP",
+    state_code: "tokyo"
   },
   {
-    "country_code": "TZ",
-    "state_code": "lindi"
+    country_code: "KR",
+    state_code: "north_chungcheong"
   },
   {
-    "country_code": "SK",
-    "state_code": "nitriansky_kraj"
+    country_code: "NZ",
+    state_code: "southland"
   },
   {
-    "country_code": "DE",
-    "state_code": "berlin"
+    country_code: "NO",
+    state_code: "oslo"
   },
   {
-    "country_code": "LV",
-    "state_code": "varaklanu_novads"
+    country_code: "BA",
+    state_code: "republika_srpska"
   },
   {
-    "country_code": "PH",
-    "state_code": "camarines_norte"
+    country_code: "VN",
+    state_code: "quang_tri"
   },
   {
-    "country_code": "MA",
-    "state_code": "soussmassa"
+    country_code: "EC",
+    state_code: "carchi"
   },
   {
-    "country_code": "SZ",
-    "state_code": "hhohho"
+    country_code: "CA",
+    state_code: "alberta"
   },
   {
-    "country_code": "CL",
-    "state_code": "region_metropolitana_de_santiago"
+    country_code: "KE",
+    state_code: "kisumu_county"
   },
   {
-    "country_code": "VE",
-    "state_code": "monagas"
+    country_code: "DK",
+    state_code: "central_jutland"
   },
   {
-    "country_code": "ID",
-    "state_code": "west_kalimantan"
+    country_code: "XK",
+    state_code: "prizren"
   },
   {
-    "country_code": "RO",
-    "state_code": "mures"
+    country_code: "BW",
+    state_code: "city_of_francistown"
   },
   {
-    "country_code": "TN",
-    "state_code": "sousse"
+    country_code: "MY",
+    state_code: "labuan"
   },
   {
-    "country_code": "RO",
-    "state_code": "constanta_county"
+    country_code: "TN",
+    state_code: "jendouba"
   },
   {
-    "country_code": "SC",
-    "state_code": "glacis"
+    country_code: "MT",
+    state_code: "luqa"
   },
   {
-    "country_code": "CU",
-    "state_code": "artemisa"
+    country_code: "LV",
+    state_code: "ludzas_novads"
   },
   {
-    "country_code": "MV",
-    "state_code": "haa_dhaalu_atholhu"
+    country_code: "GY",
+    state_code: "cuyunimazaruni"
   },
   {
-    "country_code": "IE",
-    "state_code": "kildare"
+    country_code: "SK",
+    state_code: "kosice_region"
   },
   {
-    "country_code": "SE",
-    "state_code": "vastra_gotalands_lan"
+    country_code: "JO",
+    state_code: "amman"
   },
   {
-    "country_code": "TT",
-    "state_code": "san_fernando"
+    country_code: "HU",
+    state_code: "pest_county"
   },
   {
-    "country_code": "TH",
-    "state_code": "khon_kaen"
+    country_code: "SA",
+    state_code: "ash_sharqiyah"
   },
   {
-    "country_code": "US",
-    "state_code": "florida"
+    country_code: "CZ",
+    state_code: "olomoucky_kraj"
   },
   {
-    "country_code": "MA",
-    "state_code": "casablancasettat"
+    country_code: "UG",
+    state_code: "gomba"
   },
   {
-    "country_code": "CL",
-    "state_code": "santiago_metropolitan"
+    country_code: "UG",
+    state_code: "central_region"
   },
   {
-    "country_code": "ES",
-    "state_code": "basque_country"
+    country_code: "PR",
+    state_code: "toa_baja"
   },
   {
-    "country_code": "RW",
-    "state_code": "nord"
+    country_code: "RO",
+    state_code: "brasov"
   },
   {
-    "country_code": "PE",
-    "state_code": "lima_province"
+    country_code: "HT",
+    state_code: "lwes"
   },
   {
-    "country_code": "EG",
-    "state_code": "dumyat"
+    country_code: "UG",
+    state_code: "kibaale"
   },
   {
-    "country_code": "GR",
-    "state_code": "south_aegean"
+    country_code: "TN",
+    state_code: "siliana"
   },
   {
-    "country_code": "IN",
-    "state_code": "sikkim"
+    country_code: "QA",
+    state_code: "al_wakrah"
   },
   {
-    "country_code": "IT",
-    "state_code": "piemonte"
+    country_code: "AT",
+    state_code: "wien"
   },
   {
-    "country_code": "EC",
-    "state_code": "azuay"
+    country_code: "DZ",
+    state_code: "ain_temouchent"
   },
   {
-    "country_code": "TZ",
-    "state_code": "manyara"
+    country_code: "SV",
+    state_code: "departamento_de_san_salvador"
   },
   {
-    "country_code": "BQ",
-    "state_code": "bonaire"
+    country_code: "KE",
+    state_code: "tharaka_nithi"
   },
   {
-    "country_code": "AR",
-    "state_code": "mendoza"
+    country_code: "JO",
+    state_code: "balqa"
   },
   {
-    "country_code": "SR",
-    "state_code": "wanica_district"
+    country_code: "SE",
+    state_code: "dalarnas_lan"
   },
   {
-    "country_code": "PL",
-    "state_code": "pomorskie"
+    country_code: "SS",
+    state_code: "central_equatoria"
   },
   {
-    "country_code": "HR",
-    "state_code": "osjeckobaranjska_zupanija"
+    country_code: "KE",
+    state_code: "meru"
   },
   {
-    "country_code": "IN",
-    "state_code": "andaman_and_nicobar"
+    country_code: "VE",
+    state_code: "yaracuy"
   },
   {
-    "country_code": "LB",
-    "state_code": "libannord"
+    country_code: "BR",
+    state_code: "parana"
   },
   {
-    "country_code": "US",
-    "state_code": "arizona"
+    country_code: "CR",
+    state_code: "guanacaste_province"
   },
   {
-    "country_code": "ES",
-    "state_code": "catalonia"
+    country_code: "CL",
+    state_code: "tarapaca"
   },
   {
-    "country_code": "PR",
-    "state_code": "corozal"
+    country_code: "IE",
+    state_code: "munster"
   },
   {
-    "country_code": "IL",
-    "state_code": "tall_abib"
+    country_code: "PH",
+    state_code: "northern_samar"
   },
   {
-    "country_code": "GR",
-    "state_code": "west_greece"
+    country_code: "PL",
+    state_code: "warminskomazurskie"
   },
   {
-    "country_code": "MX",
-    "state_code": "queretaro"
+    country_code: "KW",
+    state_code: "al_asimah"
   },
   {
-    "country_code": "FR",
-    "state_code": "provencealpescotedazur"
+    country_code: "RO",
+    state_code: "mures_county"
   },
   {
-    "country_code": "IN",
-    "state_code": "madhya_pradesh"
+    country_code: "US",
+    state_code: "south_dakota"
   },
   {
-    "country_code": "NG",
-    "state_code": "jigawa"
+    country_code: "CN",
+    state_code: "liaoning"
   },
   {
-    "country_code": "TZ",
-    "state_code": "singida"
+    country_code: "AD",
+    state_code: "andorra_la_vella"
   },
   {
-    "country_code": "IN",
-    "state_code": "meghalaya"
+    country_code: "NL",
+    state_code: "groningen"
   },
   {
-    "country_code": "KE",
-    "state_code": "wajir"
+    country_code: "TZ",
+    state_code: "zanzibar_urbanwest"
   },
   {
-    "country_code": "IQ",
-    "state_code": "muhafazat_babil"
+    country_code: "ES",
+    state_code: "asturias"
   },
   {
-    "country_code": "LC",
-    "state_code": "choiseul"
+    country_code: "IN",
+    state_code: "bihar"
   },
   {
-    "country_code": "AT",
-    "state_code": "vienna"
+    country_code: "BW",
+    state_code: "jwaneng"
   },
   {
-    "country_code": "ID",
-    "state_code": "sulawesi"
+    country_code: "KN",
+    state_code: "saint_mary_cayon"
   },
   {
-    "country_code": "JM",
-    "state_code": "saint_ann"
+    country_code: "MX",
+    state_code: "chihuahua"
   },
   {
-    "country_code": "DZ",
-    "state_code": "ouargla"
+    country_code: "MA",
+    state_code: "loriental"
   },
   {
-    "country_code": "NA",
-    "state_code": "erongo"
+    country_code: "RO",
+    state_code: "timis"
   },
   {
-    "country_code": "AE",
-    "state_code": "umm_al_qaywayn"
+    country_code: "XK",
+    state_code: "gjilan"
   },
   {
-    "country_code": "IT",
-    "state_code": "toscana"
+    country_code: "PR",
+    state_code: "aguas_buenas"
   },
   {
-    "country_code": "MX",
-    "state_code": "durango"
+    country_code: "TH",
+    state_code: "roi_et"
   },
   {
-    "country_code": "ET",
-    "state_code": "tigray"
+    country_code: "RW",
+    state_code: "kigali"
   },
   {
-    "country_code": "MD",
-    "state_code": "cantemir"
+    country_code: "IT",
+    state_code: "umbria"
   },
   {
-    "country_code": "NL",
-    "state_code": "north_brabant"
+    country_code: "AT",
+    state_code: "salzburg"
   },
   {
-    "country_code": "JP",
-    "state_code": "miyazaki"
+    country_code: "CO",
+    state_code: "antioquia"
   },
   {
-    "country_code": "ES",
-    "state_code": "andalusia"
+    country_code: "MX",
+    state_code: "jalisco"
   },
   {
-    "country_code": "IN",
-    "state_code": "chandigarh"
+    country_code: "DE",
+    state_code: "hessen"
   },
   {
-    "country_code": "PR",
-    "state_code": "cayey"
+    country_code: "VN",
+    state_code: "lam_đong"
   },
   {
-    "country_code": "IN",
-    "state_code": "nagaland"
+    country_code: "RO",
+    state_code: "bucuresti"
   },
   {
-    "country_code": "SG",
-    "state_code": "south_east"
+    country_code: "BW",
+    state_code: "northeast"
   },
   {
-    "country_code": "MT",
-    "state_code": "xghajra"
+    country_code: "TZ",
+    state_code: "morogoro"
   },
   {
-    "country_code": "NL",
-    "state_code": "overijssel"
+    country_code: "BB",
+    state_code: "saint_lucy"
   },
   {
-    "country_code": "IE",
-    "state_code": "westmeath"
+    country_code: "TW",
+    state_code: "taoyuan"
   },
   {
-    "country_code": "AZ",
-    "state_code": "baki"
+    country_code: "UA",
+    state_code: "kyiv_city"
   },
   {
-    "country_code": "ZA",
-    "state_code": "free_state"
+    country_code: "CZ",
+    state_code: "stredocesky_kraj"
   },
   {
-    "country_code": "AR",
-    "state_code": "salta"
+    country_code: "CZ",
+    state_code: "prague"
   },
   {
-    "country_code": "AE",
-    "state_code": "fujairah"
+    country_code: "IE",
+    state_code: "louth"
   },
   {
-    "country_code": "IL",
-    "state_code": "haifa"
+    country_code: "MX",
+    state_code: "queretaro"
   },
   {
-    "country_code": "NZ",
-    "state_code": "taranaki_region"
+    country_code: "JP",
+    state_code: "kochi"
   },
   {
-    "country_code": "MT",
-    "state_code": "saint_pauls_bay"
+    country_code: "JP",
+    state_code: "ishikawa"
   },
   {
-    "country_code": "CN",
-    "state_code": "hong_kong_sar"
+    country_code: "PG",
+    state_code: "west_new_britain"
   },
   {
-    "country_code": "PT",
-    "state_code": "santarem"
+    country_code: "LU",
+    state_code: "luxembourg"
   },
   {
-    "country_code": "IN",
-    "state_code": "tamil_nadu"
+    country_code: "KE",
+    state_code: "muranga"
   },
   {
-    "country_code": "LB",
-    "state_code": "montliban"
+    country_code: "BZ",
+    state_code: "cayo"
   },
   {
-    "country_code": "KR",
-    "state_code": "gyeongsangbukdo"
+    country_code: "AM",
+    state_code: "yerevan"
   },
   {
-    "country_code": "ID",
-    "state_code": "jawa_timur"
+    country_code: "NP",
+    state_code: "gandaki"
   },
   {
-    "country_code": "ZA",
-    "state_code": "kwazulunatal"
+    country_code: "RS",
+    state_code: "central_serbia"
   },
   {
-    "country_code": "MY",
-    "state_code": "pahang"
+    country_code: "TR",
+    state_code: "bursa"
   },
   {
-    "country_code": "PH",
-    "state_code": "bohol"
+    country_code: "GD",
+    state_code: "southern_grenadine_islands"
   },
   {
-    "country_code": "BR",
-    "state_code": "sao_paulo"
+    country_code: "MZ",
+    state_code: "nampula"
   },
   {
-    "country_code": "GH",
-    "state_code": "bono_east"
+    country_code: "DZ",
+    state_code: "sidi_bel_abbes"
   },
   {
-    "country_code": "EG",
-    "state_code": "as_suways"
+    country_code: "CN",
+    state_code: "beijing"
   },
   {
-    "country_code": "DO",
-    "state_code": "puerto_plata"
+    country_code: "GE",
+    state_code: "imereti"
   },
   {
-    "country_code": "GD",
-    "state_code": "saint_patrick"
+    country_code: "PT",
+    state_code: "regiao_autonoma_dos_acores"
   },
   {
-    "country_code": "HN",
-    "state_code": "atlantida_department"
+    country_code: "EG",
+    state_code: "ismailia"
   },
   {
-    "country_code": "TT",
-    "state_code": "point_fortin"
+    country_code: "FI",
+    state_code: "south_karelia"
   },
   {
-    "country_code": "PH",
-    "state_code": "iloilo"
+    country_code: "KW",
+    state_code: "hawalli"
   },
   {
-    "country_code": "MX",
-    "state_code": "guanajuato"
+    country_code: "KE",
+    state_code: "kirinyaga"
   },
   {
-    "country_code": "KE",
-    "state_code": "nairobi"
+    country_code: "GR",
+    state_code: "attiki"
   },
   {
-    "country_code": "LY",
-    "state_code": "az_zawiyah"
+    country_code: "NP",
+    state_code: "bagmati_province"
   },
   {
-    "country_code": "MY",
-    "state_code": "terengganu"
+    country_code: "SI",
+    state_code: "municipality_of_polzela"
   },
   {
-    "country_code": "TH",
-    "state_code": "songkhla"
+    country_code: "BO",
+    state_code: "santa_cruz_department"
   },
   {
-    "country_code": "RU",
-    "state_code": "avtonomna_respublika_krym"
+    country_code: "NG",
+    state_code: "kwara"
   },
   {
-    "country_code": "MX",
-    "state_code": "sinaloa"
+    country_code: "DZ",
+    state_code: "medea"
   },
   {
-    "country_code": "TZ",
-    "state_code": "dar_es_salaam"
+    country_code: "HR",
+    state_code: "brodskoposavska_zupanija"
   },
   {
-    "country_code": "LU",
-    "state_code": "esch_an_der_alzette"
+    country_code: "HN",
+    state_code: "cortes"
   },
   {
-    "country_code": "HR",
-    "state_code": "istria_county"
+    country_code: "VN",
+    state_code: "ho_chi_minh"
   },
   {
-    "country_code": "KH",
-    "state_code": "phnom_penh"
+    country_code: "JO",
+    state_code: "al_asimah"
   },
   {
-    "country_code": "LV",
-    "state_code": "ogres_novads"
+    country_code: "BG",
+    state_code: "sofia"
   },
   {
-    "country_code": "IN",
-    "state_code": "maharashtra"
+    country_code: "NZ",
+    state_code: "hawkes_bay_region"
   },
   {
-    "country_code": "PR",
-    "state_code": "las_piedras"
+    country_code: "MG",
+    state_code: "analamanga"
   },
   {
-    "country_code": "RO",
-    "state_code": "brasov_county"
+    country_code: "BR",
+    state_code: "pernambuco"
   },
   {
-    "country_code": "DZ",
-    "state_code": "annaba"
+    country_code: "UG",
+    state_code: "gulu"
   },
   {
-    "country_code": "VU",
-    "state_code": "shefa"
+    country_code: "CA",
+    state_code: "yukon"
   },
   {
-    "country_code": "IT",
-    "state_code": "tuscany"
+    country_code: "MT",
+    state_code: "saint_julians"
   },
   {
-    "country_code": "VN",
-    "state_code": "tuyen_quang"
+    country_code: "BW",
+    state_code: "francistown"
   },
   {
-    "country_code": "IM",
-    "state_code": "isle_of_man"
+    country_code: "RO",
+    state_code: "calarasi_county"
   },
   {
-    "country_code": "TZ",
-    "state_code": "mtwara"
+    country_code: "US",
+    state_code: "tennessee"
   },
   {
-    "country_code": "NO",
-    "state_code": "akershus"
+    country_code: "CO",
+    state_code: "boyaca"
   },
   {
-    "country_code": "GG",
-    "state_code": "guernsey"
+    country_code: "VN",
+    state_code: "hung_yen_province"
   },
   {
-    "country_code": "LU",
-    "state_code": "clervaux"
+    country_code: "HR",
+    state_code: "međimurje"
   },
   {
-    "country_code": "BD",
-    "state_code": "barishal"
+    country_code: "BW",
+    state_code: "kgatleng"
   },
   {
-    "country_code": "TW",
-    "state_code": "taiwan"
+    country_code: "HK",
+    state_code: "hong_kong"
   },
   {
-    "country_code": "SE",
-    "state_code": "kronoberg"
+    country_code: "UG",
+    state_code: "wakiso"
   },
   {
-    "country_code": "PH",
-    "state_code": "antique"
+    country_code: "BG",
+    state_code: "dobrich"
   },
   {
-    "country_code": "LY",
-    "state_code": "banghazi"
+    country_code: "US",
+    state_code: "alaska"
   },
   {
-    "country_code": "DE",
-    "state_code": "rheinlandpfalz"
+    country_code: "TG",
+    state_code: "kara"
   },
   {
-    "country_code": "AT",
-    "state_code": "karnten"
+    country_code: "NL",
+    state_code: "south_holland"
   },
   {
-    "country_code": "PG",
-    "state_code": "morobe_province"
+    country_code: "BG",
+    state_code: "lovech"
   },
   {
-    "country_code": "PH",
-    "state_code": "bicol_region"
+    country_code: "NL",
+    state_code: "noordbrabant"
   },
   {
-    "country_code": "CY",
-    "state_code": "ammochostos"
+    country_code: "US",
+    state_code: "louisiana"
   },
   {
-    "country_code": "DK",
-    "state_code": "syddanmark"
+    country_code: "KN",
+    state_code: "saint_john_figtree"
   },
   {
-    "country_code": "LY",
-    "state_code": "tarabulus"
+    country_code: "DO",
+    state_code: "cibao_sur"
   },
   {
-    "country_code": "IM",
-    "state_code": "ramsey"
+    country_code: "KE",
+    state_code: "kakamega_county"
   },
   {
-    "country_code": "AE",
-    "state_code": "emirate_of_fujairah"
+    country_code: "TT",
+    state_code: "siparia"
   },
   {
-    "country_code": "CK",
-    "state_code": "cook_islands"
+    country_code: "JM",
+    state_code: "saint_ann_parish"
   },
   {
-    "country_code": "IE",
-    "state_code": "longford"
+    country_code: "IN",
+    state_code: "karnataka"
   },
   {
-    "country_code": "JM",
-    "state_code": "saint_andrew"
+    country_code: "BH",
+    state_code: "muharraq"
   },
   {
-    "country_code": "SI",
-    "state_code": "sevnica"
+    country_code: "KN",
+    state_code: "saint_thomas_lowland"
   },
   {
-    "country_code": "VN",
-    "state_code": "hai_phong"
+    country_code: "JP",
+    state_code: "osaka"
   },
   {
-    "country_code": "DO",
-    "state_code": "santiago"
+    country_code: "DZ",
+    state_code: "setif"
   },
   {
-    "country_code": "AE",
-    "state_code": "ajman"
+    country_code: "ES",
+    state_code: "castille_and_leon"
   },
   {
-    "country_code": "FR",
-    "state_code": "la_reunion"
+    country_code: "KE",
+    state_code: "turkana"
   },
   {
-    "country_code": "MT",
-    "state_code": "isswieqi"
+    country_code: "MT",
+    state_code: "attard"
   },
   {
-    "country_code": "SG",
-    "state_code": "central_singapore"
+    country_code: "TR",
+    state_code: "istanbul"
   },
   {
-    "country_code": "JP",
-    "state_code": "tochigi"
+    country_code: "NA",
+    state_code: "khomas"
   },
   {
-    "country_code": "SI",
-    "state_code": "municipality_of_kamnik"
+    country_code: "TH",
+    state_code: "rayong"
   },
   {
-    "country_code": "BO",
-    "state_code": "la_paz"
+    country_code: "CY",
+    state_code: "nicosia"
   },
   {
-    "country_code": "US",
-    "state_code": "pennsylvania"
+    country_code: "VN",
+    state_code: "khanh_hoa"
   },
   {
-    "country_code": "BD",
-    "state_code": "dhaka"
+    country_code: "LT",
+    state_code: "panevezys"
   },
   {
-    "country_code": "CN",
-    "state_code": "shanghai"
+    country_code: "QA",
+    state_code: "ad_dawhah"
   },
   {
-    "country_code": "US",
-    "state_code": "hawaii"
+    country_code: "PH",
+    state_code: "surigao_del_norte"
   },
   {
-    "country_code": "TR",
-    "state_code": "izmir"
+    country_code: "BE",
+    state_code: "wallonne"
   },
   {
-    "country_code": "ZW",
-    "state_code": "mashonaland_west"
+    country_code: "IQ",
+    state_code: "wasit"
   },
   {
-    "country_code": "SE",
-    "state_code": "halland"
+    country_code: "MU",
+    state_code: "grand_port"
   },
   {
-    "country_code": "MV",
-    "state_code": "kaafu_atoll"
+    country_code: "KE",
+    state_code: "kitui"
   },
   {
-    "country_code": "PH",
-    "state_code": "national_capital_region"
+    country_code: "PH",
+    state_code: "northern_mindanao"
   },
   {
-    "country_code": "ES",
-    "state_code": "la_rioja"
+    country_code: "PR",
+    state_code: "guayama"
   },
   {
-    "country_code": "SK",
-    "state_code": "kosicky_kraj"
+    country_code: "ET",
+    state_code: "amara"
   },
   {
-    "country_code": "SY",
-    "state_code": "hama"
+    country_code: "KE",
+    state_code: "narok"
   },
   {
-    "country_code": "CL",
-    "state_code": "coquimbo_region"
+    country_code: "AE",
+    state_code: "dubayy"
   },
   {
-    "country_code": "BN",
-    "state_code": "brunei"
+    country_code: "CR",
+    state_code: "limon"
   },
   {
-    "country_code": "SA",
-    "state_code": "jazan"
+    country_code: "KN",
+    state_code: "saint_john_capisterre"
   },
   {
-    "country_code": "BR",
-    "state_code": "piaui"
+    country_code: "CG",
+    state_code: "pointenoire"
   },
   {
-    "country_code": "RS",
-    "state_code": "kolubarski_okrug"
+    country_code: "TT",
+    state_code: "san_juanlaventille"
   },
   {
-    "country_code": "US",
-    "state_code": "idaho"
+    country_code: "PT",
+    state_code: "porto"
   },
   {
-    "country_code": "SI",
-    "state_code": "municipality_of_ribnica"
+    country_code: "AT",
+    state_code: "styria"
   },
   {
-    "country_code": "MV",
-    "state_code": "north_ari_atoll"
+    country_code: "PH",
+    state_code: "rizal"
   },
   {
-    "country_code": "TW",
-    "state_code": "taipei_city"
+    country_code: "CL",
+    state_code: "los_rios_region"
   },
   {
-    "country_code": "PH",
-    "state_code": "surigao_del_sur"
+    country_code: "CZ",
+    state_code: "praha"
   },
   {
-    "country_code": "NA",
-    "state_code": "hardap"
+    country_code: "CD",
+    state_code: "hautkatanga"
   },
   {
-    "country_code": "ID",
-    "state_code": "jawa_tengah"
+    country_code: "XK",
+    state_code: "pristina"
   },
   {
-    "country_code": "MA",
-    "state_code": "tangertetouanal_hoceima"
+    country_code: "IE",
+    state_code: "donegal"
   },
   {
-    "country_code": "CN",
-    "state_code": "shandong"
+    country_code: "IT",
+    state_code: "veneto"
   },
   {
-    "country_code": "PR",
-    "state_code": "caguas"
+    country_code: "MU",
+    state_code: "pamplemousses"
   },
   {
-    "country_code": "DZ",
-    "state_code": "biskra"
+    country_code: "BR",
+    state_code: "maranhao"
   },
   {
-    "country_code": "KR",
-    "state_code": "gyeongsangnamdo"
+    country_code: "VN",
+    state_code: "bac_giang"
   },
   {
-    "country_code": "PH",
-    "state_code": "abra"
+    country_code: "SE",
+    state_code: "norrbottens_lan"
   },
   {
-    "country_code": "SI",
-    "state_code": "urban_municipality_of_nova_gorica"
+    country_code: "RO",
+    state_code: "carasseverin"
   },
   {
-    "country_code": "KE",
-    "state_code": "marsabit_county"
+    country_code: "ES",
+    state_code: "catalunya"
   },
   {
-    "country_code": "SY",
-    "state_code": "dimashq"
+    country_code: "PH",
+    state_code: "nueva_ecija"
   },
   {
-    "country_code": "NG",
-    "state_code": "rivers"
+    country_code: "ZA",
+    state_code: "eastern_cape"
   },
   {
-    "country_code": "PR",
-    "state_code": "cabo_rojo"
+    country_code: "SY",
+    state_code: "tartus"
   },
   {
-    "country_code": "TR",
-    "state_code": "kahramanmaras"
+    country_code: "BR",
+    state_code: "bahia"
   },
   {
-    "country_code": "KE",
-    "state_code": "kisii_county"
+    country_code: "CO",
+    state_code: "distrito_capital_de_bogota"
   },
   {
-    "country_code": "NZ",
-    "state_code": "waikato"
+    country_code: "CZ",
+    state_code: "moravskoslezsky_kraj"
   },
   {
-    "country_code": "AE",
-    "state_code": "emirate_of_sharjah"
+    country_code: "QA",
+    state_code: "ar_rayyan"
   },
   {
-    "country_code": "CY",
-    "state_code": "lemesos"
+    country_code: "AL",
+    state_code: "durres"
   },
   {
-    "country_code": "KE",
-    "state_code": "nairobi_county"
+    country_code: "BR",
+    state_code: "para"
   },
   {
-    "country_code": "MT",
-    "state_code": "sliema"
+    country_code: "BD",
+    state_code: "khulna_division"
   },
   {
-    "country_code": "PH",
-    "state_code": "camarines_sur"
+    country_code: "BT",
+    state_code: "samtse_district"
   },
   {
-    "country_code": "JP",
-    "state_code": "kanagawa"
+    country_code: "KE",
+    state_code: "kirinyaga_county"
   },
   {
-    "country_code": "NG",
-    "state_code": "anambra"
+    country_code: "OM",
+    state_code: "zufar"
   },
   {
-    "country_code": "VE",
-    "state_code": "miranda"
+    country_code: "IT",
+    state_code: "the_marches"
   },
   {
-    "country_code": "NA",
-    "state_code": "otjozondjupa"
+    country_code: "YE",
+    state_code: "taizz"
   },
   {
-    "country_code": "BR",
-    "state_code": "federal_district"
+    country_code: "SE",
+    state_code: "vasterbotten"
   },
   {
-    "country_code": "ES",
-    "state_code": "andalucia"
+    country_code: "DZ",
+    state_code: "blida"
   },
   {
-    "country_code": "KN",
-    "state_code": "saint_paul_charlestown"
+    country_code: "LY",
+    state_code: "tarabulus"
   },
   {
-    "country_code": "TT",
-    "state_code": "penaldebe"
+    country_code: "ZW",
+    state_code: "harare"
   },
   {
-    "country_code": "RU",
-    "state_code": "moscow_oblast"
+    country_code: "EC",
+    state_code: "chimborazo_province"
   },
   {
-    "country_code": "OM",
-    "state_code": "muscat"
+    country_code: "NL",
+    state_code: "noordholland"
   },
   {
-    "country_code": "BZ",
-    "state_code": "toledo"
+    country_code: "LS",
+    state_code: "maseru_district"
   },
   {
-    "country_code": "DM",
-    "state_code": "saint_paul"
+    country_code: "RO",
+    state_code: "neamt_county"
   },
   {
-    "country_code": "MY",
-    "state_code": "sabah"
+    country_code: "CY",
+    state_code: "pafos"
   },
   {
-    "country_code": "FR",
-    "state_code": "iledefrance"
+    country_code: "CN",
+    state_code: "jiangsu"
   },
   {
-    "country_code": "PL",
-    "state_code": "małopolskie"
+    country_code: "DE",
+    state_code: "saxonyanhalt"
   },
   {
-    "country_code": "VG",
-    "state_code": "british_virgin_islands"
+    country_code: "TH",
+    state_code: "trat"
   },
   {
-    "country_code": "IT",
-    "state_code": "lombardia"
+    country_code: "PH",
+    state_code: "quezon"
   },
   {
-    "country_code": "NL",
-    "state_code": "fryslan"
+    country_code: "MY",
+    state_code: "wilayah_persekutuan_putrajaya"
   },
   {
-    "country_code": "HK",
-    "state_code": "sai_kung_district"
+    country_code: "CA",
+    state_code: "newfoundland_and_labrador"
   },
   {
-    "country_code": "PH",
-    "state_code": "zamboanga_del_sur"
+    country_code: "GH",
+    state_code: "ahafo"
   },
   {
-    "country_code": "DO",
-    "state_code": "ozama"
+    country_code: "VE",
+    state_code: "barinas"
   },
   {
-    "country_code": "FI",
-    "state_code": "north_karelia"
+    country_code: "HN",
+    state_code: "islas_de_la_bahia"
   },
   {
-    "country_code": "PR",
-    "state_code": "san_juan"
+    country_code: "PL",
+    state_code: "subcarpathia"
   },
   {
-    "country_code": "MX",
-    "state_code": "coahuila_de_zaragoza"
+    country_code: "TR",
+    state_code: "ankara"
   },
   {
-    "country_code": "PH",
-    "state_code": "cagayan"
+    country_code: "JP",
+    state_code: "kyoto"
   },
   {
-    "country_code": "EG",
-    "state_code": "red_sea"
+    country_code: "RU",
+    state_code: "stpetersburg"
   },
   {
-    "country_code": "NG",
-    "state_code": "abia"
+    country_code: "NG",
+    state_code: "ogun_state"
   },
   {
-    "country_code": "HR",
-    "state_code": "koprivnickokrizevacka_zupanija"
+    country_code: "ES",
+    state_code: "valencia"
   },
   {
-    "country_code": "SK",
-    "state_code": "trnavsky_kraj"
+    country_code: "JM",
+    state_code: "saint_catherine_parish"
   },
   {
-    "country_code": "IT",
-    "state_code": "abruzzo"
+    country_code: "HK",
+    state_code: "eastern_district"
   },
   {
-    "country_code": "KR",
-    "state_code": "daegu"
+    country_code: "GH",
+    state_code: "greater_accra"
   },
   {
-    "country_code": "CH",
-    "state_code": "sankt_gallen"
+    country_code: "US",
+    state_code: "puerto_rico"
   },
   {
-    "country_code": "RO",
-    "state_code": "dambovita_county"
+    country_code: "IT",
+    state_code: "friuli_venezia_giulia"
   },
   {
-    "country_code": "ES",
-    "state_code": "canary_islands"
+    country_code: "TT",
+    state_code: "princes_town"
   },
   {
-    "country_code": "RO",
-    "state_code": "mehedinti_county"
+    country_code: "MW",
+    state_code: "blantyre"
   },
   {
-    "country_code": "KE",
-    "state_code": "kakamega"
+    country_code: "CR",
+    state_code: "alajuela"
   },
   {
-    "country_code": "SI",
-    "state_code": "skofljica"
+    country_code: "IQ",
+    state_code: "al_basrah"
   },
   {
-    "country_code": "TN",
-    "state_code": "tunis_governorate"
+    country_code: "MX",
+    state_code: "tamaulipas"
   },
   {
-    "country_code": "PL",
-    "state_code": "lubelskie"
+    country_code: "SI",
+    state_code: "urban_municipality_of_ptuj"
   },
   {
-    "country_code": "SO",
-    "state_code": "woqooyi_galbeed"
+    country_code: "MT",
+    state_code: "birzebbuga"
   },
   {
-    "country_code": "LY",
-    "state_code": "al_jafarah"
+    country_code: "DO",
+    state_code: "santiago_province"
   },
   {
-    "country_code": "US",
-    "state_code": "utah"
+    country_code: "PL",
+    state_code: "łodz_voivodeship"
   },
   {
-    "country_code": "MX",
-    "state_code": "baja_california_sur"
+    country_code: "AL",
+    state_code: "shkoder"
   },
   {
-    "country_code": "JP",
-    "state_code": "mie"
+    country_code: "CD",
+    state_code: "kinshasa"
   },
   {
-    "country_code": "DZ",
-    "state_code": "mostaganem"
+    country_code: "VN",
+    state_code: "hanoi"
   },
   {
-    "country_code": "LK",
-    "state_code": "southern_province"
+    country_code: "GR",
+    state_code: "epirus"
   },
   {
-    "country_code": "BR",
-    "state_code": "minas_gerais"
+    country_code: "VE",
+    state_code: "anzoategui"
   },
   {
-    "country_code": "CN",
-    "state_code": "henan"
+    country_code: "EG",
+    state_code: "al_iskandariyah"
   },
   {
-    "country_code": "AL",
-    "state_code": "tirana"
+    country_code: "ID",
+    state_code: "jawa"
   },
   {
-    "country_code": "PH",
-    "state_code": "western_visayas"
+    country_code: "PR",
+    state_code: "penuelas"
   },
   {
-    "country_code": "GT",
-    "state_code": "guatemala"
+    country_code: "AL",
+    state_code: "tirane"
   },
   {
-    "country_code": "BG",
-    "state_code": "sofiacapital"
+    country_code: "SE",
+    state_code: "vastmanlands_lan"
   },
   {
-    "country_code": "JP",
-    "state_code": "hyogo"
+    country_code: "MY",
+    state_code: "kedah"
   },
   {
-    "country_code": "LS",
-    "state_code": "bothabothe"
+    country_code: "BR",
+    state_code: "rio_grande_do_sul"
   },
   {
-    "country_code": "IT",
-    "state_code": "sicily"
+    country_code: "SE",
+    state_code: "vastra_gotaland"
   },
   {
-    "country_code": "GR",
-    "state_code": "attiki"
+    country_code: "CO",
+    state_code: "bolivar"
   },
   {
-    "country_code": "GW",
-    "state_code": "bissau"
+    country_code: "PH",
+    state_code: "central_luzon"
   },
   {
-    "country_code": "PH",
-    "state_code": "zamboanga_sibugay"
+    country_code: "RO",
+    state_code: "galati"
   },
   {
-    "country_code": "EC",
-    "state_code": "los_rios"
+    country_code: "TT",
+    state_code: "san_juanlaventille"
   },
   {
-    "country_code": "DZ",
-    "state_code": "skikda"
+    country_code: "SE",
+    state_code: "vastmanland"
   },
   {
-    "country_code": "PH",
-    "state_code": "davao_del_sur"
+    country_code: "TO",
+    state_code: "tongatapu"
   },
   {
-    "country_code": "MT",
-    "state_code": "swieqi"
+    country_code: "MA",
+    state_code: "marrakeshsafi"
   },
   {
-    "country_code": "IN",
-    "state_code": "chandigarh"
+    country_code: "ID",
+    state_code: "banten"
   },
   {
-    "country_code": "GH",
-    "state_code": "upper_west"
+    country_code: "SA",
+    state_code: "al_madinah_al_munawwarah"
   },
   {
-    "country_code": "PE",
-    "state_code": "la_libertad"
+    country_code: "LB",
+    state_code: "aakkar"
   },
   {
-    "country_code": "AR",
-    "state_code": "chubut"
+    country_code: "MK",
+    state_code: "negotino"
   },
   {
-    "country_code": "EG",
-    "state_code": "al_minufiyah"
+    country_code: "SA",
+    state_code: "tabuk_region"
   },
   {
-    "country_code": "NG",
-    "state_code": "borno"
+    country_code: "AM",
+    state_code: "erevan"
   },
   {
-    "country_code": "DE",
-    "state_code": "hamburg"
+    country_code: "SO",
+    state_code: "banaadir"
   },
   {
-    "country_code": "GN",
-    "state_code": "conakry"
+    country_code: "MX",
+    state_code: "ciudad_de_mexico"
   },
   {
-    "country_code": "US",
-    "state_code": "wyoming"
+    country_code: "JM",
+    state_code: "saint_catherine"
   },
   {
-    "country_code": "QA",
-    "state_code": "ar_rayyan"
+    country_code: "ID",
+    state_code: "bali"
   },
   {
-    "country_code": "FR",
-    "state_code": "grand_est"
+    country_code: "NG",
+    state_code: "ekiti"
   },
   {
-    "country_code": "GY",
-    "state_code": "demeraramahaica_region"
+    country_code: "CZ",
+    state_code: "pardubicky"
   },
   {
-    "country_code": "IT",
-    "state_code": "campania"
+    country_code: "PH",
+    state_code: "zamboanga_del_norte"
   },
   {
-    "country_code": "GR",
-    "state_code": "crete"
+    country_code: "TZ",
+    state_code: "tanga"
   },
   {
-    "country_code": "FR",
-    "state_code": "saintmartin"
+    country_code: "DE",
+    state_code: "free_and_hanseatic_city_of_hamburg"
   },
   {
-    "country_code": "DE",
-    "state_code": "land_berlin"
+    country_code: "CH",
+    state_code: "schwyz"
   },
   {
-    "country_code": "SE",
-    "state_code": "uppsala_lan"
+    country_code: "IT",
+    state_code: "sardinia"
   },
   {
-    "country_code": "CU",
-    "state_code": "havana"
+    country_code: "ET",
+    state_code: "oromia"
   },
   {
-    "country_code": "ID",
-    "state_code": "sumatera"
+    country_code: "RS",
+    state_code: "belgrade"
   },
   {
-    "country_code": "PL",
-    "state_code": "greater_poland"
+    country_code: "NA",
+    state_code: "karas"
   },
   {
-    "country_code": "ET",
-    "state_code": "gambela_peoples"
+    country_code: "MK",
+    state_code: "resen"
   },
   {
-    "country_code": "TR",
-    "state_code": "kocaeli"
+    country_code: "SG",
+    state_code: "south_west"
   },
   {
-    "country_code": "AR",
-    "state_code": "formosa"
+    country_code: "KE",
+    state_code: "nandi"
   },
   {
-    "country_code": "LY",
-    "state_code": "murzuq"
+    country_code: "BS",
+    state_code: "black_point"
   },
   {
-    "country_code": "ID",
-    "state_code": "yogyakarta"
+    country_code: "RS",
+    state_code: "juznobanatski_okrug"
   },
   {
-    "country_code": "PH",
-    "state_code": "davao_region"
+    country_code: "CA",
+    state_code: "british_columbia"
   },
   {
-    "country_code": "SI",
-    "state_code": "velenje"
+    country_code: "TH",
+    state_code: "pathum_thani"
   },
   {
-    "country_code": "CR",
-    "state_code": "puntarenas"
+    country_code: "PH",
+    state_code: "agusan_del_sur"
   },
   {
-    "country_code": "JM",
-    "state_code": "trelawny"
+    country_code: "IT",
+    state_code: "trentinoalto_adige"
   },
   {
-    "country_code": "HT",
-    "state_code": "ouest"
+    country_code: "FI",
+    state_code: "etelasavo"
   },
   {
-    "country_code": "KR",
-    "state_code": "incheon"
+    country_code: "OM",
+    state_code: "masqat"
   },
   {
-    "country_code": "HR",
-    "state_code": "splitdalmatia"
+    country_code: "IT",
+    state_code: "apulia"
   },
   {
-    "country_code": "SI",
-    "state_code": "slovenj_gradec"
+    country_code: "KY",
+    state_code: "george_town"
   },
   {
-    "country_code": "IN",
-    "state_code": "meghalaya"
+    country_code: "VC",
+    state_code: "grenadines"
   },
   {
-    "country_code": "CH",
-    "state_code": "neuchatel"
+    country_code: "TH",
+    state_code: "narathiwat"
   },
   {
-    "country_code": "TZ",
-    "state_code": "iringa"
+    country_code: "AE",
+    state_code: "ras_al_khaimah"
   },
   {
-    "country_code": "ME",
-    "state_code": "podgorica"
+    country_code: "BH",
+    state_code: "northern"
   },
   {
-    "country_code": "FI",
-    "state_code": "kantahame"
+    country_code: "PL",
+    state_code: "lesser_poland"
   },
   {
-    "country_code": "RO",
-    "state_code": "dambovita"
+    country_code: "JM",
+    state_code: "portland"
   },
   {
-    "country_code": "PT",
-    "state_code": "lisbon"
+    country_code: "JM",
+    state_code: "hanover"
   },
   {
-    "country_code": "PH",
-    "state_code": "tarlac"
+    country_code: "ID",
+    state_code: "west_java"
   },
   {
-    "country_code": "TT",
-    "state_code": "sangre_grande"
+    country_code: "CO",
+    state_code: "tolima_department"
   },
   {
-    "country_code": "SI",
-    "state_code": "municipality_of_piran"
+    country_code: "BW",
+    state_code: "kweneng"
   },
   {
-    "country_code": "ZM",
-    "state_code": "copperbelt"
+    country_code: "MT",
+    state_code: "marsa"
   },
   {
-    "country_code": "EG",
-    "state_code": "beheira"
+    country_code: "IS",
+    state_code: "sudurland"
   },
   {
-    "country_code": "ID",
-    "state_code": "central_kalimantan"
+    country_code: "TZ",
+    state_code: "njombe"
   },
   {
-    "country_code": "BH",
-    "state_code": "al_janubiyah"
+    country_code: "IQ",
+    state_code: "baghdad"
   },
   {
-    "country_code": "TT",
-    "state_code": "tunapunapiarco"
+    country_code: "SE",
+    state_code: "kalmar_lan"
   },
   {
-    "country_code": "NG",
-    "state_code": "oyo"
+    country_code: "KE",
+    state_code: "meru_county"
   },
   {
-    "country_code": "US",
-    "state_code": "colorado"
+    country_code: "LY",
+    state_code: "shabiyat_misratah"
   },
   {
-    "country_code": "RS",
-    "state_code": "kosovskomitrovacki_okrug"
+    country_code: "GB",
+    state_code: "scotland"
   },
   {
-    "country_code": "PH",
-    "state_code": "samar"
+    country_code: "BA",
+    state_code: "federacija_bosne_i_hercegovine"
   },
   {
-    "country_code": "GY",
-    "state_code": "east_berbicecorentyne"
+    country_code: "SA",
+    state_code: "riyadh_region"
   },
   {
-    "country_code": "US",
-    "state_code": "ohio"
+    country_code: "EC",
+    state_code: "tungurahua_province"
   },
   {
-    "country_code": "HU",
-    "state_code": "budapest"
+    country_code: "TZ",
+    state_code: "mjini_magharibi"
   },
   {
-    "country_code": "MX",
-    "state_code": "oaxaca"
+    country_code: "ID",
+    state_code: "sumatera_selatan"
   },
   {
-    "country_code": "RO",
-    "state_code": "vrancea"
+    country_code: "TN",
+    state_code: "nabeul_governorate"
   },
   {
-    "country_code": "TT",
-    "state_code": "mayaro"
+    country_code: "NO",
+    state_code: "oslo_county"
   },
   {
-    "country_code": "CH",
-    "state_code": "baselcity"
+    country_code: "JP",
+    state_code: "hiroshima"
   },
   {
-    "country_code": "LY",
-    "state_code": "nalut"
+    country_code: "MY",
+    state_code: "melaka"
   },
   {
-    "country_code": "MZ",
-    "state_code": "tete"
+    country_code: "TN",
+    state_code: "sousse_governorate"
   },
   {
-    "country_code": "RO",
-    "state_code": "bacau"
+    country_code: "NO",
+    state_code: "trøndelag"
   },
   {
-    "country_code": "GR",
-    "state_code": "central_macedonia"
+    country_code: "SI",
+    state_code: "ljubljana"
   },
   {
-    "country_code": "ME",
-    "state_code": "niksic"
+    country_code: "BO",
+    state_code: "la_paz"
   },
   {
-    "country_code": "NG",
-    "state_code": "sokoto"
+    country_code: "BD",
+    state_code: "dhaka"
   },
   {
-    "country_code": "SE",
-    "state_code": "sodermanland"
+    country_code: "CN",
+    state_code: "shanghai"
   },
   {
-    "country_code": "SE",
-    "state_code": "vastmanland_county"
+    country_code: "US",
+    state_code: "pennsylvania"
   },
   {
-    "country_code": "PT",
-    "state_code": "faro"
+    country_code: "SI",
+    state_code: "koper"
   },
   {
-    "country_code": "TW",
-    "state_code": "changhua"
+    country_code: "SI",
+    state_code: "municipality_of_kamnik"
   },
   {
-    "country_code": "BD",
-    "state_code": "barisal_division"
+    country_code: "MT",
+    state_code: "isswieqi"
   },
   {
-    "country_code": "MY",
-    "state_code": "pulau_pinang"
+    country_code: "SG",
+    state_code: "central_singapore"
   },
   {
-    "country_code": "IT",
-    "state_code": "roma"
+    country_code: "FR",
+    state_code: "la_reunion"
   },
   {
-    "country_code": "FR",
-    "state_code": "nouvellecaledonie"
+    country_code: "AE",
+    state_code: "ajman"
   },
   {
-    "country_code": "TT",
-    "state_code": "couvatabaquitetalparo"
+    country_code: "TR",
+    state_code: "elazıg"
   },
   {
-    "country_code": "KE",
-    "state_code": "bungoma"
+    country_code: "DO",
+    state_code: "santiago"
   },
   {
-    "country_code": "NO",
-    "state_code": "vestland"
+    country_code: "VE",
+    state_code: "bolivar"
   },
   {
-    "country_code": "TN",
-    "state_code": "nabeul"
+    country_code: "SI",
+    state_code: "zagorje_ob_savi"
   },
   {
-    "country_code": "MK",
-    "state_code": "probishtip"
+    country_code: "VN",
+    state_code: "hai_phong"
   },
   {
-    "country_code": "BG",
-    "state_code": "silistra"
+    country_code: "UA",
+    state_code: "poltava"
   },
   {
-    "country_code": "CN",
-    "state_code": "zhejiang"
+    country_code: "JM",
+    state_code: "saint_andrew"
   },
   {
-    "country_code": "CA",
-    "state_code": "quebec"
+    country_code: "DK",
+    state_code: "syddanmark"
   },
   {
-    "country_code": "ID",
-    "state_code": "kalimantan_barat"
+    country_code: "PG",
+    state_code: "morobe_province"
   },
   {
-    "country_code": "MK",
-    "state_code": "kavadarci"
+    country_code: "PH",
+    state_code: "bicol_region"
   },
   {
-    "country_code": "IN",
-    "state_code": "haryana"
+    country_code: "LY",
+    state_code: "tarabulus"
   },
   {
-    "country_code": "ZA",
-    "state_code": "western_cape"
+    country_code: "IM",
+    state_code: "ramsey"
   },
   {
-    "country_code": "PK",
-    "state_code": "khyber_pakhtunkhwa"
+    country_code: "TW",
+    state_code: "taiwan"
   },
   {
-    "country_code": "BR",
-    "state_code": "acre"
+    country_code: "SE",
+    state_code: "kronoberg"
   },
   {
-    "country_code": "MT",
-    "state_code": "qormi"
+    country_code: "PH",
+    state_code: "antique"
   },
   {
-    "country_code": "IN",
-    "state_code": "national_capital_territory_of_delhi"
+    country_code: "BD",
+    state_code: "barishal"
   },
   {
-    "country_code": "NO",
-    "state_code": "innlandet"
+    country_code: "DE",
+    state_code: "rheinlandpfalz"
   },
   {
-    "country_code": "US",
-    "state_code": "wisconsin"
+    country_code: "CY",
+    state_code: "ammochostos"
   },
   {
-    "country_code": "SR",
-    "state_code": "paramaribo_district"
+    country_code: "LY",
+    state_code: "banghazi"
   },
   {
-    "country_code": "US",
-    "state_code": "south_carolina"
+    country_code: "IE",
+    state_code: "longford"
   },
   {
-    "country_code": "TH",
-    "state_code": "krung_thep_maha_nakhon"
+    country_code: "PA",
+    state_code: "panama"
   },
   {
-    "country_code": "BR",
-    "state_code": "roraima"
+    country_code: "FR",
+    state_code: "auvergnerhonealpes"
   },
   {
-    "country_code": "NZ",
-    "state_code": "waikato_region"
+    country_code: "IM",
+    state_code: "isle_of_man"
   },
   {
-    "country_code": "BS",
-    "state_code": "city_of_freeport"
+    country_code: "GG",
+    state_code: "guernsey"
   },
   {
-    "country_code": "JP",
-    "state_code": "fukuoka"
+    country_code: "NO",
+    state_code: "akershus"
   },
   {
-    "country_code": "IN",
-    "state_code": "maharashtra"
+    country_code: "IE",
+    state_code: "connaught"
   },
   {
-    "country_code": "AU",
-    "state_code": "western_australia"
+    country_code: "RO",
+    state_code: "brasov_county"
   },
   {
-    "country_code": "KE",
-    "state_code": "nakuru"
+    country_code: "DZ",
+    state_code: "annaba"
   },
   {
-    "country_code": "CA",
-    "state_code": "nunavut"
+    country_code: "VU",
+    state_code: "shefa"
   },
   {
-    "country_code": "AR",
-    "state_code": "buenos_aires_fd"
+    country_code: "IT",
+    state_code: "tuscany"
   },
   {
-    "country_code": "RO",
-    "state_code": "cluj"
+    country_code: "MT",
+    state_code: "xaghra"
   },
   {
-    "country_code": "RS",
-    "state_code": "pomoravski_okrug"
+    country_code: "KH",
+    state_code: "phnom_penh"
   },
   {
-    "country_code": "GU",
-    "state_code": "tamuningtumonharmon"
+    country_code: "TZ",
+    state_code: "dar_es_salaam"
   },
   {
-    "country_code": "VN",
-    "state_code": "ho_chi_minh"
+    country_code: "LU",
+    state_code: "esch_an_der_alzette"
   },
   {
-    "country_code": "PR",
-    "state_code": "rio_grande"
+    country_code: "IN",
+    state_code: "maharashtra"
   },
   {
-    "country_code": "KE",
-    "state_code": "tana_river"
+    country_code: "LV",
+    state_code: "ogres_novads"
   },
   {
-    "country_code": "PR",
-    "state_code": "culebra"
+    country_code: "PR",
+    state_code: "las_piedras"
   },
   {
-    "country_code": "US",
-    "state_code": "tennessee"
+    country_code: "PS",
+    state_code: "hebron"
   },
   {
-    "country_code": "MG",
-    "state_code": "analamanga"
+    country_code: "MX",
+    state_code: "sinaloa"
   },
   {
-    "country_code": "BR",
-    "state_code": "pernambuco"
+    country_code: "BR",
+    state_code: "amazonas"
   },
   {
-    "country_code": "RO",
-    "state_code": "calarasi_county"
+    country_code: "MX",
+    state_code: "guanajuato"
   },
   {
-    "country_code": "UG",
-    "state_code": "gulu"
+    country_code: "KE",
+    state_code: "nairobi"
   },
   {
-    "country_code": "CA",
-    "state_code": "yukon"
+    country_code: "NZ",
+    state_code: "marlborough"
   },
   {
-    "country_code": "BW",
-    "state_code": "francistown"
+    country_code: "MY",
+    state_code: "terengganu"
   },
   {
-    "country_code": "AR",
-    "state_code": "entre_rios"
+    country_code: "PH",
+    state_code: "iloilo"
   },
   {
-    "country_code": "JO",
-    "state_code": "al_asimah"
+    country_code: "TT",
+    state_code: "point_fortin"
   },
   {
-    "country_code": "BG",
-    "state_code": "sofia"
+    country_code: "LY",
+    state_code: "az_zawiyah"
   },
   {
-    "country_code": "VN",
-    "state_code": "ho_chi_minh"
+    country_code: "BR",
+    state_code: "sao_paulo"
   },
   {
-    "country_code": "NZ",
-    "state_code": "hawkes_bay_region"
+    country_code: "GH",
+    state_code: "bono_east"
   },
   {
-    "country_code": "NP",
-    "state_code": "bagmati_province"
+    country_code: "MY",
+    state_code: "pahang"
   },
   {
-    "country_code": "NG",
-    "state_code": "kwara"
+    country_code: "SI",
+    state_code: "ribnica"
   },
   {
-    "country_code": "RO",
-    "state_code": "giurgiu"
+    country_code: "CH",
+    state_code: "nidwalden"
   },
   {
-    "country_code": "KE",
-    "state_code": "west_pokot_county"
+    country_code: "IN",
+    state_code: "tamil_nadu"
   },
   {
-    "country_code": "SI",
-    "state_code": "municipality_of_polzela"
+    country_code: "GD",
+    state_code: "saint_patrick"
   },
   {
-    "country_code": "BO",
-    "state_code": "santa_cruz_department"
+    country_code: "PT",
+    state_code: "santarem"
   },
   {
-    "country_code": "GR",
-    "state_code": "attiki"
+    country_code: "LB",
+    state_code: "montliban"
   },
   {
-    "country_code": "KE",
-    "state_code": "kirinyaga"
+    country_code: "CN",
+    state_code: "hong_kong_sar"
   },
   {
-    "country_code": "NA",
-    "state_code": "karas"
+    country_code: "DO",
+    state_code: "puerto_plata"
   },
   {
-    "country_code": "FI",
-    "state_code": "south_karelia"
+    country_code: "ID",
+    state_code: "jawa_timur"
   },
   {
-    "country_code": "KW",
-    "state_code": "hawalli"
+    country_code: "KR",
+    state_code: "gyeongsangbukdo"
   },
   {
-    "country_code": "EG",
-    "state_code": "ismailia"
+    country_code: "IL",
+    state_code: "haifa"
   },
   {
-    "country_code": "PK",
-    "state_code": "azad_kashmir"
+    country_code: "AE",
+    state_code: "fujairah"
   },
   {
-    "country_code": "PT",
-    "state_code": "regiao_autonoma_dos_acores"
+    country_code: "ZA",
+    state_code: "kwazulunatal"
   },
   {
-    "country_code": "CN",
-    "state_code": "beijing"
+    country_code: "PH",
+    state_code: "bohol"
   },
   {
-    "country_code": "GE",
-    "state_code": "imereti"
+    country_code: "NZ",
+    state_code: "taranaki_region"
   },
   {
-    "country_code": "GD",
-    "state_code": "southern_grenadine_islands"
+    country_code: "MT",
+    state_code: "saint_pauls_bay"
   },
   {
-    "country_code": "DZ",
-    "state_code": "sidi_bel_abbes"
+    country_code: "RO",
+    state_code: "mehedinti_county"
   },
   {
-    "country_code": "MZ",
-    "state_code": "nampula"
+    country_code: "MT",
+    state_code: "kercem"
   },
   {
-    "country_code": "RS",
-    "state_code": "central_serbia"
+    country_code: "KE",
+    state_code: "kakamega"
   },
   {
-    "country_code": "TR",
-    "state_code": "bursa"
+    country_code: "TN",
+    state_code: "tunis_governorate"
   },
   {
-    "country_code": "BZ",
-    "state_code": "cayo"
+    country_code: "VE",
+    state_code: "guarico"
   },
   {
-    "country_code": "LU",
-    "state_code": "luxembourg"
+    country_code: "SI",
+    state_code: "skofljica"
   },
   {
-    "country_code": "KE",
-    "state_code": "muranga"
+    country_code: "IT",
+    state_code: "abruzzo"
   },
   {
-    "country_code": "NP",
-    "state_code": "gandaki"
+    country_code: "KR",
+    state_code: "daegu"
   },
   {
-    "country_code": "AM",
-    "state_code": "yerevan"
+    country_code: "RO",
+    state_code: "dambovita_county"
   },
   {
-    "country_code": "JP",
-    "state_code": "ishikawa"
+    country_code: "IM",
+    state_code: "peel"
   },
   {
-    "country_code": "MX",
-    "state_code": "queretaro"
+    country_code: "ES",
+    state_code: "canary_islands"
   },
   {
-    "country_code": "UG",
-    "state_code": "yumbe"
+    country_code: "SK",
+    state_code: "trnavsky_kraj"
   },
   {
-    "country_code": "PG",
-    "state_code": "west_new_britain"
+    country_code: "EG",
+    state_code: "red_sea"
   },
   {
-    "country_code": "TW",
-    "state_code": "taoyuan"
+    country_code: "CL",
+    state_code: "maule_region"
   },
   {
-    "country_code": "UA",
-    "state_code": "kyiv_city"
+    country_code: "NG",
+    state_code: "abia"
   },
   {
-    "country_code": "IE",
-    "state_code": "louth"
+    country_code: "PH",
+    state_code: "zamboanga_del_sur"
   },
   {
-    "country_code": "BB",
-    "state_code": "saint_lucy"
+    country_code: "IT",
+    state_code: "lombardia"
   },
   {
-    "country_code": "ME",
-    "state_code": "budva"
+    country_code: "NL",
+    state_code: "fryslan"
   },
   {
-    "country_code": "CZ",
-    "state_code": "prague"
+    country_code: "PH",
+    state_code: "cagayan"
   },
   {
-    "country_code": "RO",
-    "state_code": "bucuresti"
+    country_code: "MX",
+    state_code: "coahuila_de_zaragoza"
   },
   {
-    "country_code": "MX",
-    "state_code": "jalisco"
+    country_code: "PR",
+    state_code: "san_juan"
   },
   {
-    "country_code": "DE",
-    "state_code": "hessen"
+    country_code: "DO",
+    state_code: "ozama"
   },
   {
-    "country_code": "DZ",
-    "state_code": "ghardaia"
+    country_code: "PL",
+    state_code: "małopolskie"
   },
   {
-    "country_code": "TZ",
-    "state_code": "morogoro"
+    country_code: "SC",
+    state_code: "seychelles"
   },
   {
-    "country_code": "BW",
-    "state_code": "northeast"
+    country_code: "DE",
+    state_code: "thuringen"
   },
   {
-    "country_code": "BF",
-    "state_code": "hautsbassins"
+    country_code: "VG",
+    state_code: "british_virgin_islands"
   },
   {
-    "country_code": "HK",
-    "state_code": "central_and_western"
+    country_code: "MY",
+    state_code: "sabah"
   },
   {
-    "country_code": "RW",
-    "state_code": "kigali"
+    country_code: "FR",
+    state_code: "iledefrance"
   },
   {
-    "country_code": "AT",
-    "state_code": "salzburg"
+    country_code: "ES",
+    state_code: "andalucia"
   },
   {
-    "country_code": "CO",
-    "state_code": "antioquia"
+    country_code: "BR",
+    state_code: "federal_district"
   },
   {
-    "country_code": "IT",
-    "state_code": "umbria"
+    country_code: "BZ",
+    state_code: "toledo"
   },
   {
-    "country_code": "XK",
-    "state_code": "gjilan"
+    country_code: "DM",
+    state_code: "saint_paul"
   },
   {
-    "country_code": "MX",
-    "state_code": "chihuahua"
+    country_code: "TT",
+    state_code: "penaldebe"
   },
   {
-    "country_code": "MA",
-    "state_code": "loriental"
+    country_code: "OM",
+    state_code: "muscat"
   },
   {
-    "country_code": "FR",
-    "state_code": "bourgognefranchecomte"
+    country_code: "MT",
+    state_code: "sliema"
   },
   {
-    "country_code": "ZA",
-    "state_code": "eastern_cape"
+    country_code: "RU",
+    state_code: "moscow_oblast"
   },
   {
-    "country_code": "RO",
-    "state_code": "carasseverin"
+    country_code: "NI",
+    state_code: "costa_caribe_sur"
   },
   {
-    "country_code": "ES",
-    "state_code": "catalunya"
+    country_code: "KE",
+    state_code: "nairobi_county"
   },
   {
-    "country_code": "CO",
-    "state_code": "distrito_capital_de_bogota"
+    country_code: "NG",
+    state_code: "anambra"
   },
   {
-    "country_code": "CZ",
-    "state_code": "moravskoslezsky_kraj"
+    country_code: "VE",
+    state_code: "miranda"
   },
   {
-    "country_code": "BD",
-    "state_code": "khulna_division"
+    country_code: "PH",
+    state_code: "camarines_sur"
   },
   {
-    "country_code": "BR",
-    "state_code": "bahia"
+    country_code: "JP",
+    state_code: "kanagawa"
   },
   {
-    "country_code": "QA",
-    "state_code": "ar_rayyan"
+    country_code: "NG",
+    state_code: "rivers"
   },
   {
-    "country_code": "VN",
-    "state_code": "bac_giang"
+    country_code: "PR",
+    state_code: "cabo_rojo"
   },
   {
-    "country_code": "IT",
-    "state_code": "veneto"
+    country_code: "SY",
+    state_code: "dimashq"
   },
   {
-    "country_code": "MU",
-    "state_code": "pamplemousses"
+    country_code: "RS",
+    state_code: "branicevski_okrug"
   },
   {
-    "country_code": "BY",
-    "state_code": "vitebsk"
+    country_code: "NZ",
+    state_code: "waikato"
   },
   {
-    "country_code": "SE",
-    "state_code": "norrbottens_lan"
+    country_code: "AE",
+    state_code: "emirate_of_sharjah"
   },
   {
-    "country_code": "PH",
-    "state_code": "nueva_ecija"
+    country_code: "KE",
+    state_code: "kisii_county"
   },
   {
-    "country_code": "MU",
-    "state_code": "rodrigues"
+    country_code: "NA",
+    state_code: "otjozondjupa"
   },
   {
-    "country_code": "CL",
-    "state_code": "los_rios_region"
+    country_code: "SI",
+    state_code: "urban_municipality_of_nova_gorica"
   },
   {
-    "country_code": "AL",
-    "state_code": "korce"
+    country_code: "RO",
+    state_code: "vaslui"
   },
   {
-    "country_code": "LT",
-    "state_code": "siauliu_apskritis"
+    country_code: "TR",
+    state_code: "kahramanmaras"
   },
   {
-    "country_code": "PH",
-    "state_code": "rizal"
+    country_code: "KR",
+    state_code: "gyeongsangnamdo"
   },
   {
-    "country_code": "XK",
-    "state_code": "pristina"
+    country_code: "CY",
+    state_code: "lemesos"
   },
   {
-    "country_code": "CZ",
-    "state_code": "praha"
+    country_code: "DZ",
+    state_code: "biskra"
   },
   {
-    "country_code": "IE",
-    "state_code": "donegal"
+    country_code: "PH",
+    state_code: "surigao_del_sur"
   },
   {
-    "country_code": "CD",
-    "state_code": "hautkatanga"
+    country_code: "CN",
+    state_code: "shandong"
   },
   {
-    "country_code": "TT",
-    "state_code": "san_juanlaventille"
+    country_code: "PR",
+    state_code: "caguas"
   },
   {
-    "country_code": "PT",
-    "state_code": "porto"
+    country_code: "ID",
+    state_code: "jawa_tengah"
   },
   {
-    "country_code": "AT",
-    "state_code": "styria"
+    country_code: "MA",
+    state_code: "tangertetouanal_hoceima"
   },
   {
-    "country_code": "CG",
-    "state_code": "pointenoire"
+    country_code: "US",
+    state_code: "idaho"
   },
   {
-    "country_code": "AL",
-    "state_code": "korce"
+    country_code: "BG",
+    state_code: "sliven"
   },
   {
-    "country_code": "KE",
-    "state_code": "narok"
+    country_code: "RS",
+    state_code: "kolubarski_okrug"
   },
   {
-    "country_code": "AE",
-    "state_code": "dubayy"
+    country_code: "SI",
+    state_code: "municipality_of_ribnica"
   },
   {
-    "country_code": "KE",
-    "state_code": "nyamira_county"
+    country_code: "DZ",
+    state_code: "touggourt"
   },
   {
-    "country_code": "ET",
-    "state_code": "amara"
+    country_code: "TW",
+    state_code: "taipei_city"
   },
   {
-    "country_code": "MU",
-    "state_code": "grand_port"
+    country_code: "PH",
+    state_code: "abra"
   },
   {
-    "country_code": "BT",
-    "state_code": "thimphu_dzongkhag"
+    country_code: "BR",
+    state_code: "piaui"
   },
   {
-    "country_code": "KE",
-    "state_code": "kitui"
+    country_code: "SK",
+    state_code: "kosicky_kraj"
   },
   {
-    "country_code": "PH",
-    "state_code": "northern_mindanao"
+    country_code: "BN",
+    state_code: "brunei"
   },
   {
-    "country_code": "QA",
-    "state_code": "ad_dawhah"
+    country_code: "SE",
+    state_code: "halland"
   },
   {
-    "country_code": "DZ",
-    "state_code": "bordj_bou_arreridj"
+    country_code: "MV",
+    state_code: "kaafu_atoll"
   },
   {
-    "country_code": "LT",
-    "state_code": "panevezys"
+    country_code: "ZW",
+    state_code: "mashonaland_west"
   },
   {
-    "country_code": "CY",
-    "state_code": "nicosia"
+    country_code: "PH",
+    state_code: "national_capital_region"
   },
   {
-    "country_code": "VN",
-    "state_code": "khanh_hoa"
+    country_code: "ES",
+    state_code: "la_rioja"
   },
   {
-    "country_code": "BE",
-    "state_code": "wallonne"
+    country_code: "US",
+    state_code: "hawaii"
   },
   {
-    "country_code": "PH",
-    "state_code": "surigao_del_norte"
+    country_code: "EG",
+    state_code: "beheira"
   },
   {
-    "country_code": "ES",
-    "state_code": "castille_and_leon"
+    country_code: "ZM",
+    state_code: "copperbelt"
   },
   {
-    "country_code": "MT",
-    "state_code": "attard"
+    country_code: "SI",
+    state_code: "municipality_of_piran"
   },
   {
-    "country_code": "TH",
-    "state_code": "rayong"
+    country_code: "ME",
+    state_code: "podgorica"
   },
   {
-    "country_code": "NA",
-    "state_code": "otjozondjupa_region"
+    country_code: "CH",
+    state_code: "neuchatel"
   },
   {
-    "country_code": "TR",
-    "state_code": "istanbul"
+    country_code: "PT",
+    state_code: "lisbon"
   },
   {
-    "country_code": "NA",
-    "state_code": "khomas"
+    country_code: "TT",
+    state_code: "sangre_grande"
   },
   {
-    "country_code": "KE",
-    "state_code": "bomet_county"
+    country_code: "FI",
+    state_code: "kantahame"
   },
   {
-    "country_code": "DZ",
-    "state_code": "tissemsilt"
+    country_code: "PH",
+    state_code: "tarlac"
   },
   {
-    "country_code": "DZ",
-    "state_code": "setif"
+    country_code: "XK",
+    state_code: "gjakova"
   },
   {
-    "country_code": "KE",
-    "state_code": "turkana"
+    country_code: "HR",
+    state_code: "splitdalmatia"
   },
   {
-    "country_code": "JP",
-    "state_code": "osaka"
+    country_code: "HT",
+    state_code: "ouest"
   },
   {
-    "country_code": "KN",
-    "state_code": "saint_thomas_lowland"
+    country_code: "TZ",
+    state_code: "iringa"
   },
   {
-    "country_code": "JM",
-    "state_code": "saint_ann_parish"
+    country_code: "IN",
+    state_code: "meghalaya"
   },
   {
-    "country_code": "KE",
-    "state_code": "kakamega_county"
+    country_code: "KR",
+    state_code: "incheon"
   },
   {
-    "country_code": "TT",
-    "state_code": "siparia"
+    country_code: "SI",
+    state_code: "slovenj_gradec"
   },
   {
-    "country_code": "BH",
-    "state_code": "muharraq"
+    country_code: "JM",
+    state_code: "trelawny"
   },
   {
-    "country_code": "IN",
-    "state_code": "karnataka"
+    country_code: "HR",
+    state_code: "splitdalmatia_county"
   },
   {
-    "country_code": "DO",
-    "state_code": "cibao_sur"
+    country_code: "LY",
+    state_code: "murzuq"
   },
   {
-    "country_code": "NL",
-    "state_code": "noordbrabant"
+    country_code: "TR",
+    state_code: "kocaeli"
   },
   {
-    "country_code": "US",
-    "state_code": "louisiana"
+    country_code: "PH",
+    state_code: "davao_region"
   },
   {
-    "country_code": "NL",
-    "state_code": "south_holland"
+    country_code: "ID",
+    state_code: "yogyakarta"
   },
   {
-    "country_code": "RS",
-    "state_code": "severnobacki_okrug"
+    country_code: "SY",
+    state_code: "hims"
   },
   {
-    "country_code": "BG",
-    "state_code": "lovech"
+    country_code: "PL",
+    state_code: "greater_poland"
   },
   {
-    "country_code": "TG",
-    "state_code": "kara"
+    country_code: "ET",
+    state_code: "gambela_peoples"
   },
   {
-    "country_code": "KH",
-    "state_code": "siem_reab"
+    country_code: "SE",
+    state_code: "uppsala_lan"
   },
   {
-    "country_code": "US",
-    "state_code": "alaska"
+    country_code: "DE",
+    state_code: "land_berlin"
   },
   {
-    "country_code": "BW",
-    "state_code": "kweneng_district"
+    country_code: "ID",
+    state_code: "sumatera"
   },
   {
-    "country_code": "IN",
-    "state_code": "himachal_pradesh"
+    country_code: "FR",
+    state_code: "grand_est"
   },
   {
-    "country_code": "BW",
-    "state_code": "kgatleng"
+    country_code: "IQ",
+    state_code: "sulaymaniyah_governorate"
   },
   {
-    "country_code": "VN",
-    "state_code": "hung_yen_province"
+    country_code: "US",
+    state_code: "wyoming"
   },
   {
-    "country_code": "HR",
-    "state_code": "međimurje"
+    country_code: "QA",
+    state_code: "ar_rayyan"
   },
   {
-    "country_code": "UG",
-    "state_code": "wakiso"
+    country_code: "GY",
+    state_code: "demeraramahaica_region"
   },
   {
-    "country_code": "HK",
-    "state_code": "hong_kong"
+    country_code: "FR",
+    state_code: "saintmartin"
   },
   {
-    "country_code": "JO",
-    "state_code": "amman_governorate"
+    country_code: "IT",
+    state_code: "campania"
   },
   {
-    "country_code": "SY",
-    "state_code": "aleppo"
+    country_code: "GR",
+    state_code: "crete"
   },
   {
-    "country_code": "PH",
-    "state_code": "central_luzon"
+    country_code: "NG",
+    state_code: "borno"
   },
   {
-    "country_code": "TT",
-    "state_code": "san_juanlaventille"
+    country_code: "EG",
+    state_code: "al_minufiyah"
   },
   {
-    "country_code": "SE",
-    "state_code": "vastra_gotaland"
+    country_code: "AR",
+    state_code: "chubut"
   },
   {
-    "country_code": "SE",
-    "state_code": "vastmanland"
+    country_code: "GN",
+    state_code: "conakry"
   },
   {
-    "country_code": "VE",
-    "state_code": "bolivar"
+    country_code: "DE",
+    state_code: "hamburg"
   },
   {
-    "country_code": "TO",
-    "state_code": "tongatapu"
+    country_code: "SV",
+    state_code: "la_libertad"
   },
   {
-    "country_code": "AL",
-    "state_code": "tirane"
+    country_code: "CZ",
+    state_code: "pardubicky_kraj"
   },
   {
-    "country_code": "BR",
-    "state_code": "rio_grande_do_sul"
+    country_code: "SR",
+    state_code: "nickerie_district"
   },
   {
-    "country_code": "MY",
-    "state_code": "kedah"
+    country_code: "PH",
+    state_code: "zamboanga_sibugay"
   },
   {
-    "country_code": "PR",
-    "state_code": "penuelas"
+    country_code: "IN",
+    state_code: "chandigarh"
   },
   {
-    "country_code": "GR",
-    "state_code": "epirus"
+    country_code: "DZ",
+    state_code: "skikda"
   },
   {
-    "country_code": "EG",
-    "state_code": "al_iskandariyah"
+    country_code: "PH",
+    state_code: "davao_del_sur"
   },
   {
-    "country_code": "PH",
-    "state_code": "capiz"
+    country_code: "GH",
+    state_code: "upper_west"
   },
   {
-    "country_code": "ID",
-    "state_code": "jawa"
+    country_code: "IT",
+    state_code: "sicily"
   },
   {
-    "country_code": "CD",
-    "state_code": "kinshasa"
+    country_code: "GR",
+    state_code: "attiki"
   },
   {
-    "country_code": "VN",
-    "state_code": "hanoi"
+    country_code: "PH",
+    state_code: "western_visayas"
   },
   {
-    "country_code": "DO",
-    "state_code": "santiago_province"
+    country_code: "AL",
+    state_code: "tirana"
   },
   {
-    "country_code": "MT",
-    "state_code": "birzebbuga"
+    country_code: "BG",
+    state_code: "sofiacapital"
   },
   {
-    "country_code": "PL",
-    "state_code": "łodz_voivodeship"
+    country_code: "LS",
+    state_code: "bothabothe"
   },
   {
-    "country_code": "AL",
-    "state_code": "shkoder"
+    country_code: "JP",
+    state_code: "hyogo"
   },
   {
-    "country_code": "MX",
-    "state_code": "tamaulipas"
+    country_code: "GT",
+    state_code: "guatemala"
   },
   {
-    "country_code": "RS",
-    "state_code": "raski_okrug"
+    country_code: "DZ",
+    state_code: "mostaganem"
   },
   {
-    "country_code": "OM",
-    "state_code": "al_batinah_north"
+    country_code: "JP",
+    state_code: "mie"
   },
   {
-    "country_code": "IT",
-    "state_code": "friuli_venezia_giulia"
+    country_code: "LK",
+    state_code: "southern_province"
   },
   {
-    "country_code": "HR",
-    "state_code": "splitskodalmatinska_zupanija"
+    country_code: "BR",
+    state_code: "minas_gerais"
   },
   {
-    "country_code": "GH",
-    "state_code": "greater_accra"
+    country_code: "PL",
+    state_code: "lubelskie"
   },
   {
-    "country_code": "US",
-    "state_code": "puerto_rico"
+    country_code: "PT",
+    state_code: "santarem"
   },
   {
-    "country_code": "CR",
-    "state_code": "alajuela"
+    country_code: "US",
+    state_code: "utah"
   },
   {
-    "country_code": "TT",
-    "state_code": "princes_town"
+    country_code: "MX",
+    state_code: "baja_california_sur"
   },
   {
-    "country_code": "MW",
-    "state_code": "blantyre"
+    country_code: "SO",
+    state_code: "woqooyi_galbeed"
   },
   {
-    "country_code": "AS",
-    "state_code": "eastern_district"
+    country_code: "LY",
+    state_code: "al_jafarah"
   },
   {
-    "country_code": "NG",
-    "state_code": "ogun_state"
+    country_code: "KE",
+    state_code: "tana_river"
   },
   {
-    "country_code": "RU",
-    "state_code": "stpetersburg"
+    country_code: "SC",
+    state_code: "grand_anse_praslin"
   },
   {
-    "country_code": "JM",
-    "state_code": "saint_catherine_parish"
+    country_code: "TZ",
+    state_code: "zanzibar_west"
   },
   {
-    "country_code": "ES",
-    "state_code": "valencia"
+    country_code: "PR",
+    state_code: "rio_grande"
   },
   {
-    "country_code": "VE",
-    "state_code": "barinas"
+    country_code: "VN",
+    state_code: "ho_chi_minh"
   },
   {
-    "country_code": "HN",
-    "state_code": "islas_de_la_bahia"
+    country_code: "IN",
+    state_code: "maharashtra"
   },
   {
-    "country_code": "CA",
-    "state_code": "newfoundland_and_labrador"
+    country_code: "KE",
+    state_code: "nakuru"
   },
   {
-    "country_code": "ET",
-    "state_code": "harari_people"
+    country_code: "RS",
+    state_code: "pomoravski_okrug"
   },
   {
-    "country_code": "TR",
-    "state_code": "ankara"
+    country_code: "AU",
+    state_code: "western_australia"
   },
   {
-    "country_code": "JP",
-    "state_code": "kyoto"
+    country_code: "RO",
+    state_code: "cluj"
   },
   {
-    "country_code": "GH",
-    "state_code": "ahafo"
+    country_code: "AR",
+    state_code: "buenos_aires_fd"
   },
   {
-    "country_code": "PL",
-    "state_code": "subcarpathia"
+    country_code: "CA",
+    state_code: "nunavut"
   },
   {
-    "country_code": "SC",
-    "state_code": "mont_buxton"
+    country_code: "AT",
+    state_code: "carinthia"
   },
   {
-    "country_code": "CN",
-    "state_code": "jiangsu"
+    country_code: "JP",
+    state_code: "fukuoka"
   },
   {
-    "country_code": "MY",
-    "state_code": "wilayah_persekutuan_putrajaya"
+    country_code: "MT",
+    state_code: "ghaxaq"
   },
   {
-    "country_code": "DE",
-    "state_code": "saxonyanhalt"
+    country_code: "BR",
+    state_code: "roraima"
   },
   {
-    "country_code": "PH",
-    "state_code": "quezon"
+    country_code: "TH",
+    state_code: "krung_thep_maha_nakhon"
   },
   {
-    "country_code": "LS",
-    "state_code": "maseru_district"
+    country_code: "BS",
+    state_code: "city_of_freeport"
   },
   {
-    "country_code": "CY",
-    "state_code": "pafos"
+    country_code: "NZ",
+    state_code: "waikato_region"
   },
   {
-    "country_code": "JP",
-    "state_code": "aomori"
+    country_code: "SR",
+    state_code: "paramaribo_district"
   },
   {
-    "country_code": "ZW",
-    "state_code": "harare"
+    country_code: "US",
+    state_code: "south_carolina"
   },
   {
-    "country_code": "NL",
-    "state_code": "noordholland"
+    country_code: "NO",
+    state_code: "innlandet"
   },
   {
-    "country_code": "IT",
-    "state_code": "the_marches"
+    country_code: "US",
+    state_code: "wisconsin"
   },
   {
-    "country_code": "LY",
-    "state_code": "tarabulus"
+    country_code: "MT",
+    state_code: "qormi"
   },
   {
-    "country_code": "SE",
-    "state_code": "vasterbotten"
+    country_code: "DZ",
+    state_code: "adrar"
   },
   {
-    "country_code": "DZ",
-    "state_code": "blida"
+    country_code: "ZA",
+    state_code: "western_cape"
   },
   {
-    "country_code": "BR",
-    "state_code": "para"
+    country_code: "PK",
+    state_code: "khyber_pakhtunkhwa"
   },
   {
-    "country_code": "KE",
-    "state_code": "kirinyaga_county"
+    country_code: "BR",
+    state_code: "acre"
   },
   {
-    "country_code": "OM",
-    "state_code": "zufar"
+    country_code: "IN",
+    state_code: "national_capital_territory_of_delhi"
   },
   {
-    "country_code": "PL",
-    "state_code": "west_pomerania"
+    country_code: "CA",
+    state_code: "quebec"
   },
   {
-    "country_code": "FM",
-    "state_code": "pohnpei_state"
+    country_code: "JE",
+    state_code: "st_john"
   },
   {
-    "country_code": "NO",
-    "state_code": "trøndelag"
+    country_code: "BG",
+    state_code: "gabrovo"
   },
   {
-    "country_code": "SI",
-    "state_code": "ljubljana"
+    country_code: "IN",
+    state_code: "haryana"
   },
   {
-    "country_code": "JP",
-    "state_code": "hiroshima"
+    country_code: "ID",
+    state_code: "kalimantan_barat"
   },
   {
-    "country_code": "PH",
-    "state_code": "sarangani"
+    country_code: "MK",
+    state_code: "kavadarci"
   },
   {
-    "country_code": "RU",
-    "state_code": "mordoviya_republic"
+    country_code: "NO",
+    state_code: "vestland"
   },
   {
-    "country_code": "TN",
-    "state_code": "sousse_governorate"
+    country_code: "TN",
+    state_code: "nabeul"
   },
   {
-    "country_code": "MY",
-    "state_code": "melaka"
+    country_code: "BG",
+    state_code: "silistra"
   },
   {
-    "country_code": "MM",
-    "state_code": "mandalay"
+    country_code: "NO",
+    state_code: "troondelage"
   },
   {
-    "country_code": "TZ",
-    "state_code": "mjini_magharibi"
+    country_code: "CN",
+    state_code: "zhejiang"
   },
   {
-    "country_code": "NO",
-    "state_code": "oslo_county"
+    country_code: "MK",
+    state_code: "probishtip"
   },
   {
-    "country_code": "TN",
-    "state_code": "nabeul_governorate"
+    country_code: "MY",
+    state_code: "pulau_pinang"
   },
   {
-    "country_code": "GB",
-    "state_code": "scotland"
+    country_code: "TT",
+    state_code: "couvatabaquitetalparo"
   },
   {
-    "country_code": "EC",
-    "state_code": "tungurahua_province"
+    country_code: "KE",
+    state_code: "bungoma"
   },
   {
-    "country_code": "SA",
-    "state_code": "riyadh_region"
+    country_code: "IT",
+    state_code: "roma"
   },
   {
-    "country_code": "BA",
-    "state_code": "federacija_bosne_i_hercegovine"
+    country_code: "FR",
+    state_code: "nouvellecaledonie"
   },
   {
-    "country_code": "KE",
-    "state_code": "meru_county"
+    country_code: "GR",
+    state_code: "central_macedonia"
   },
   {
-    "country_code": "TZ",
-    "state_code": "njombe"
+    country_code: "RO",
+    state_code: "bacau"
   },
   {
-    "country_code": "BW",
-    "state_code": "kweneng"
+    country_code: "NA",
+    state_code: "oshana"
   },
   {
-    "country_code": "SE",
-    "state_code": "kalmar_lan"
+    country_code: "PT",
+    state_code: "faro"
   },
   {
-    "country_code": "PL",
-    "state_code": "lesser_poland"
+    country_code: "NG",
+    state_code: "sokoto"
   },
   {
-    "country_code": "JM",
-    "state_code": "portland"
+    country_code: "SE",
+    state_code: "vastmanland_county"
   },
   {
-    "country_code": "IQ",
-    "state_code": "kirkuk"
+    country_code: "SE",
+    state_code: "sodermanland"
   },
   {
-    "country_code": "JM",
-    "state_code": "hanover"
+    country_code: "BD",
+    state_code: "barisal_division"
   },
   {
-    "country_code": "ID",
-    "state_code": "west_java"
+    country_code: "CH",
+    state_code: "baselcity"
   },
   {
-    "country_code": "IQ",
-    "state_code": "baghdad"
+    country_code: "RO",
+    state_code: "vrancea"
   },
   {
-    "country_code": "BH",
-    "state_code": "northern"
+    country_code: "MX",
+    state_code: "oaxaca"
   },
   {
-    "country_code": "MT",
-    "state_code": "mellieha"
+    country_code: "TT",
+    state_code: "mayaro"
   },
   {
-    "country_code": "AE",
-    "state_code": "ras_al_khaimah"
+    country_code: "CH",
+    state_code: "zug"
   },
   {
-    "country_code": "VC",
-    "state_code": "grenadines"
+    country_code: "US",
+    state_code: "ohio"
   },
   {
-    "country_code": "TH",
-    "state_code": "narathiwat"
+    country_code: "GY",
+    state_code: "east_berbicecorentyne"
   },
   {
-    "country_code": "RU",
-    "state_code": "tomskaya_oblast"
+    country_code: "HU",
+    state_code: "budapest"
   },
   {
-    "country_code": "OM",
-    "state_code": "masqat"
+    country_code: "NG",
+    state_code: "oyo"
   },
   {
-    "country_code": "KY",
-    "state_code": "george_town"
+    country_code: "CD",
+    state_code: "kinshasa_city"
   },
   {
-    "country_code": "IT",
-    "state_code": "apulia"
+    country_code: "TT",
+    state_code: "tunapunapiarco"
   },
   {
-    "country_code": "CA",
-    "state_code": "british_columbia"
+    country_code: "PH",
+    state_code: "samar"
   },
   {
-    "country_code": "PH",
-    "state_code": "agusan_del_sur"
+    country_code: "US",
+    state_code: "colorado"
   },
   {
-    "country_code": "IT",
-    "state_code": "trentinoalto_adige"
+    country_code: "RS",
+    state_code: "kosovskomitrovacki_okrug"
   },
   {
-    "country_code": "TH",
-    "state_code": "pathum_thani"
+    country_code: "BH",
+    state_code: "al_janubiyah"
   },
   {
-    "country_code": "RS",
-    "state_code": "belgrade"
+    country_code: "KE",
+    state_code: "taitataveta"
   },
   {
-    "country_code": "KE",
-    "state_code": "nandi"
+    country_code: "KE",
+    state_code: "lamu"
   },
   {
-    "country_code": "ET",
-    "state_code": "oromia"
+    country_code: "CL",
+    state_code: "atacama"
   },
   {
-    "country_code": "SG",
-    "state_code": "south_west"
+    country_code: "AL",
+    state_code: "fier"
   },
   {
-    "country_code": "RS",
-    "state_code": "juznobanatski_okrug"
+    country_code: "HN",
+    state_code: "cortes_department"
   },
   {
-    "country_code": "NA",
-    "state_code": "karas"
+    country_code: "AT",
+    state_code: "niederosterreich"
   },
   {
-    "country_code": "MK",
-    "state_code": "resen"
+    country_code: "SE",
+    state_code: "stockholm_county"
   },
   {
-    "country_code": "TZ",
-    "state_code": "tanga"
+    country_code: "CO",
+    state_code: "atlantico"
   },
   {
-    "country_code": "PR",
-    "state_code": "anasco"
+    country_code: "DZ",
+    state_code: "illizi"
   },
   {
-    "country_code": "DK",
-    "state_code": "sjælland"
+    country_code: "PR",
+    state_code: "guaynabo"
   },
   {
-    "country_code": "PH",
-    "state_code": "zamboanga_del_norte"
+    country_code: "NG",
+    state_code: "kaduna"
   },
   {
-    "country_code": "ID",
-    "state_code": "bali"
+    country_code: "QA",
+    state_code: "al_khawr_wa_adh_dhakhirah"
   },
   {
-    "country_code": "NG",
-    "state_code": "ekiti"
+    country_code: "GR",
+    state_code: "ionian_islands"
   },
   {
-    "country_code": "SA",
-    "state_code": "tabuk_region"
+    country_code: "LY",
+    state_code: "al_wahat"
   },
   {
-    "country_code": "AM",
-    "state_code": "erevan"
+    country_code: "MX",
+    state_code: "yucatan"
   },
   {
-    "country_code": "JM",
-    "state_code": "saint_catherine"
+    country_code: "PS",
+    state_code: "nablus"
   },
   {
-    "country_code": "SO",
-    "state_code": "banaadir"
+    country_code: "PH",
+    state_code: "benguet"
   },
   {
-    "country_code": "MX",
-    "state_code": "ciudad_de_mexico"
+    country_code: "IQ",
+    state_code: "basra"
   },
   {
-    "country_code": "MA",
-    "state_code": "marrakeshsafi"
+    country_code: "UY",
+    state_code: "montevideo_department"
   },
   {
-    "country_code": "ID",
-    "state_code": "banten"
+    country_code: "ID",
+    state_code: "nusa_tenggara_barat"
   },
   {
-    "country_code": "SA",
-    "state_code": "al_madinah_al_munawwarah"
+    country_code: "LS",
+    state_code: "leribe"
   },
   {
-    "country_code": "AG",
-    "state_code": "saint_john"
+    country_code: "PT",
+    state_code: "coimbra"
   },
   {
-    "country_code": "TZ",
-    "state_code": "arusha"
+    country_code: "TH",
+    state_code: "bangkok"
   },
   {
-    "country_code": "MA",
-    "state_code": "beni_mellalkhenifra"
+    country_code: "NR",
+    state_code: "yaren"
   },
   {
-    "country_code": "SE",
-    "state_code": "orebro_lan"
+    country_code: "BS",
+    state_code: "freeport"
   },
   {
-    "country_code": "KN",
-    "state_code": "saint_kitts"
+    country_code: "BR",
+    state_code: "piaui"
   },
   {
-    "country_code": "FK",
-    "state_code": "falkland_islands"
+    country_code: "MO",
+    state_code: "macao"
   },
   {
-    "country_code": "UA",
-    "state_code": "rivne"
+    country_code: "JM",
+    state_code: "manchester"
   },
   {
-    "country_code": "AL",
-    "state_code": "berat_county"
+    country_code: "MA",
+    state_code: "oriental"
   },
   {
-    "country_code": "GR",
-    "state_code": "north_aegean"
+    country_code: "NG",
+    state_code: "enugu_state"
   },
   {
-    "country_code": "DE",
-    "state_code": "niedersachsen"
+    country_code: "HN",
+    state_code: "francisco_morazan"
   },
   {
-    "country_code": "CO",
-    "state_code": "distrito_capital_de_bogota"
+    country_code: "SI",
+    state_code: "lendava"
   },
   {
-    "country_code": "EE",
-    "state_code": "idavirumaa"
+    country_code: "KE",
+    state_code: "uasin_gishu_county"
   },
   {
-    "country_code": "TT",
-    "state_code": "tunapunapiarco"
+    country_code: "RS",
+    state_code: "juznobacki_okrug"
   },
   {
-    "country_code": "GR",
-    "state_code": "ionia_nisia"
+    country_code: "US",
+    state_code: "iowa"
   },
   {
-    "country_code": "PH",
-    "state_code": "calabarzon"
+    country_code: "SV",
+    state_code: "san_salvador_department"
   },
   {
-    "country_code": "PR",
-    "state_code": "dorado"
+    country_code: "PG",
+    state_code: "national_capital"
   },
   {
-    "country_code": "DZ",
-    "state_code": "bouira"
+    country_code: "RO",
+    state_code: "ialomita_county"
   },
   {
-    "country_code": "AT",
-    "state_code": "niederosterreich"
+    country_code: "IT",
+    state_code: "lombardy"
   },
   {
-    "country_code": "BS",
-    "state_code": "new_providence"
+    country_code: "HK",
+    state_code: "kowloon"
   },
   {
-    "country_code": "MU",
-    "state_code": "plaines_wilhems_district"
+    country_code: "DE",
+    state_code: "nordrheinwestfalen"
   },
   {
-    "country_code": "SC",
-    "state_code": "bel_ombre"
+    country_code: "NO",
+    state_code: "viken"
   },
   {
-    "country_code": "NR",
-    "state_code": "yaren_district"
+    country_code: "FR",
+    state_code: "bretagne"
   },
   {
-    "country_code": "AL",
-    "state_code": "durres_county"
+    country_code: "SI",
+    state_code: "municipality_of_cerknica"
   },
   {
-    "country_code": "VC",
-    "state_code": "saint_patrick_parish"
+    country_code: "SI",
+    state_code: "celje"
   },
   {
-    "country_code": "CA",
-    "state_code": "saskatchewan"
+    country_code: "MK",
+    state_code: "radovish"
   },
   {
-    "country_code": "IL",
-    "state_code": "hamerkaz"
+    country_code: "MD",
+    state_code: "soroca"
   },
   {
-    "country_code": "RO",
-    "state_code": "braila_county"
+    country_code: "VU",
+    state_code: "shefa"
   },
   {
-    "country_code": "KE",
-    "state_code": "makueni_county"
+    country_code: "CL",
+    state_code: "biobio"
   },
   {
-    "country_code": "IT",
-    "state_code": "molise"
+    country_code: "PH",
+    state_code: "davao_del_norte"
   },
   {
-    "country_code": "SE",
-    "state_code": "skane_county"
+    country_code: "MD",
+    state_code: "chisinau"
   },
   {
-    "country_code": "NP",
-    "state_code": "bagmati"
+    country_code: "MX",
+    state_code: "michoacan"
   },
   {
-    "country_code": "KY",
-    "state_code": "cayman_islands"
+    country_code: "ES",
+    state_code: "illes_balears"
   },
   {
-    "country_code": "ID",
-    "state_code": "west_sumatra"
+    country_code: "MR",
+    state_code: "nouakchott_ouest"
   },
   {
-    "country_code": "TR",
-    "state_code": "bursa_province"
+    country_code: "ID",
+    state_code: "papua"
   },
   {
-    "country_code": "PR",
-    "state_code": "ponce"
+    country_code: "SO",
+    state_code: "shabeellaha_hoose"
   },
   {
-    "country_code": "EG",
-    "state_code": "gharbia"
+    country_code: "CV",
+    state_code: "praia"
   },
   {
-    "country_code": "SN",
-    "state_code": "thies"
+    country_code: "US",
+    state_code: "montana"
   },
   {
-    "country_code": "PR",
-    "state_code": "arecibo"
+    country_code: "PK",
+    state_code: "sindh"
   },
   {
-    "country_code": "KG",
-    "state_code": "bishkek"
+    country_code: "TR",
+    state_code: "aydın"
   },
   {
-    "country_code": "KE",
-    "state_code": "kericho_county"
+    country_code: "ZA",
+    state_code: "maseru"
   },
   {
-    "country_code": "GE",
-    "state_code": "samegrelo_and_zemo_svaneti"
+    country_code: "DZ",
+    state_code: "tipaza"
   },
   {
-    "country_code": "EG",
-    "state_code": "al_jizah"
+    country_code: "DE",
+    state_code: "north_rhinewestphalia"
   },
   {
-    "country_code": "TZ",
-    "state_code": "mwanza"
+    country_code: "DZ",
+    state_code: "medea"
   },
   {
-    "country_code": "MA",
-    "state_code": "fes_meknes"
+    country_code: "DZ",
+    state_code: "sidi_bel_abbes"
   },
   {
-    "country_code": "BW",
-    "state_code": "central"
+    country_code: "KR",
+    state_code: "daegugwangyeoksi"
   },
   {
-    "country_code": "HU",
-    "state_code": "tolna"
+    country_code: "AG",
+    state_code: "saint_john_parish"
   },
   {
-    "country_code": "TL",
-    "state_code": "cova_lima"
+    country_code: "DE",
+    state_code: "city_state_bremen"
   },
   {
-    "country_code": "ID",
-    "state_code": "south_sumatra"
+    country_code: "FI",
+    state_code: "ostrobothnia"
   },
   {
-    "country_code": "CA",
-    "state_code": "northwest_territories"
+    country_code: "KE",
+    state_code: "nyeri"
   },
   {
-    "country_code": "BB",
-    "state_code": "saint_george"
+    country_code: "LY",
+    state_code: "al_jufrah"
   },
   {
-    "country_code": "ZA",
-    "state_code": "north_west"
+    country_code: "JP",
+    state_code: "gunma"
   },
   {
-    "country_code": "US",
-    "state_code": "virgin_islands"
+    country_code: "TG",
+    state_code: "maritime"
   },
   {
-    "country_code": "ID",
-    "state_code": "kalimantan_selatan"
+    country_code: "RO",
+    state_code: "covasna_county"
   },
   {
-    "country_code": "SO",
-    "state_code": "nugaal"
+    country_code: "PR",
+    state_code: "san_sebastian"
   },
   {
-    "country_code": "MA",
-    "state_code": "draatafilalet"
+    country_code: "JO",
+    state_code: "az_zarqa"
   },
   {
-    "country_code": "MT",
-    "state_code": "tassliema"
+    country_code: "NA",
+    state_code: "hardap_region"
   },
   {
-    "country_code": "FR",
-    "state_code": "rhonealpes"
+    country_code: "CR",
+    state_code: "heredia_province"
   },
   {
-    "country_code": "DZ",
-    "state_code": "el_oued"
+    country_code: "NO",
+    state_code: "vestfold"
   },
   {
-    "country_code": "US",
-    "state_code": "alabama"
+    country_code: "GE",
+    state_code: "tbilisi"
   },
   {
-    "country_code": "MA",
-    "state_code": "marrakechsafi"
+    country_code: "RO",
+    state_code: "bistritanasaud"
   },
   {
-    "country_code": "SK",
-    "state_code": "trnava_region"
+    country_code: "IN",
+    state_code: "manipur"
   },
   {
-    "country_code": "MT",
-    "state_code": "fgura"
+    country_code: "MK",
+    state_code: "saraj"
   },
   {
-    "country_code": "IL",
-    "state_code": "hefa"
+    country_code: "AO",
+    state_code: "cabinda"
   },
   {
-    "country_code": "IN",
-    "state_code": "andhra_pradesh"
+    country_code: "NO",
+    state_code: "agder"
   },
   {
-    "country_code": "PR",
-    "state_code": "trujillo_alto"
+    country_code: "SE",
+    state_code: "jonkoping"
   },
   {
-    "country_code": "HR",
-    "state_code": "sibenikknin"
+    country_code: "TN",
+    state_code: "sfax_governorate"
   },
   {
-    "country_code": "LC",
-    "state_code": "dennery"
+    country_code: "MR",
+    state_code: "mauritania"
   },
   {
-    "country_code": "TH",
-    "state_code": "buriram"
+    country_code: "HN",
+    state_code: "bay_islands"
   },
   {
-    "country_code": "LT",
-    "state_code": "kauno_apskritis"
+    country_code: "IQ",
+    state_code: "heremi_kurdistan"
   },
   {
-    "country_code": "IE",
-    "state_code": "laois"
+    country_code: "PR",
+    state_code: "humacao"
   },
   {
-    "country_code": "ME",
-    "state_code": "opstina_niksic"
+    country_code: "ES",
+    state_code: "extremadura"
   },
   {
-    "country_code": "NA",
-    "state_code": "kavango_east"
+    country_code: "BM",
+    state_code: "paget"
   },
   {
-    "country_code": "IN",
-    "state_code": "rajasthan"
+    country_code: "ZA",
+    state_code: "berea"
   },
   {
-    "country_code": "KE",
-    "state_code": "migori"
+    country_code: "BH",
+    state_code: "al_asimah"
   },
   {
-    "country_code": "PH",
-    "state_code": "lanao_del_sur"
+    country_code: "GA",
+    state_code: "estuaire"
   },
   {
-    "country_code": "MT",
-    "state_code": "gharb"
+    country_code: "MY",
+    state_code: "perak"
   },
   {
-    "country_code": "AR",
-    "state_code": "ciudad_autonoma_de_buenos_aires"
+    country_code: "KE",
+    state_code: "laikipia"
   },
   {
-    "country_code": "DE",
-    "state_code": "saarland"
+    country_code: "US",
+    state_code: "connecticut"
   },
   {
-    "country_code": "AE",
-    "state_code": "abu_zaby"
+    country_code: "AF",
+    state_code: "kabul"
   },
   {
-    "country_code": "ES",
-    "state_code": "galicia"
+    country_code: "BG",
+    state_code: "ruse"
   },
   {
-    "country_code": "MT",
-    "state_code": "saint_pauls_bay"
+    country_code: "TH",
+    state_code: "samut_sakhon"
   },
   {
-    "country_code": "AR",
-    "state_code": "rio_negro"
+    country_code: "RO",
+    state_code: "satu_mare_county"
   },
   {
-    "country_code": "BB",
-    "state_code": "saint_philip"
+    country_code: "EG",
+    state_code: "al_qahirah"
   },
   {
-    "country_code": "TT",
-    "state_code": "diego_martin_regional_corporation"
+    country_code: "EG",
+    state_code: "dakahlia"
   },
   {
-    "country_code": "MN",
-    "state_code": "ulaanbaatar"
+    country_code: "SI",
+    state_code: "municipality_of_trzic"
   },
   {
-    "country_code": "DZ",
-    "state_code": "bechar"
+    country_code: "DZ",
+    state_code: "msila"
   },
   {
-    "country_code": "PL",
-    "state_code": "podkarpackie"
+    country_code: "SE",
+    state_code: "uppsala_county"
   },
   {
-    "country_code": "CH",
-    "state_code": "vaud"
+    country_code: "SR",
+    state_code: "commewijne"
   },
   {
-    "country_code": "PR",
-    "state_code": "vieques"
+    country_code: "SE",
+    state_code: "kalmar"
   },
   {
-    "country_code": "VE",
-    "state_code": "trujillo"
+    country_code: "SE",
+    state_code: "stockholms_lan"
   },
   {
-    "country_code": "NG",
-    "state_code": "kogi"
+    country_code: "LT",
+    state_code: "siauliai"
   },
   {
-    "country_code": "BW",
-    "state_code": "southern"
+    country_code: "CR",
+    state_code: "heredia"
   },
   {
-    "country_code": "RE",
-    "state_code": "reunion"
+    country_code: "BR",
+    state_code: "ceara"
   },
   {
-    "country_code": "DZ",
-    "state_code": "oran"
+    country_code: "NL",
+    state_code: "zuidholland"
   },
   {
-    "country_code": "DZ",
-    "state_code": "saida"
+    country_code: "RO",
+    state_code: "valcea"
   },
   {
-    "country_code": "DJ",
-    "state_code": "djibouti"
+    country_code: "DE",
+    state_code: "badenwurttemberg"
   },
   {
-    "country_code": "VE",
-    "state_code": "aragua"
+    country_code: "MW",
+    state_code: "southern_region"
   },
   {
-    "country_code": "IN",
-    "state_code": "kerala"
+    country_code: "HR",
+    state_code: "primorskogoranska_zupanija"
   },
   {
-    "country_code": "KE",
-    "state_code": "homa_bay"
+    country_code: "MG",
+    state_code: "antananarivo"
   },
   {
-    "country_code": "SE",
-    "state_code": "vastmanlands_lan"
+    country_code: "MX",
+    state_code: "mexico_city"
   },
   {
-    "country_code": "GU",
-    "state_code": "agat"
+    country_code: "PH",
+    state_code: "cordillera"
   },
   {
-    "country_code": "BS",
-    "state_code": "central_abaco"
+    country_code: "PH",
+    state_code: "sultan_kudarat"
   },
   {
-    "country_code": "AR",
-    "state_code": "chaco"
+    country_code: "MK",
+    state_code: "radovis"
   },
   {
-    "country_code": "TH",
-    "state_code": "kalasin"
+    country_code: "BZ",
+    state_code: "corozal_district"
   },
   {
-    "country_code": "BD",
-    "state_code": "sylhet_division"
+    country_code: "BB",
+    state_code: "saint_joseph"
   },
   {
-    "country_code": "SD",
-    "state_code": "khartoum"
+    country_code: "RS",
+    state_code: "vojvodina"
   },
   {
-    "country_code": "BE",
-    "state_code": "wallonia"
+    country_code: "CA",
+    state_code: "new_brunswick"
   },
   {
-    "country_code": "IL",
-    "state_code": "central_district"
+    country_code: "IQ",
+    state_code: "duhok"
   },
   {
-    "country_code": "PT",
-    "state_code": "viana_do_castelo"
+    country_code: "LB",
+    state_code: "beyrouth"
   },
   {
-    "country_code": "TR",
-    "state_code": "adana"
+    country_code: "MX",
+    state_code: "san_luis_potosi"
   },
   {
-    "country_code": "TR",
-    "state_code": "antalya"
+    country_code: "IE",
+    state_code: "meath"
   },
   {
-    "country_code": "NG",
-    "state_code": "kano"
+    country_code: "PH",
+    state_code: "nueva_vizcaya"
   },
   {
-    "country_code": "PL",
-    "state_code": "dolnoslaskie"
+    country_code: "HR",
+    state_code: "koprivnicakrizevci"
   },
   {
-    "country_code": "EG",
-    "state_code": "ad_daqahliyah"
+    country_code: "AU",
+    state_code: "australian_capital_territory"
   },
   {
-    "country_code": "IN",
-    "state_code": "rajasthan"
+    country_code: "TW",
+    state_code: "taipei"
   },
   {
-    "country_code": "BT",
-    "state_code": "thimphu"
+    country_code: "TZ",
+    state_code: "dar_es_salaam_region"
   },
   {
-    "country_code": "ID",
-    "state_code": "riau"
+    country_code: "ID",
+    state_code: "sulawesi_selatan"
   },
   {
-    "country_code": "PL",
-    "state_code": "wielkopolskie"
+    country_code: "PG",
+    state_code: "national_capital_district"
   },
   {
-    "country_code": "CY",
-    "state_code": "lefkosia"
+    country_code: "ES",
+    state_code: "madrid"
   },
   {
-    "country_code": "DZ",
-    "state_code": "tlemcen"
+    country_code: "PH",
+    state_code: "caraga"
   },
   {
-    "country_code": "PR",
-    "state_code": "fajardo"
+    country_code: "PL",
+    state_code: "silesia"
   },
   {
-    "country_code": "SK",
-    "state_code": "bratislavsky_kraj"
+    country_code: "CO",
+    state_code: "risaralda"
   },
   {
-    "country_code": "TR",
-    "state_code": "adiyaman"
+    country_code: "IE",
+    state_code: "connacht"
   },
   {
-    "country_code": "TT",
-    "state_code": "borough_of_arima"
+    country_code: "NG",
+    state_code: "delta"
   },
   {
-    "country_code": "SI",
-    "state_code": "urban_municipality_of_krsko"
+    country_code: "BF",
+    state_code: "kadiogo"
   },
   {
-    "country_code": "RE",
-    "state_code": "reunion"
+    country_code: "TH",
+    state_code: "chon_buri"
   },
   {
-    "country_code": "QA",
-    "state_code": "umm_salal"
+    country_code: "BE",
+    state_code: "flanders"
   },
   {
-    "country_code": "KW",
-    "state_code": "mubarak_al_kabir"
+    country_code: "US",
+    state_code: "arkansas"
   },
   {
-    "country_code": "GR",
-    "state_code": "attica"
+    country_code: "ID",
+    state_code: "west_nusa_tenggara"
   },
   {
-    "country_code": "SE",
-    "state_code": "vastra_gotaland_county"
+    country_code: "AU",
+    state_code: "tasmania"
   },
   {
-    "country_code": "CL",
-    "state_code": "libertador_general_bernardo_ohiggins"
+    country_code: "IN",
+    state_code: "jharkhand"
   },
   {
-    "country_code": "JP",
-    "state_code": "nagasaki"
+    country_code: "KE",
+    state_code: "kiambu"
   },
   {
-    "country_code": "BG",
-    "state_code": "burgas"
+    country_code: "SA",
+    state_code: "ar_riyad"
   },
   {
-    "country_code": "NZ",
-    "state_code": "taranaki"
+    country_code: "LU",
+    state_code: "eschsuralzette"
   },
   {
-    "country_code": "PT",
-    "state_code": "setubal"
+    country_code: "ST",
+    state_code: "agua_grande"
   },
   {
-    "country_code": "AR",
-    "state_code": "tucuman"
+    country_code: "SA",
+    state_code: "medina_region"
   },
   {
-    "country_code": "GE",
-    "state_code": "mtskhetamtianeti"
+    country_code: "MX",
+    state_code: "zacatecas"
   },
   {
-    "country_code": "PL",
-    "state_code": "lower_silesia"
+    country_code: "SC",
+    state_code: "english_river"
   },
   {
-    "country_code": "KE",
-    "state_code": "kericho"
+    country_code: "DZ",
+    state_code: "setif"
   },
   {
-    "country_code": "PT",
-    "state_code": "aveiro"
+    country_code: "DZ",
+    state_code: "tebessa"
   },
   {
-    "country_code": "NL",
-    "state_code": "drenthe"
+    country_code: "MA",
+    state_code: "soussmassa"
   },
   {
-    "country_code": "AO",
-    "state_code": "huila"
+    country_code: "DE",
+    state_code: "berlin"
   },
   {
-    "country_code": "TT",
-    "state_code": "sangre_grande_regional_corporation"
+    country_code: "PH",
+    state_code: "camarines_norte"
   },
   {
-    "country_code": "NI",
-    "state_code": "managua"
+    country_code: "MY",
+    state_code: "penang"
   },
   {
-    "country_code": "PL",
-    "state_code": "kujawskopomorskie"
+    country_code: "VN",
+    state_code: "đong_thap"
   },
   {
-    "country_code": "GH",
-    "state_code": "greater_accra_region"
+    country_code: "SE",
+    state_code: "varmland"
   },
   {
-    "country_code": "QA",
-    "state_code": "baladiyat_ad_dawhah"
+    country_code: "SE",
+    state_code: "uppsala"
   },
   {
-    "country_code": "MK",
-    "state_code": "sveti_nikole"
+    country_code: "NO",
+    state_code: "østfold"
   },
   {
-    "country_code": "NZ",
-    "state_code": "manawatuwhanganui"
+    country_code: "RS",
+    state_code: "nisavski_okrug"
   },
   {
-    "country_code": "MT",
-    "state_code": "valletta"
+    country_code: "MK",
+    state_code: "debar"
   },
   {
-    "country_code": "ME",
-    "state_code": "berane"
+    country_code: "JM",
+    state_code: "saint_thomas_parish"
   },
   {
-    "country_code": "SE",
-    "state_code": "sodermanlands_lan"
+    country_code: "NZ",
+    state_code: "wellington_region"
   },
   {
-    "country_code": "EC",
-    "state_code": "pichincha"
+    country_code: "HR",
+    state_code: "koprivnickokrizevacka_zupanija"
   },
   {
-    "country_code": "ES",
-    "state_code": "castillala_mancha"
+    country_code: "AI",
+    state_code: "anguilla"
   },
   {
-    "country_code": "MX",
-    "state_code": "colima"
+    country_code: "SE",
+    state_code: "ostergotlands_lan"
   },
   {
-    "country_code": "VN",
-    "state_code": "quang_ninh"
+    country_code: "ID",
+    state_code: "kalimantan_timur"
   },
   {
-    "country_code": "TH",
-    "state_code": "phra_nakhon_si_ayutthaya"
+    country_code: "TR",
+    state_code: "kars"
   },
   {
-    "country_code": "US",
-    "state_code": "texas"
+    country_code: "FM",
+    state_code: "pohnpei"
   },
   {
-    "country_code": "PR",
-    "state_code": "carolina"
+    country_code: "MK",
+    state_code: "kumanovo"
   },
   {
-    "country_code": "PH",
-    "state_code": "misamis_oriental"
+    country_code: "DE",
+    state_code: "brandenburg"
   },
   {
-    "country_code": "JP",
-    "state_code": "ibaraki"
+    country_code: "MM",
+    state_code: "nay_pyi_taw"
   },
   {
-    "country_code": "IT",
-    "state_code": "sardegna"
+    country_code: "DO",
+    state_code: "nacional"
   },
   {
-    "country_code": "BR",
-    "state_code": "ceara"
+    country_code: "IE",
+    state_code: "mayo"
   },
   {
-    "country_code": "IE",
-    "state_code": "offaly"
+    country_code: "ES",
+    state_code: "valenciana_comunidad"
   },
   {
-    "country_code": "AE",
-    "state_code": "dubai"
+    country_code: "AR",
+    state_code: "entre_rios"
   },
   {
-    "country_code": "HK",
-    "state_code": "yuen_long"
+    country_code: "HR",
+    state_code: "zadar"
   },
   {
-    "country_code": "PT",
-    "state_code": "vila_real"
+    country_code: "HU",
+    state_code: "fejer"
   },
   {
-    "country_code": "VE",
-    "state_code": "carabobo"
+    country_code: "BG",
+    state_code: "plovdiv"
   },
   {
-    "country_code": "IL",
-    "state_code": "jerusalem"
+    country_code: "MT",
+    state_code: "ħazzabbar"
   },
   {
-    "country_code": "PH",
-    "state_code": "cagayan_valley"
+    country_code: "RO",
+    state_code: "olt"
   },
   {
-    "country_code": "ME",
-    "state_code": "ulcinj"
+    country_code: "JM",
+    state_code: "saint_elizabeth"
   },
   {
-    "country_code": "BS",
-    "state_code": "new_providence_district"
+    country_code: "RO",
+    state_code: "sibiu_county"
   },
   {
-    "country_code": "GY",
-    "state_code": "mahaicaberbice"
+    country_code: "ID",
+    state_code: "jawa_barat"
   },
   {
-    "country_code": "PH",
-    "state_code": "soccsksargen"
+    country_code: "NZ",
+    state_code: "nelson_region"
   },
   {
-    "country_code": "BZ",
-    "state_code": "orange_walk_district"
+    country_code: "PH",
+    state_code: "biliran"
   },
   {
-    "country_code": "MF",
-    "state_code": "saint_martin_french_part"
+    country_code: "HU",
+    state_code: "csongrad"
   },
   {
-    "country_code": "UG",
-    "state_code": "soroti"
+    country_code: "PR",
+    state_code: "santa_isabel"
   },
   {
-    "country_code": "AU",
-    "state_code": "south_australia"
+    country_code: "NG",
+    state_code: "oyo_state"
   },
   {
-    "country_code": "ID",
-    "state_code": "north_sulawesi"
+    country_code: "IQ",
+    state_code: "sulaymaniyah"
   },
   {
-    "country_code": "PT",
-    "state_code": "viseu"
+    country_code: "NG",
+    state_code: "adamawa"
   },
   {
-    "country_code": "AT",
-    "state_code": "oberosterreich"
+    country_code: "SI",
+    state_code: "municipality_of_zalec"
   },
   {
-    "country_code": "RS",
-    "state_code": "nisava"
+    country_code: "RO",
+    state_code: "cluj_county"
   },
   {
-    "country_code": "BO",
-    "state_code": "cochabamba"
+    country_code: "HR",
+    state_code: "zagreb"
   },
   {
-    "country_code": "PL",
-    "state_code": "slaskie"
+    country_code: "ID",
+    state_code: "sulawesi_utara"
   },
   {
-    "country_code": "IN",
-    "state_code": "west_bengal"
+    country_code: "IN",
+    state_code: "odisha"
   },
   {
-    "country_code": "RU",
-    "state_code": "samara_oblast"
+    country_code: "ID",
+    state_code: "south_sulawesi"
   },
   {
-    "country_code": "CH",
-    "state_code": "basellandschaft"
+    country_code: "SE",
+    state_code: "varmlands_lan"
   },
   {
-    "country_code": "MT",
-    "state_code": "msida"
+    country_code: "JP",
+    state_code: "miyagi"
   },
   {
-    "country_code": "KR",
-    "state_code": "busangwangyeoksi"
+    country_code: "AR",
+    state_code: "cordoba"
   },
   {
-    "country_code": "AL",
-    "state_code": "shkoder"
+    country_code: "QA",
+    state_code: "ad_dawhah"
   },
   {
-    "country_code": "MX",
-    "state_code": "chiapas"
+    country_code: "DE",
+    state_code: "schleswigholstein"
   },
   {
-    "country_code": "NG",
-    "state_code": "abia_state"
+    country_code: "MV",
+    state_code: "haa_alifu_atholhu"
   },
   {
-    "country_code": "US",
-    "state_code": "delaware"
+    country_code: "MF",
+    state_code: "saint_martin"
   },
   {
-    "country_code": "IS",
-    "state_code": "southern_peninsula"
+    country_code: "KE",
+    state_code: "vihiga"
   },
   {
-    "country_code": "SE",
-    "state_code": "vasternorrland"
+    country_code: "VE",
+    state_code: "merida"
   },
   {
-    "country_code": "OM",
-    "state_code": "ad_dakhiliyah"
+    country_code: "MA",
+    state_code: "tangertetouanal_hoceima"
   },
   {
-    "country_code": "BZ",
-    "state_code": "toledo_district"
+    country_code: "PH",
+    state_code: "bukidnon"
   },
   {
-    "country_code": "FR",
-    "state_code": "normandie"
+    country_code: "MV",
+    state_code: "male"
   },
   {
-    "country_code": "TH",
-    "state_code": "prachuap_khiri_khan"
+    country_code: "US",
+    state_code: "new_york"
   },
   {
-    "country_code": "PH",
-    "state_code": "bataan"
+    country_code: "TH",
+    state_code: "phetchaburi"
   },
   {
-    "country_code": "TZ",
-    "state_code": "zanzibar_urbanwest"
+    country_code: "BD",
+    state_code: "bagerhat"
   },
   {
-    "country_code": "NL",
-    "state_code": "groningen"
+    country_code: "NL",
+    state_code: "overijssel"
   },
   {
-    "country_code": "ES",
-    "state_code": "asturias"
+    country_code: "AT",
+    state_code: "tirol"
   },
   {
-    "country_code": "IN",
-    "state_code": "bihar"
+    country_code: "IE",
+    state_code: "westmeath"
   },
   {
-    "country_code": "CN",
-    "state_code": "liaoning"
+    country_code: "AR",
+    state_code: "salta"
   },
   {
-    "country_code": "AD",
-    "state_code": "andorra_la_vella"
+    country_code: "AZ",
+    state_code: "baki"
   },
   {
-    "country_code": "PL",
-    "state_code": "warminskomazurskie"
+    country_code: "ZA",
+    state_code: "free_state"
   },
   {
-    "country_code": "JO",
-    "state_code": "al_asimah"
+    country_code: "IN",
+    state_code: "nagaland"
   },
   {
-    "country_code": "US",
-    "state_code": "south_dakota"
+    country_code: "IN",
+    state_code: "chandigarh"
   },
   {
-    "country_code": "RO",
-    "state_code": "mures_county"
+    country_code: "PR",
+    state_code: "cayey"
   },
   {
-    "country_code": "CZ",
-    "state_code": "jihomoravsky_kraj"
+    country_code: "SG",
+    state_code: "south_east"
   },
   {
-    "country_code": "PH",
-    "state_code": "northern_samar"
+    country_code: "DO",
+    state_code: "duarte_province"
   },
   {
-    "country_code": "IE",
-    "state_code": "munster"
+    country_code: "LY",
+    state_code: "sabha"
   },
   {
-    "country_code": "KE",
-    "state_code": "meru"
+    country_code: "JP",
+    state_code: "yamanashi"
   },
   {
-    "country_code": "CR",
-    "state_code": "guanacaste_province"
+    country_code: "JP",
+    state_code: "miyazaki"
   },
   {
-    "country_code": "BR",
-    "state_code": "parana"
+    country_code: "ES",
+    state_code: "andalusia"
   },
   {
-    "country_code": "SS",
-    "state_code": "central_equatoria"
+    country_code: "MK",
+    state_code: "valandovo"
   },
   {
-    "country_code": "AT",
-    "state_code": "wien"
+    country_code: "NL",
+    state_code: "north_brabant"
   },
   {
-    "country_code": "JO",
-    "state_code": "balqa"
+    country_code: "HN",
+    state_code: "islas_de_la_bahia"
   },
   {
-    "country_code": "KE",
-    "state_code": "tharaka_nithi"
+    country_code: "MX",
+    state_code: "durango"
   },
   {
-    "country_code": "HT",
-    "state_code": "lwes"
+    country_code: "IT",
+    state_code: "toscana"
   },
   {
-    "country_code": "UG",
-    "state_code": "kibaale"
+    country_code: "ET",
+    state_code: "tigray"
   },
   {
-    "country_code": "QA",
-    "state_code": "al_wakrah"
+    country_code: "JM",
+    state_code: "saint_ann"
   },
   {
-    "country_code": "UG",
-    "state_code": "gomba"
+    country_code: "AT",
+    state_code: "vienna"
   },
   {
-    "country_code": "HU",
-    "state_code": "pest_county"
+    country_code: "ID",
+    state_code: "sulawesi"
   },
   {
-    "country_code": "SA",
-    "state_code": "ash_sharqiyah"
+    country_code: "DZ",
+    state_code: "ouargla"
   },
   {
-    "country_code": "PR",
-    "state_code": "toa_baja"
+    country_code: "NA",
+    state_code: "erongo"
   },
   {
-    "country_code": "RO",
-    "state_code": "brasov"
+    country_code: "IQ",
+    state_code: "muhafazat_babil"
   },
   {
-    "country_code": "UG",
-    "state_code": "central_region"
+    country_code: "LC",
+    state_code: "choiseul"
   },
   {
-    "country_code": "CZ",
-    "state_code": "ustecky_kraj"
+    country_code: "EC",
+    state_code: "el_oro"
   },
   {
-    "country_code": "SK",
-    "state_code": "kosice_region"
+    country_code: "MX",
+    state_code: "queretaro"
   },
   {
-    "country_code": "PL",
-    "state_code": "podlaskie"
+    country_code: "IL",
+    state_code: "tall_abib"
   },
   {
-    "country_code": "JO",
-    "state_code": "amman"
+    country_code: "FR",
+    state_code: "provencealpescotedazur"
   },
   {
-    "country_code": "MT",
-    "state_code": "luqa"
+    country_code: "TZ",
+    state_code: "singida"
   },
   {
-    "country_code": "DK",
-    "state_code": "central_jutland"
+    country_code: "NG",
+    state_code: "jigawa"
   },
   {
-    "country_code": "XK",
-    "state_code": "prizren"
+    country_code: "IN",
+    state_code: "madhya_pradesh"
   },
   {
-    "country_code": "MY",
-    "state_code": "labuan"
+    country_code: "US",
+    state_code: "arizona"
   },
   {
-    "country_code": "CA",
-    "state_code": "alberta"
+    country_code: "ES",
+    state_code: "catalonia"
   },
   {
-    "country_code": "KE",
-    "state_code": "kisumu_county"
+    country_code: "RS",
+    state_code: "jablanicki_okrug"
   },
   {
-    "country_code": "UG",
-    "state_code": "mbale"
+    country_code: "HK",
+    state_code: "central_and_western_district"
   },
   {
-    "country_code": "BW",
-    "state_code": "city_of_francistown"
+    country_code: "BR",
+    state_code: "paraiba"
   },
   {
-    "country_code": "BA",
-    "state_code": "republika_srpska"
+    country_code: "GR",
+    state_code: "west_greece"
   },
   {
-    "country_code": "KR",
-    "state_code": "north_chungcheong"
+    country_code: "IN",
+    state_code: "meghalaya"
   },
   {
-    "country_code": "NZ",
-    "state_code": "southland"
+    country_code: "DO",
+    state_code: "san_cristobal"
   },
   {
-    "country_code": "NO",
-    "state_code": "oslo"
+    country_code: "VN",
+    state_code: "vinh_phuc"
   },
   {
-    "country_code": "UZ",
-    "state_code": "tashkent"
+    country_code: "LB",
+    state_code: "libannord"
   },
   {
-    "country_code": "JP",
-    "state_code": "tokyo"
+    country_code: "EG",
+    state_code: "al_uqsur"
   },
   {
-    "country_code": "MK",
-    "state_code": "strumica"
+    country_code: "AR",
+    state_code: "mendoza"
   },
   {
-    "country_code": "ET",
-    "state_code": "oromiya"
+    country_code: "SR",
+    state_code: "wanica_district"
   },
   {
-    "country_code": "GR",
-    "state_code": "thessaly"
+    country_code: "PL",
+    state_code: "pomorskie"
   },
   {
-    "country_code": "UA",
-    "state_code": "kyiv"
+    country_code: "HR",
+    state_code: "osjeckobaranjska_zupanija"
   },
   {
-    "country_code": "KE",
-    "state_code": "garissa_county"
+    country_code: "EG",
+    state_code: "qena"
   },
   {
-    "country_code": "JP",
-    "state_code": "hyogo"
+    country_code: "BQ",
+    state_code: "bonaire"
   },
   {
-    "country_code": "TN",
-    "state_code": "manouba"
+    country_code: "GR",
+    state_code: "south_aegean"
   },
   {
-    "country_code": "IT",
-    "state_code": "lazio"
+    country_code: "PE",
+    state_code: "lima_province"
   },
   {
-    "country_code": "CI",
-    "state_code": "abidjan"
+    country_code: "TZ",
+    state_code: "manyara"
   },
   {
-    "country_code": "HR",
-    "state_code": "city_of_zagreb"
+    country_code: "EC",
+    state_code: "azuay"
   },
   {
-    "country_code": "IL",
-    "state_code": "northern_district"
+    country_code: "IT",
+    state_code: "piemonte"
   },
   {
-    "country_code": "CR",
-    "state_code": "cartago_province"
+    country_code: "TH",
+    state_code: "khon_kaen"
   },
   {
-    "country_code": "US",
-    "state_code": "nebraska"
+    country_code: "ES",
+    state_code: "basque_country"
   },
   {
-    "country_code": "TN",
-    "state_code": "bizerte_governorate"
+    country_code: "CL",
+    state_code: "santiago_metropolitan"
   },
   {
-    "country_code": "RO",
-    "state_code": "satu_mare"
+    country_code: "US",
+    state_code: "florida"
   },
   {
-    "country_code": "CY",
-    "state_code": "larnaka"
+    country_code: "PL",
+    state_code: "swietokrzyskie"
   },
   {
-    "country_code": "VI",
-    "state_code": "virgin_islands_us"
+    country_code: "TT",
+    state_code: "san_fernando"
   },
   {
-    "country_code": "SE",
-    "state_code": "vasterbottens_lan"
+    country_code: "NG",
+    state_code: "osun_state"
   },
   {
-    "country_code": "SA",
-    "state_code": "asir"
+    country_code: "MA",
+    state_code: "casablancasettat"
   },
   {
-    "country_code": "US",
-    "state_code": "maine"
+    country_code: "SE",
+    state_code: "vastra_gotalands_lan"
   },
   {
-    "country_code": "CZ",
-    "state_code": "central_bohemia"
+    country_code: "PR",
+    state_code: "rincon"
   },
   {
-    "country_code": "AR",
-    "state_code": "misiones"
+    country_code: "RW",
+    state_code: "nord"
   },
   {
-    "country_code": "MX",
-    "state_code": "nuevo_leon"
+    country_code: "IQ",
+    state_code: "babil"
   },
   {
-    "country_code": "RS",
-    "state_code": "borski_okrug"
+    country_code: "RO",
+    state_code: "constanta_county"
   },
   {
-    "country_code": "ID",
-    "state_code": "jambi"
+    country_code: "ID",
+    state_code: "nusa_tenggara_timur"
   },
   {
-    "country_code": "PT",
-    "state_code": "regiao_autonoma_dos_acores"
+    country_code: "CU",
+    state_code: "artemisa"
   },
   {
-    "country_code": "SE",
-    "state_code": "stockholm"
+    country_code: "CH",
+    state_code: "graubunden"
   },
   {
-    "country_code": "BG",
-    "state_code": "haskovo"
+    country_code: "IE",
+    state_code: "kildare"
   },
   {
-    "country_code": "IE",
-    "state_code": "cavan"
+    country_code: "JP",
+    state_code: "yamaguchi"
   },
   {
-    "country_code": "IT",
-    "state_code": "sicilia"
+    country_code: "SZ",
+    state_code: "hhohho"
   },
   {
-    "country_code": "RS",
-    "state_code": "nisavski_okrug"
+    country_code: "EE",
+    state_code: "saare"
   },
   {
-    "country_code": "NO",
-    "state_code": "nordland"
+    country_code: "RO",
+    state_code: "mures"
   },
   {
-    "country_code": "JO",
-    "state_code": "al_aqabah"
+    country_code: "ID",
+    state_code: "west_kalimantan"
   },
   {
-    "country_code": "OM",
-    "state_code": "masqat"
+    country_code: "SC",
+    state_code: "glacis"
   },
   {
-    "country_code": "IN",
-    "state_code": "nagaland"
+    country_code: "TN",
+    state_code: "sousse"
   },
   {
-    "country_code": "AR",
-    "state_code": "neuquen"
+    country_code: "NO",
+    state_code: "troms"
   },
   {
-    "country_code": "JM",
-    "state_code": "saint_james_parish"
+    country_code: "PR",
+    state_code: "vega_alta"
   },
   {
-    "country_code": "BZ",
-    "state_code": "cayo_district"
+    country_code: "VN",
+    state_code: "hai_phong"
   },
   {
-    "country_code": "PH",
-    "state_code": "sulu"
+    country_code: "MU",
+    state_code: "port_louis"
   },
   {
-    "country_code": "EE",
-    "state_code": "tartumaa"
+    country_code: "VN",
+    state_code: "gia_lai"
   },
   {
-    "country_code": "SI",
-    "state_code": "murska_sobota"
+    country_code: "HR",
+    state_code: "varazdinska_zupanija"
   },
   {
-    "country_code": "MX",
-    "state_code": "aguascalientes"
+    country_code: "US",
+    state_code: "north_carolina"
   },
   {
-    "country_code": "HR",
-    "state_code": "grad_zagreb"
+    country_code: "KE",
+    state_code: "muranga"
   },
   {
-    "country_code": "PL",
-    "state_code": "zachodniopomorskie"
+    country_code: "RS",
+    state_code: "zlatiborski_okrug"
   },
   {
-    "country_code": "AL",
-    "state_code": "elbasan_county"
+    country_code: "SI",
+    state_code: "municipality_of_racefram"
   },
   {
-    "country_code": "LA",
-    "state_code": "vientiane_prefecture"
+    country_code: "BD",
+    state_code: "rangpur_division"
   },
   {
-    "country_code": "SC",
-    "state_code": "mont_fleuri"
+    country_code: "CO",
+    state_code: "cordoba"
   },
   {
-    "country_code": "KR",
-    "state_code": "seoul"
+    country_code: "RS",
+    state_code: "pcinjski_okrug"
   },
   {
-    "country_code": "BG",
-    "state_code": "stara_zagora"
+    country_code: "NA",
+    state_code: "erongo_region"
   },
   {
-    "country_code": "KH",
-    "state_code": "kandaal"
+    country_code: "BE",
+    state_code: "westvlaanderen"
   },
   {
-    "country_code": "PH",
-    "state_code": "cordillera_administrative_region"
+    country_code: "KE",
+    state_code: "kiambu_county"
   },
   {
-    "country_code": "MA",
-    "state_code": "rabatsalekenitra"
+    country_code: "EG",
+    state_code: "al_ismailiyah"
   },
   {
-    "country_code": "NA",
-    "state_code": "karas_region"
+    country_code: "US",
+    state_code: "kansas"
   },
   {
-    "country_code": "BR",
-    "state_code": "mato_grosso"
+    country_code: "TR",
+    state_code: "samsun"
   },
   {
-    "country_code": "NZ",
-    "state_code": "auckland"
+    country_code: "KW",
+    state_code: "al_farwaniyah"
   },
   {
-    "country_code": "CH",
-    "state_code": "geneva"
+    country_code: "SI",
+    state_code: "radovljica"
   },
   {
-    "country_code": "PH",
-    "state_code": "aklan"
+    country_code: "VN",
+    state_code: "an_giang"
   },
   {
-    "country_code": "AT",
-    "state_code": "burgenland"
+    country_code: "BZ",
+    state_code: "stann_creek_district"
   },
   {
-    "country_code": "GR",
-    "state_code": "west_macedonia"
+    country_code: "FR",
+    state_code: "hautsdefrance"
   },
   {
-    "country_code": "QA",
-    "state_code": "ash_shamal"
+    country_code: "FR",
+    state_code: "guyane"
   },
   {
-    "country_code": "EG",
-    "state_code": "al_bahr_al_ahmar"
+    country_code: "NP",
+    state_code: "gandaki_pradesh"
   },
   {
-    "country_code": "UG",
-    "state_code": "butaleja"
+    country_code: "KE",
+    state_code: "machakos"
   },
   {
-    "country_code": "PT",
-    "state_code": "evora"
+    country_code: "MU",
+    state_code: "moka"
   },
   {
-    "country_code": "JO",
-    "state_code": "zarqa"
+    country_code: "AT",
+    state_code: "tyrol"
   },
   {
-    "country_code": "YE",
-    "state_code": "aden"
+    country_code: "KE",
+    state_code: "kajiado_county"
   },
   {
-    "country_code": "PR",
-    "state_code": "aguadilla"
+    country_code: "NG",
+    state_code: "imo"
   },
   {
-    "country_code": "DE",
-    "state_code": "thuringen"
+    country_code: "AL",
+    state_code: "korce_county"
   },
   {
-    "country_code": "FR",
-    "state_code": "paysdelaloire"
+    country_code: "JP",
+    state_code: "nagano"
   },
   {
-    "country_code": "CN",
-    "state_code": "sichuan"
+    country_code: "SI",
+    state_code: "urban_municipality_of_celje"
   },
   {
-    "country_code": "RU",
-    "state_code": "moscow"
+    country_code: "KN",
+    state_code: "saint_james_windward"
   },
   {
-    "country_code": "BQ",
-    "state_code": "saba"
+    country_code: "AR",
+    state_code: "jujuy"
   },
   {
-    "country_code": "BG",
-    "state_code": "vratsa"
+    country_code: "GQ",
+    state_code: "bioko_norte"
   },
   {
-    "country_code": "IE",
-    "state_code": "kilkenny"
+    country_code: "AU",
+    state_code: "queensland"
   },
   {
-    "country_code": "CN",
-    "state_code": "hebei"
+    country_code: "PG",
+    state_code: "morobe"
   },
   {
-    "country_code": "LK",
-    "state_code": "western_province"
+    country_code: "HN",
+    state_code: "francisco_morazan"
   },
   {
-    "country_code": "ES",
-    "state_code": "andalucia"
+    country_code: "ID",
+    state_code: "nusa_tenggara"
   },
   {
-    "country_code": "BD",
-    "state_code": "rajshahi_division"
+    country_code: "TR",
+    state_code: "gaziantep"
   },
   {
-    "country_code": "ID",
-    "state_code": "maluku"
+    country_code: "LC",
+    state_code: "castries"
   },
   {
-    "country_code": "PH",
-    "state_code": "batanes"
+    country_code: "US",
+    state_code: "massachusetts"
   },
   {
-    "country_code": "PA",
-    "state_code": "provincia_de_panama"
+    country_code: "ES",
+    state_code: "aragon"
   },
   {
-    "country_code": "KE",
-    "state_code": "nairobi_city"
+    country_code: "PH",
+    state_code: "sorsogon"
   },
   {
-    "country_code": "NA",
-    "state_code": "oshikoto"
+    country_code: "GR",
+    state_code: "peloponnisos"
   },
   {
-    "country_code": "IE",
-    "state_code": "tipperary"
+    country_code: "ZW",
+    state_code: "bulawayo"
   },
   {
-    "country_code": "CA",
-    "state_code": "prince_edward_island"
+    country_code: "MK",
+    state_code: "kriva_palanka"
   },
   {
-    "country_code": "AE",
-    "state_code": "emirate_of_ras_al_khaimah"
+    country_code: "RO",
+    state_code: "carasseverin_county"
   },
   {
-    "country_code": "BR",
-    "state_code": "goias"
+    country_code: "SI",
+    state_code: "municipality_of_domzale"
   },
   {
-    "country_code": "PH",
-    "state_code": "davao_occidental"
+    country_code: "MU",
+    state_code: "flacq"
   },
   {
-    "country_code": "ID",
-    "state_code": "east_nusa_tenggara"
+    country_code: "SK",
+    state_code: "zilinsky_kraj"
   },
   {
-    "country_code": "BE",
-    "state_code": "antwerpen"
+    country_code: "MM",
+    state_code: "yangon"
   },
   {
-    "country_code": "PL",
-    "state_code": "podlasie"
+    country_code: "AE",
+    state_code: "abu_zaby"
   },
   {
-    "country_code": "KE",
-    "state_code": "kisii"
+    country_code: "BG",
+    state_code: "varna"
   },
   {
-    "country_code": "BE",
-    "state_code": "vlaams_gewest"
+    country_code: "PL",
+    state_code: "mazovia"
   },
   {
-    "country_code": "PR",
-    "state_code": "san_german"
+    country_code: "NZ",
+    state_code: "canterbury"
   },
   {
-    "country_code": "NL",
-    "state_code": "zeeland"
+    country_code: "KW",
+    state_code: "hawalli"
   },
   {
-    "country_code": "NL",
-    "state_code": "aruba"
+    country_code: "US",
+    state_code: "vermont"
   },
   {
-    "country_code": "RO",
-    "state_code": "buzau_county"
+    country_code: "SI",
+    state_code: "municipality_of_straza"
   },
   {
-    "country_code": "PE",
-    "state_code": "lima_region"
+    country_code: "DZ",
+    state_code: "chlef"
   },
   {
-    "country_code": "EG",
-    "state_code": "al_iskandariyah"
+    country_code: "ET",
+    state_code: "amhara"
   },
   {
-    "country_code": "SI",
-    "state_code": "zalec"
+    country_code: "ET",
+    state_code: "addis_ababa"
   },
   {
-    "country_code": "DZ",
-    "state_code": "bordj_bou_arreridj"
+    country_code: "SZ",
+    state_code: "shiselweni"
   },
   {
-    "country_code": "TT",
-    "state_code": "siparia_regional_corporation"
+    country_code: "FI",
+    state_code: "north_savo"
   },
   {
-    "country_code": "MK",
-    "state_code": "ohrid"
+    country_code: "US",
+    state_code: "north_dakota"
   },
   {
-    "country_code": "IE",
-    "state_code": "galway"
+    country_code: "NL",
+    state_code: "friesland"
   },
   {
-    "country_code": "LB",
-    "state_code": "south_governorate"
+    country_code: "NG",
+    state_code: "akwa_ibom_state"
   },
   {
-    "country_code": "MC",
-    "state_code": "municipality_of_monaco"
+    country_code: "MU",
+    state_code: "plaines_wilhems"
   },
   {
-    "country_code": "GR",
-    "state_code": "east_macedonia_and_thrace"
+    country_code: "TH",
+    state_code: "surat_thani"
   },
   {
-    "country_code": "TR",
-    "state_code": "sakarya"
+    country_code: "US",
+    state_code: "missouri"
   },
   {
-    "country_code": "NG",
-    "state_code": "kwara_state"
+    country_code: "TZ",
+    state_code: "geita"
   },
   {
-    "country_code": "PT",
-    "state_code": "leiria"
+    country_code: "SI",
+    state_code: "pesnica"
   },
   {
-    "country_code": "ZA",
-    "state_code": "limpopo"
+    country_code: "MX",
+    state_code: "tabasco"
   },
   {
-    "country_code": "US",
-    "state_code": "georgia"
+    country_code: "ID",
+    state_code: "north_sumatra"
   },
   {
-    "country_code": "BE",
-    "state_code": "limburg"
+    country_code: "VE",
+    state_code: "distrito_capital"
   },
   {
-    "country_code": "PL",
-    "state_code": "opole_voivodeship"
+    country_code: "KW",
+    state_code: "al_jahra"
   },
   {
-    "country_code": "DZ",
-    "state_code": "alger"
+    country_code: "VN",
+    state_code: "đa_nang"
   },
   {
-    "country_code": "UG",
-    "state_code": "kanungu"
+    country_code: "PR",
+    state_code: "coamo"
   },
   {
-    "country_code": "BW",
-    "state_code": "gaborone"
+    country_code: "SE",
+    state_code: "hallands_lan"
   },
   {
-    "country_code": "GY",
-    "state_code": "essequibo_islandswest_demerara"
+    country_code: "HR",
+    state_code: "virovitickopodravska_zupanija"
   },
   {
-    "country_code": "BH",
-    "state_code": "manama"
+    country_code: "LS",
+    state_code: "qachas_nek"
   },
   {
-    "country_code": "TN",
-    "state_code": "tunis"
+    country_code: "LI",
+    state_code: "triesenberg"
   },
   {
-    "country_code": "TZ",
-    "state_code": "tabora"
+    country_code: "LT",
+    state_code: "vilniaus_apskritis"
   },
   {
-    "country_code": "CN",
-    "state_code": "guangdong"
+    country_code: "VN",
+    state_code: "ca_mau"
   },
   {
-    "country_code": "NL",
-    "state_code": "curacao"
+    country_code: "KE",
+    state_code: "kisumu"
   },
   {
-    "country_code": "US",
-    "state_code": "illinois"
+    country_code: "BS",
+    state_code: "san_salvador"
   },
   {
-    "country_code": "TH",
-    "state_code": "sakon_nakhon"
+    country_code: "ES",
+    state_code: "euskal_herria"
   },
   {
-    "country_code": "NL",
-    "state_code": "flevoland"
+    country_code: "ID",
+    state_code: "lampung"
   },
   {
-    "country_code": "ZA",
-    "state_code": "northwest"
+    country_code: "NP",
+    state_code: "madhesh"
   },
   {
-    "country_code": "NO",
-    "state_code": "møre_og_romsdal"
+    country_code: "BY",
+    state_code: "gomelskaya_oblast"
   },
   {
-    "country_code": "ID",
-    "state_code": "east_java"
+    country_code: "JM",
+    state_code: "saint_mary"
   },
   {
-    "country_code": "MA",
-    "state_code": "guelmimoued_noun_ehpartial"
+    country_code: "SE",
+    state_code: "dalarna"
   },
   {
-    "country_code": "FR",
-    "state_code": "pays_de_la_loire"
+    country_code: "ET",
+    state_code: "somali"
   },
   {
-    "country_code": "SI",
-    "state_code": "trebnje"
+    country_code: "MT",
+    state_code: "irrabat"
   },
   {
-    "country_code": "DZ",
-    "state_code": "tizi_ouzou"
+    country_code: "DE",
+    state_code: "badenwurttemberg"
   },
   {
-    "country_code": "BE",
-    "state_code": "liege"
+    country_code: "RO",
+    state_code: "maramures"
   },
   {
-    "country_code": "ET",
-    "state_code": "southern_nations_nationalities_and_peoples"
+    country_code: "DO",
+    state_code: "la_romana"
   },
   {
-    "country_code": "SR",
-    "state_code": "paramaribo"
+    country_code: "UA",
+    state_code: "lviv"
   },
   {
-    "country_code": "CY",
-    "state_code": "limassol"
+    country_code: "HR",
+    state_code: "varazdinska_zupanija"
   },
   {
-    "country_code": "IE",
-    "state_code": "roscommon"
+    country_code: "RO",
+    state_code: "teleorman_county"
   },
   {
-    "country_code": "GR",
-    "state_code": "thessalia"
+    country_code: "AR",
+    state_code: "neuquen"
   },
   {
-    "country_code": "RO",
-    "state_code": "suceava"
+    country_code: "JO",
+    state_code: "irbid"
   },
   {
-    "country_code": "IE",
-    "state_code": "cork"
+    country_code: "JM",
+    state_code: "kingston"
   },
   {
-    "country_code": "SK",
-    "state_code": "bratislavsky_kraj"
+    country_code: "CR",
+    state_code: "puntarenas_province"
   },
   {
-    "country_code": "PR",
-    "state_code": "mayaguez"
+    country_code: "PH",
+    state_code: "bulacan"
   },
   {
-    "country_code": "CN",
-    "state_code": "xinjiang"
+    country_code: "IM",
+    state_code: "douglas"
   },
   {
-    "country_code": "MX",
-    "state_code": "puebla"
+    country_code: "KE",
+    state_code: "busia"
   },
   {
-    "country_code": "MX",
-    "state_code": "coahuila"
+    country_code: "XK",
+    state_code: "mitrovica"
   },
   {
-    "country_code": "PL",
-    "state_code": "swietokrzyskie"
+    country_code: "XK",
+    state_code: "pec"
   },
   {
-    "country_code": "HR",
-    "state_code": "zadarska_zupanija"
+    country_code: "PA",
+    state_code: "colon"
   },
   {
-    "country_code": "SZ",
-    "state_code": "lubombo"
+    country_code: "CO",
+    state_code: "cundinamarca"
   },
   {
-    "country_code": "PH",
-    "state_code": "romblon"
+    country_code: "KE",
+    state_code: "tharakanithi"
   },
   {
-    "country_code": "RU",
-    "state_code": "khabarovsk"
+    country_code: "VE",
+    state_code: "lara"
   },
   {
-    "country_code": "SV",
-    "state_code": "la_libertad_department"
+    country_code: "HR",
+    state_code: "karlovac"
   },
   {
-    "country_code": "ID",
-    "state_code": "sumatera_utara"
+    country_code: "TR",
+    state_code: "kırıkkale"
   },
   {
-    "country_code": "IN",
-    "state_code": "jharkhand"
+    country_code: "PA",
+    state_code: "cocle"
   },
   {
-    "country_code": "PH",
-    "state_code": "dinagat_islands"
+    country_code: "PY",
+    state_code: "asuncion"
   },
   {
-    "country_code": "US",
-    "state_code": "kentucky"
+    country_code: "IE",
+    state_code: "leinster"
   },
   {
-    "country_code": "CH",
-    "state_code": "aargau"
+    country_code: "ES",
+    state_code: "navarre"
   },
   {
-    "country_code": "BR",
-    "state_code": "espirito_santo"
+    country_code: "AT",
+    state_code: "lower_austria"
   },
   {
-    "country_code": "HK",
-    "state_code": "islands"
+    country_code: "DK",
+    state_code: "north_denmark"
   },
   {
-    "country_code": "RW",
-    "state_code": "ville_de_kigali"
+    country_code: "EG",
+    state_code: "suez"
   },
   {
-    "country_code": "PH",
-    "state_code": "la_union"
+    country_code: "IE",
+    state_code: "kerry"
   },
   {
-    "country_code": "NO",
-    "state_code": "rogaland"
+    country_code: "CN",
+    state_code: "shandong_sheng"
   },
   {
-    "country_code": "KE",
-    "state_code": "nyandarua"
+    country_code: "HK",
+    state_code: "kwai_tsing_district"
   },
   {
-    "country_code": "SI",
-    "state_code": "urban_municipality_of_koper"
+    country_code: "BW",
+    state_code: "ghanzi"
   },
   {
-    "country_code": "NA",
-    "state_code": "khomas_region"
+    country_code: "GE",
+    state_code: "guria"
   },
   {
-    "country_code": "ES",
-    "state_code": "valenciana"
+    country_code: "JM",
+    state_code: "saint_james"
   },
   {
-    "country_code": "FK",
-    "state_code": "falkland_islands_malvinas"
+    country_code: "IN",
+    state_code: "andaman_and_nicobar_islands"
   },
   {
-    "country_code": "MX",
-    "state_code": "mexico"
+    country_code: "NL",
+    state_code: "utrecht"
   },
   {
-    "country_code": "DZ",
-    "state_code": "algiers"
+    country_code: "GE",
+    state_code: "kvemo_kartli"
   },
   {
-    "country_code": "PR",
-    "state_code": "barranquitas"
+    country_code: "FI",
+    state_code: "north_ostrobothnia"
   },
   {
-    "country_code": "IT",
-    "state_code": "calabria"
+    country_code: "KW",
+    state_code: "mubarak_al_kabir"
   },
   {
-    "country_code": "MD",
-    "state_code": "telenesti"
+    country_code: "DK",
+    state_code: "capital_region"
   },
   {
-    "country_code": "KE",
-    "state_code": "nakuru_county"
+    country_code: "SA",
+    state_code: "eastern_province"
   },
   {
-    "country_code": "TT",
-    "state_code": "diego_martin"
+    country_code: "IN",
+    state_code: "haryana"
   },
   {
-    "country_code": "LS",
-    "state_code": "mokhotlong"
+    country_code: "PA",
+    state_code: "chiriqui_province"
   },
   {
-    "country_code": "ID",
-    "state_code": "bangkabelitung_islands"
+    country_code: "MK",
+    state_code: "grad_skopje"
   },
   {
-    "country_code": "TR",
-    "state_code": "eskisehir"
+    country_code: "SI",
+    state_code: "tolmin"
   },
   {
-    "country_code": "BN",
-    "state_code": "tutong"
+    country_code: "KZ",
+    state_code: "astana"
   },
   {
-    "country_code": "GD",
-    "state_code": "saint_mark_parish"
+    country_code: "PR",
+    state_code: "canovanas"
   },
   {
-    "country_code": "LR",
-    "state_code": "montserrado_county"
+    country_code: "MH",
+    state_code: "majuro_atoll"
   },
   {
-    "country_code": "FI",
-    "state_code": "south_savo"
+    country_code: "PT",
+    state_code: "castelo_branco"
   },
   {
-    "country_code": "NP",
-    "state_code": "lumbini"
+    country_code: "RO",
+    state_code: "buzau"
   },
   {
-    "country_code": "PH",
-    "state_code": "ilocos_norte"
+    country_code: "SK",
+    state_code: "trencin_region"
   },
   {
-    "country_code": "IE",
-    "state_code": "carlow"
+    country_code: "CH",
+    state_code: "bern"
   },
   {
-    "country_code": "PR",
-    "state_code": "moca"
+    country_code: "BD",
+    state_code: "mymensingh_division"
   },
   {
-    "country_code": "JM",
-    "state_code": "st_elizabeth"
+    country_code: "MX",
+    state_code: "guerrero"
   },
   {
-    "country_code": "PK",
-    "state_code": "islamabad"
+    country_code: "AE",
+    state_code: "ash_shariqah"
   },
   {
-    "country_code": "EG",
-    "state_code": "giza"
+    country_code: "NA",
+    state_code: "oshikoto_region"
   },
   {
-    "country_code": "MW",
-    "state_code": "thyolo"
+    country_code: "BW",
+    state_code: "southeast"
   },
   {
-    "country_code": "FI",
-    "state_code": "kantahame"
+    country_code: "IE",
+    state_code: "clare"
   },
   {
-    "country_code": "VN",
-    "state_code": "đak_lak"
+    country_code: "GR",
+    state_code: "dytiki_ellada"
   },
   {
-    "country_code": "KW",
-    "state_code": "al_farwaniyah"
+    country_code: "ZA",
+    state_code: "northern_cape"
   },
   {
-    "country_code": "FR",
-    "state_code": "iledefrance"
+    country_code: "IN",
+    state_code: "jammu_and_kashmir"
   },
   {
-    "country_code": "NL",
-    "state_code": "gelderland"
+    country_code: "RO",
+    state_code: "timis"
   },
   {
-    "country_code": "KE",
-    "state_code": "nyandarua_county"
+    country_code: "DZ",
+    state_code: "boumerdes"
   },
   {
-    "country_code": "MV",
-    "state_code": "faafu_atholhu"
+    country_code: "GY",
+    state_code: "demeraramahaica"
   },
   {
-    "country_code": "IN",
-    "state_code": "gujarat"
+    country_code: "BR",
+    state_code: "amapa"
   },
   {
-    "country_code": "CH",
-    "state_code": "geneve"
+    country_code: "IN",
+    state_code: "assam"
   },
   {
-    "country_code": "SG",
-    "state_code": "north_east"
+    country_code: "FR",
+    state_code: "provencealpescotedazur"
   },
   {
-    "country_code": "RS",
-    "state_code": "sumadijski_okrug"
+    country_code: "NG",
+    state_code: "ogun"
   },
   {
-    "country_code": "ES",
-    "state_code": "araba"
+    country_code: "PA",
+    state_code: "panama_oeste_province"
   },
   {
-    "country_code": "ET",
-    "state_code": "sidama"
+    country_code: "PH",
+    state_code: "metro_manila"
   },
   {
-    "country_code": "KE",
-    "state_code": "embu"
+    country_code: "PH",
+    state_code: "agusan_del_norte"
   },
   {
-    "country_code": "KW",
-    "state_code": "al_asimah"
+    country_code: "AR",
+    state_code: "ciudad_autonoma_de_buenos_aires"
   },
   {
-    "country_code": "MZ",
-    "state_code": "maputo"
+    country_code: "PH",
+    state_code: "pampanga"
   },
   {
-    "country_code": "SL",
-    "state_code": "western_area"
+    country_code: "CU",
+    state_code: "la_habana"
   },
   {
-    "country_code": "VE",
-    "state_code": "distrito_federal"
+    country_code: "PH",
+    state_code: "siquijor"
   },
   {
-    "country_code": "JM",
-    "state_code": "saint_mary_parish"
+    country_code: "JM",
+    state_code: "portland_parish"
   },
   {
-    "country_code": "DK",
-    "state_code": "south_denmark"
+    country_code: "CH",
+    state_code: "grisons"
   },
   {
-    "country_code": "GR",
-    "state_code": "anatoliki_makedonia_kai_thraki"
+    country_code: "BY",
+    state_code: "minsk_city"
   },
   {
-    "country_code": "IE",
-    "state_code": "limerick"
+    country_code: "BD",
+    state_code: "dhaka_division"
   },
   {
-    "country_code": "SE",
-    "state_code": "skane"
+    country_code: "CO",
+    state_code: "cauca"
   },
   {
-    "country_code": "AL",
-    "state_code": "fier_county"
+    country_code: "RU",
+    state_code: "chelyabinskaya_oblast"
   },
   {
-    "country_code": "TR",
-    "state_code": "istanbul"
+    country_code: "JO",
+    state_code: "az_zarqa"
   },
   {
-    "country_code": "ES",
-    "state_code": "balearic_islands"
+    country_code: "CR",
+    state_code: "san_jose"
   },
   {
-    "country_code": "TT",
-    "state_code": "chaguanas"
+    country_code: "KH",
+    state_code: "phnum_penh"
   },
   {
-    "country_code": "BD",
-    "state_code": "mymensingh"
+    country_code: "LY",
+    state_code: "banghazi"
   },
   {
-    "country_code": "NI",
-    "state_code": "rivas_department"
+    country_code: "GR",
+    state_code: "kentriki_makedonia"
   },
   {
-    "country_code": "MT",
-    "state_code": "limgarr"
+    country_code: "DK",
+    state_code: "zealand"
   },
   {
-    "country_code": "MK",
-    "state_code": "veles"
+    country_code: "UY",
+    state_code: "montevideo"
   },
   {
-    "country_code": "SX",
-    "state_code": "sint_maarten_dutch_part"
+    country_code: "MD",
+    state_code: "chisinau"
   },
   {
-    "country_code": "KE",
-    "state_code": "kilifi"
+    country_code: "IE",
+    state_code: "wicklow"
   },
   {
-    "country_code": "ES",
-    "state_code": "castillela_mancha"
+    country_code: "PH",
+    state_code: "ilocos"
   },
   {
-    "country_code": "EG",
-    "state_code": "janub_sina"
+    country_code: "SC",
+    state_code: "la_riviere_anglaise"
   },
   {
-    "country_code": "CH",
-    "state_code": "zurich"
+    country_code: "MA",
+    state_code: "benimellalkhenifra"
   },
   {
-    "country_code": "EG",
-    "state_code": "al_qahirah"
+    country_code: "BB",
+    state_code: "saint_michael"
   },
   {
-    "country_code": "AR",
-    "state_code": "santa_fe"
+    country_code: "PH",
+    state_code: "cavite"
   },
   {
-    "country_code": "KE",
-    "state_code": "elgeyomarakwet"
+    country_code: "TR",
+    state_code: "edirne"
   },
   {
-    "country_code": "TN",
-    "state_code": "sfax"
+    country_code: "JP",
+    state_code: "niigata"
   },
   {
-    "country_code": "PL",
-    "state_code": "opolskie"
+    country_code: "KE",
+    state_code: "migori_county"
   },
   {
-    "country_code": "NI",
-    "state_code": "managua_department"
+    country_code: "HU",
+    state_code: "zala_county"
   },
   {
-    "country_code": "NZ",
-    "state_code": "bay_of_plenty"
+    country_code: "RO",
+    state_code: "dolj"
   },
   {
-    "country_code": "DO",
-    "state_code": "santo_domingo_province"
+    country_code: "AE",
+    state_code: "ajman"
   },
   {
-    "country_code": "JE",
-    "state_code": "st_helier"
+    country_code: "CN",
+    state_code: "anhui"
   },
   {
-    "country_code": "MY",
-    "state_code": "johor"
+    country_code: "SI",
+    state_code: "urban_municipality_of_kranj"
   },
   {
-    "country_code": "UA",
-    "state_code": "cherkaska_oblast"
+    country_code: "JP",
+    state_code: "shiga"
   },
   {
-    "country_code": "HR",
-    "state_code": "primorjegorski_kotar"
+    country_code: "HK",
+    state_code: "tuen_mun"
   },
   {
-    "country_code": "IN",
-    "state_code": "tamil_nadu"
+    country_code: "PH",
+    state_code: "zambales"
   },
   {
-    "country_code": "BM",
-    "state_code": "hamilton"
+    country_code: "CZ",
+    state_code: "moravskoslezsky"
   },
   {
-    "country_code": "EG",
-    "state_code": "al_qalyubiyah"
+    country_code: "AE",
+    state_code: "abu_dhabi"
   },
   {
-    "country_code": "GH",
-    "state_code": "eastern"
+    country_code: "GB",
+    state_code: "england"
   },
   {
-    "country_code": "TH",
-    "state_code": "krabi"
+    country_code: "AL",
+    state_code: "tirane"
   },
   {
-    "country_code": "BJ",
-    "state_code": "atlantique"
+    country_code: "MY",
+    state_code: "putrajaya"
   },
   {
-    "country_code": "AL",
-    "state_code": "diber_county"
+    country_code: "BR",
+    state_code: "rio_de_janeiro"
   },
   {
-    "country_code": "AF",
-    "state_code": "kabul"
+    country_code: "BH",
+    state_code: "southern_governorate"
   },
   {
-    "country_code": "BD",
-    "state_code": "kushtia"
+    country_code: "HN",
+    state_code: "departamento_de_francisco_morazan"
   },
   {
-    "country_code": "TR",
-    "state_code": "izmir_province"
+    country_code: "KE",
+    state_code: "west_pokot"
   },
   {
-    "country_code": "BZ",
-    "state_code": "orange_walk"
+    country_code: "BM",
+    state_code: "southampton"
   },
   {
-    "country_code": "AE",
-    "state_code": "ras_al_khaymah"
+    country_code: "US",
+    state_code: "nevada"
   },
   {
-    "country_code": "UG",
-    "state_code": "kampala"
+    country_code: "TH",
+    state_code: "surin"
   },
   {
-    "country_code": "PR",
-    "state_code": "arroyo"
+    country_code: "SE",
+    state_code: "ostergotland"
   },
   {
-    "country_code": "MU",
-    "state_code": "riviere_du_rempart"
+    country_code: "BE",
+    state_code: "brussels_hoofdstedelijk_gewest"
   },
   {
-    "country_code": "TH",
-    "state_code": "chiang_mai"
+    country_code: "DO",
+    state_code: "distrito_nacional_santo_domingo"
   },
   {
-    "country_code": "GE",
-    "state_code": "ajaria"
+    country_code: "SC",
+    state_code: "grand_anse_mahe"
   },
   {
-    "country_code": "ZW",
-    "state_code": "masvingo"
+    country_code: "KZ",
+    state_code: "atyrauskaya_oblast"
   },
   {
-    "country_code": "CO",
-    "state_code": "caldas_department"
+    country_code: "GD",
+    state_code: "saint_andrew_parish"
   },
   {
-    "country_code": "CN",
-    "state_code": "chongqing_shi"
+    country_code: "DK",
+    state_code: "hovedstaden"
   },
   {
-    "country_code": "ZA",
-    "state_code": "gauteng"
+    country_code: "MT",
+    state_code: "birkirkara"
   },
   {
-    "country_code": "RO",
-    "state_code": "salaj_county"
+    country_code: "IE",
+    state_code: "ulster"
   },
   {
-    "country_code": "BZ",
-    "state_code": "stann_creek"
+    country_code: "KN",
+    state_code: "saint_george_basseterre"
   },
   {
-    "country_code": "DO",
-    "state_code": "cibao_nordeste"
+    country_code: "MD",
+    state_code: "chisinau_municipality"
   },
   {
-    "country_code": "AL",
-    "state_code": "vlore"
+    country_code: "BD",
+    state_code: "rajshahi"
   },
   {
-    "country_code": "JE",
-    "state_code": "jersey"
+    country_code: "HN",
+    state_code: "cortes"
   },
   {
-    "country_code": "SI",
-    "state_code": "municipality_of_crna_na_koroskem"
+    country_code: "BE",
+    state_code: "vlaamsbrabant"
   },
   {
-    "country_code": "CH",
-    "state_code": "saint_gallen"
+    country_code: "SI",
+    state_code: "urban_municipality_of_maribor"
   },
   {
-    "country_code": "LC",
-    "state_code": "laborie"
+    country_code: "SC",
+    state_code: "cascade"
   },
   {
-    "country_code": "PH",
-    "state_code": "negros_oriental"
+    country_code: "ID",
+    state_code: "east_kalimantan"
   },
   {
-    "country_code": "RO",
-    "state_code": "bihor_county"
+    country_code: "VC",
+    state_code: "charlotte_parish"
   },
   {
-    "country_code": "PK",
-    "state_code": "punjab"
+    country_code: "LY",
+    state_code: "al_butnan"
   },
   {
-    "country_code": "ID",
-    "state_code": "jakarta"
+    country_code: "MT",
+    state_code: "tarxien"
   },
   {
-    "country_code": "FI",
-    "state_code": "south_ostrobothnia"
+    country_code: "BH",
+    state_code: "al_muharraq"
   },
   {
-    "country_code": "RO",
-    "state_code": "hunedoara_county"
+    country_code: "JP",
+    state_code: "shizuoka"
   },
   {
-    "country_code": "RO",
-    "state_code": "gorj_county"
+    country_code: "PH",
+    state_code: "mimaropa"
   },
   {
-    "country_code": "RS",
-    "state_code": "zajecarski_okrug"
+    country_code: "MX",
+    state_code: "quintana_roo"
   },
   {
-    "country_code": "PR",
-    "state_code": "luquillo"
+    country_code: "ID",
+    state_code: "aceh"
   },
   {
-    "country_code": "QA",
-    "state_code": "baladiyat_ar_rayyan"
+    country_code: "CO",
+    state_code: "valle_del_cauca"
   },
   {
-    "country_code": "RO",
-    "state_code": "prahova"
+    country_code: "PH",
+    state_code: "cotabato"
   },
   {
-    "country_code": "BG",
-    "state_code": "pernik"
+    country_code: "LY",
+    state_code: "tripoli"
   },
   {
-    "country_code": "TT",
-    "state_code": "mayarorio_claro"
+    country_code: "MK",
+    state_code: "tetovo"
   },
   {
-    "country_code": "BH",
-    "state_code": "ash_shamaliyah"
+    country_code: "PH",
+    state_code: "pangasinan"
   },
   {
-    "country_code": "KE",
-    "state_code": "taita_taveta"
+    country_code: "SA",
+    state_code: "ar_riyad"
   },
   {
-    "country_code": "DZ",
-    "state_code": "constantine"
+    country_code: "PR",
+    state_code: "hatillo"
   },
   {
-    "country_code": "CN",
-    "state_code": "beijing_shi"
+    country_code: "PR",
+    state_code: "orocovis"
   },
   {
-    "country_code": "RU",
-    "state_code": "smolensk_oblast"
+    country_code: "IN",
+    state_code: "uttar_pradesh"
   },
   {
-    "country_code": "BR",
-    "state_code": "mato_grosso_do_sul"
+    country_code: "BR",
+    state_code: "parana"
   },
   {
-    "country_code": "RO",
-    "state_code": "iasi_county"
+    country_code: "JP",
+    state_code: "chiba"
   },
   {
-    "country_code": "BR",
-    "state_code": "alagoas"
+    country_code: "MT",
+    state_code: "bormla"
   },
   {
-    "country_code": "TN",
-    "state_code": "gabes_governorate"
+    country_code: "EG",
+    state_code: "cairo_governorate"
   },
   {
-    "country_code": "VN",
-    "state_code": "ha_noi"
+    country_code: "VC",
+    state_code: "grenadines_parish"
   },
   {
-    "country_code": "SE",
-    "state_code": "vasterbottens_lan"
+    country_code: "VN",
+    state_code: "nghe_an"
   },
   {
-    "country_code": "US",
-    "state_code": "new_mexico"
+    country_code: "DE",
+    state_code: "bremen"
   },
   {
-    "country_code": "ID",
-    "state_code": "central_java"
+    country_code: "ES",
+    state_code: "aragon"
   },
   {
-    "country_code": "HR",
-    "state_code": "varazdin"
+    country_code: "ES",
+    state_code: "murcia"
   },
   {
-    "country_code": "TH",
-    "state_code": "nakhon_phanom"
+    country_code: "TT",
+    state_code: "penaldebe"
   },
   {
-    "country_code": "NC",
-    "state_code": "south_province"
+    country_code: "ID",
+    state_code: "jakarta_raya"
   },
   {
-    "country_code": "SK",
-    "state_code": "nitra_region"
+    country_code: "NZ",
+    state_code: "tasman"
   },
   {
-    "country_code": "LB",
-    "state_code": "beqaa"
+    country_code: "DZ",
+    state_code: "bejaia"
   },
   {
-    "country_code": "CZ",
-    "state_code": "karlovarsky_kraj"
+    country_code: "MK",
+    state_code: "studenicani"
   },
   {
-    "country_code": "BY",
-    "state_code": "gorod_minsk"
+    country_code: "PH",
+    state_code: "ilocos_sur"
   },
   {
-    "country_code": "NG",
-    "state_code": "edo_state"
+    country_code: "CN",
+    state_code: "macao_sar"
   },
   {
-    "country_code": "HU",
-    "state_code": "jasznagykunszolnok"
+    country_code: "CR",
+    state_code: "san_jose"
   },
   {
-    "country_code": "BR",
-    "state_code": "santa_catarina"
+    country_code: "WS",
+    state_code: "tuamasaga"
   },
   {
-    "country_code": "MX",
-    "state_code": "nuevo_leon"
+    country_code: "DO",
+    state_code: "peravia"
   },
   {
-    "country_code": "RS",
-    "state_code": "sremski_okrug"
+    country_code: "SA",
+    state_code: "ash_sharqiyah"
   },
   {
-    "country_code": "CR",
-    "state_code": "provincia_de_san_jose"
+    country_code: "RS",
+    state_code: "kosovometohija"
   },
   {
-    "country_code": "MX",
-    "state_code": "veracruz"
+    country_code: "PT",
+    state_code: "setubal"
   },
   {
-    "country_code": "AT",
-    "state_code": "upper_austria"
+    country_code: "RO",
+    state_code: "timis_county"
   },
   {
-    "country_code": "SY",
-    "state_code": "damascus_governorate"
+    country_code: "PH",
+    state_code: "cebu"
   },
   {
-    "country_code": "ID",
-    "state_code": "south_kalimantan"
+    country_code: "DO",
+    state_code: "cibao_norte"
   },
   {
-    "country_code": "MZ",
-    "state_code": "cidade_de_maputo"
+    country_code: "ES",
+    state_code: "nafarroako_foru_komunitatea"
   },
   {
-    "country_code": "IN",
-    "state_code": "mizoram"
+    country_code: "US",
+    state_code: "michigan"
   },
   {
-    "country_code": "MT",
-    "state_code": "rabat_gozo"
+    country_code: "KE",
+    state_code: "turkana_county"
   },
   {
-    "country_code": "CO",
-    "state_code": "valle_del_cauca_department"
+    country_code: "MV",
+    state_code: "faadhippolhu_atoll"
   },
   {
-    "country_code": "KE",
-    "state_code": "trans_nzoia"
+    country_code: "FR",
+    state_code: "polynesie_francaise"
   },
   {
-    "country_code": "IN",
-    "state_code": "himachal_pradesh"
+    country_code: "CL",
+    state_code: "coquimbo"
   },
   {
-    "country_code": "PH",
-    "state_code": "central_visayas"
+    country_code: "PR",
+    state_code: "gurabo"
   },
   {
-    "country_code": "FR",
-    "state_code": "centreval_de_loire"
+    country_code: "EE",
+    state_code: "harjumaa"
   },
   {
-    "country_code": "VN",
-    "state_code": "thai_nguyen"
+    country_code: "SI",
+    state_code: "municipality_of_sevnica"
   },
   {
-    "country_code": "GR",
-    "state_code": "peloponnese"
+    country_code: "BD",
+    state_code: "chattogram"
   },
   {
-    "country_code": "PR",
-    "state_code": "juncos"
+    country_code: "KE",
+    state_code: "mombasa_county"
   },
   {
-    "country_code": "US",
-    "state_code": "maryland"
+    country_code: "SA",
+    state_code: "alqassim_region"
   },
   {
-    "country_code": "IN",
-    "state_code": "uttarakhand"
+    country_code: "LB",
+    state_code: "libansud"
   },
   {
-    "country_code": "US",
-    "state_code": "oregon"
+    country_code: "PR",
+    state_code: "adjuntas"
   },
   {
-    "country_code": "KE",
-    "state_code": "mandera"
+    country_code: "DZ",
+    state_code: "jijel"
   },
   {
-    "country_code": "SE",
-    "state_code": "kronobergs_lan"
+    country_code: "GH",
+    state_code: "ashanti_region"
   },
   {
-    "country_code": "BZ",
-    "state_code": "belize_district"
+    country_code: "DZ",
+    state_code: "bechar"
   },
   {
-    "country_code": "IL",
-    "state_code": "tel_aviv"
+    country_code: "SR",
+    state_code: "commewijne_district"
   },
   {
-    "country_code": "BA",
-    "state_code": "federation_of_bosnia_and_herzegovina"
+    country_code: "AR",
+    state_code: "buenos_aires"
   },
   {
-    "country_code": "FR",
-    "state_code": "normandy"
+    country_code: "BA",
+    state_code: "srpska"
   },
   {
-    "country_code": "NZ",
-    "state_code": "northland"
+    country_code: "SC",
+    state_code: "baie_sainte_anne"
   },
   {
-    "country_code": "MX",
-    "state_code": "baja_california"
+    country_code: "RS",
+    state_code: "beograd"
   },
   {
-    "country_code": "RS",
-    "state_code": "prizrenski_okrug"
+    country_code: "SE",
+    state_code: "gotland"
   },
   {
-    "country_code": "KE",
-    "state_code": "busia_county"
+    country_code: "SC",
+    state_code: "beau_vallon"
   },
   {
-    "country_code": "EE",
-    "state_code": "viljandimaa"
+    country_code: "IN",
+    state_code: "karnataka"
   },
   {
-    "country_code": "PL",
-    "state_code": "slaskie"
+    country_code: "FR",
+    state_code: "grandest"
   },
   {
-    "country_code": "ME",
-    "state_code": "tivat"
+    country_code: "MK",
+    state_code: "gevgelija"
   },
   {
-    "country_code": "GT",
-    "state_code": "quetzaltenango"
+    country_code: "KI",
+    state_code: "gilbert_islands"
   },
   {
-    "country_code": "BZ",
-    "state_code": "belize"
+    country_code: "PH",
+    state_code: "palawan"
   },
   {
-    "country_code": "VN",
-    "state_code": "ho_chi_minh_city_hcmc"
+    country_code: "AL",
+    state_code: "elbasan"
   },
   {
-    "country_code": "CH",
-    "state_code": "valais"
+    country_code: "CK",
+    state_code: "rarotonga"
   },
   {
-    "country_code": "FI",
-    "state_code": "southwest_finland"
+    country_code: "CM",
+    state_code: "centre"
   },
   {
-    "country_code": "GG",
-    "state_code": "st_sampson"
+    country_code: "IT",
+    state_code: "puglia"
   },
   {
-    "country_code": "KE",
-    "state_code": "machakos_county"
+    country_code: "PR",
+    state_code: "vega_baja"
   },
   {
-    "country_code": "IQ",
-    "state_code": "maysan"
+    country_code: "AT",
+    state_code: "karnten"
   },
   {
-    "country_code": "MA",
-    "state_code": "rabatsalekenitra"
+    country_code: "KE",
+    state_code: "kwale"
   },
   {
-    "country_code": "RO",
-    "state_code": "constanta"
+    country_code: "IL",
+    state_code: "al_janubi"
   },
   {
-    "country_code": "GB",
-    "state_code": "wales"
+    country_code: "AR",
+    state_code: "corrientes"
   },
   {
-    "country_code": "PL",
-    "state_code": "pomerania"
+    country_code: "NG",
+    state_code: "rivers_state"
   },
   {
-    "country_code": "UA",
-    "state_code": "odesa"
+    country_code: "FI",
+    state_code: "varsinaissuomi"
   },
   {
-    "country_code": "IN",
-    "state_code": "tripura"
+    country_code: "TZ",
+    state_code: "kilimanjaro"
   },
   {
-    "country_code": "DE",
-    "state_code": "hesse"
+    country_code: "SE",
+    state_code: "vastra_gotalands_lan"
   },
   {
-    "country_code": "CL",
-    "state_code": "valparaiso"
+    country_code: "TT",
+    state_code: "tobago"
   },
   {
-    "country_code": "NG",
-    "state_code": "kano_state"
+    country_code: "PH",
+    state_code: "davao_de_oro"
   },
   {
-    "country_code": "FR",
-    "state_code": "occitanie"
+    country_code: "DZ",
+    state_code: "msila"
   },
   {
-    "country_code": "TH",
-    "state_code": "nakhon_ratchasima"
+    country_code: "US",
+    state_code: "washington"
   },
   {
-    "country_code": "IQ",
-    "state_code": "baghdad"
+    country_code: "AU",
+    state_code: "victoria"
   },
   {
-    "country_code": "BD",
-    "state_code": "rangpur"
+    country_code: "MY",
+    state_code: "selangor"
   },
   {
-    "country_code": "MK",
-    "state_code": "bitola"
+    country_code: "MK",
+    state_code: "gostivar"
   },
   {
-    "country_code": "SE",
-    "state_code": "orebro"
+    country_code: "RW",
+    state_code: "city_of_kigali"
   },
   {
-    "country_code": "GR",
-    "state_code": "ipeiros"
+    country_code: "RO",
+    state_code: "gorj"
   },
   {
-    "country_code": "TH",
-    "state_code": "samut_prakan"
+    country_code: "CN",
+    state_code: "tianjin"
   },
   {
-    "country_code": "NZ",
-    "state_code": "greater_wellington"
+    country_code: "DZ",
+    state_code: "el_bayadh"
   },
   {
-    "country_code": "ES",
-    "state_code": "murcia_region_de"
+    country_code: "AE",
+    state_code: "ras_al_khaymah"
   },
   {
-    "country_code": "NG",
-    "state_code": "lagos"
+    country_code: "GH",
+    state_code: "volta"
   },
   {
-    "country_code": "AT",
-    "state_code": "vorarlberg"
+    country_code: "US",
+    state_code: "guam"
   },
   {
-    "country_code": "GU",
-    "state_code": "dededo"
+    country_code: "MZ",
+    state_code: "maputo_city"
   },
   {
-    "country_code": "FI",
-    "state_code": "satakunta"
+    country_code: "PR",
+    state_code: "guayanilla"
   },
   {
-    "country_code": "DZ",
-    "state_code": "djelfa"
+    country_code: "BR",
+    state_code: "rio_grande_do_norte"
   },
   {
-    "country_code": "DO",
-    "state_code": "la_altagracia_province"
+    country_code: "MY",
+    state_code: "kuala_lumpur"
   },
   {
-    "country_code": "PH",
-    "state_code": "autonomous_region_in_muslim_mindanao"
+    country_code: "DK",
+    state_code: "nordjylland"
   },
   {
-    "country_code": "IS",
-    "state_code": "hofudborgarsvaedi"
+    country_code: "TZ",
+    state_code: "kusini_unguja"
   },
   {
-    "country_code": "BY",
-    "state_code": "minskaya_voblasts"
+    country_code: "CN",
+    state_code: "shanghai_shi"
   },
   {
-    "country_code": "MT",
-    "state_code": "mosta"
+    country_code: "MX",
+    state_code: "san_luis_potosi"
   },
   {
-    "country_code": "UA",
-    "state_code": "sumy"
+    country_code: "PH",
+    state_code: "zamboanga_peninsula"
   },
   {
-    "country_code": "FI",
-    "state_code": "paijathame"
+    country_code: "LS",
+    state_code: "quthing"
   },
   {
-    "country_code": "PH",
-    "state_code": "lanao_del_norte"
+    country_code: "IN",
+    state_code: "uttarakhand"
   },
   {
-    "country_code": "BN",
-    "state_code": "bruneimuara"
+    country_code: "HR",
+    state_code: "krapinskozagorska_zupanija"
   },
   {
-    "country_code": "CV",
-    "state_code": "ilhas_de_sotavento"
+    country_code: "SB",
+    state_code: "capital_territory"
   },
   {
-    "country_code": "PH",
-    "state_code": "mindoro_oriental"
+    country_code: "HR",
+    state_code: "dubrovnikneretva"
   },
   {
-    "country_code": "LC",
-    "state_code": "vieuxfort"
+    country_code: "LT",
+    state_code: "klaipeda_county"
   },
   {
-    "country_code": "YE",
-    "state_code": "amanat_al_asimah"
+    country_code: "PR",
+    state_code: "toa_alta"
   },
   {
-    "country_code": "JP",
-    "state_code": "osaka"
+    country_code: "PT",
+    state_code: "azores"
   },
   {
-    "country_code": "AO",
-    "state_code": "luanda_province"
+    country_code: "NZ",
+    state_code: "gisborne"
   },
   {
-    "country_code": "IT",
-    "state_code": "piedmont"
+    country_code: "PT",
+    state_code: "braga"
   },
   {
-    "country_code": "HR",
-    "state_code": "splitskodalmatinska_zupanija"
+    country_code: "LU",
+    state_code: "wiltz"
   },
   {
-    "country_code": "CA",
-    "state_code": "manitoba"
+    country_code: "MY",
+    state_code: "wilayah_persekutuan_kuala_lumpur"
   },
   {
-    "country_code": "KR",
-    "state_code": "gyeonggido"
+    country_code: "US",
+    state_code: "virginia"
   },
   {
-    "country_code": "KE",
-    "state_code": "nyeri_county"
+    country_code: "MX",
+    state_code: "hidalgo"
   },
   {
-    "country_code": "RO",
-    "state_code": "valcea_county"
+    country_code: "DE",
+    state_code: "lower_saxony"
   },
   {
-    "country_code": "LB",
-    "state_code": "beqaa"
+    country_code: "SE",
+    state_code: "uppsala_lan"
   },
   {
-    "country_code": "NG",
-    "state_code": "edo"
+    country_code: "EG",
+    state_code: "al_qalyubiyah"
   },
   {
-    "country_code": "MY",
-    "state_code": "sarawak"
+    country_code: "NG",
+    state_code: "katsina"
   },
   {
-    "country_code": "TH",
-    "state_code": "sukhothai"
+    country_code: "ES",
+    state_code: "santa_cruz_de_tenerife"
   },
   {
-    "country_code": "PT",
-    "state_code": "madeira"
+    country_code: "BN",
+    state_code: "belait"
   },
   {
-    "country_code": "DE",
-    "state_code": "bayern"
+    country_code: "TH",
+    state_code: "udon_thani"
   },
   {
-    "country_code": "US",
-    "state_code": "mississippi"
+    country_code: "RO",
+    state_code: "bucuresti"
   },
   {
-    "country_code": "DZ",
-    "state_code": "khenchela"
+    country_code: "BE",
+    state_code: "brussels_capital"
   },
   {
-    "country_code": "KW",
-    "state_code": "al_jahra_governorate"
+    country_code: "BN",
+    state_code: "bruneimuara_district"
   },
   {
-    "country_code": "VG",
-    "state_code": "virgin_islands_british"
+    country_code: "BD",
+    state_code: "khulna"
   },
   {
-    "country_code": "AZ",
-    "state_code": "bakı"
+    country_code: "ID",
+    state_code: "north_maluku"
   },
   {
-    "country_code": "SA",
-    "state_code": "asir_region"
+    country_code: "ZM",
+    state_code: "lusaka"
   },
   {
-    "country_code": "BG",
-    "state_code": "pazardzhik"
+    country_code: "PR",
+    state_code: "penuelas"
   },
   {
-    "country_code": "NL",
-    "state_code": "north_holland"
+    country_code: "US",
+    state_code: "minnesota"
   },
   {
-    "country_code": "NZ",
-    "state_code": "otago"
+    country_code: "PH",
+    state_code: "negros_occidental"
   },
   {
-    "country_code": "BB",
-    "state_code": "christ_church"
+    country_code: "DZ",
+    state_code: "tiaret"
   },
   {
-    "country_code": "LT",
-    "state_code": "kaunas"
+    country_code: "AR",
+    state_code: "tucuman"
   },
   {
-    "country_code": "HU",
-    "state_code": "pest"
+    country_code: "IN",
+    state_code: "delhi"
   },
   {
-    "country_code": "VI",
-    "state_code": "saint_thomas_island"
+    country_code: "MW",
+    state_code: "lilongwe"
   },
   {
-    "country_code": "KE",
-    "state_code": "bomet"
+    country_code: "SC",
+    state_code: "saint_louis"
   },
   {
-    "country_code": "US",
-    "state_code": "west_virginia"
+    country_code: "MK",
+    state_code: "prilep"
   },
   {
-    "country_code": "GY",
-    "state_code": "upper_demeraraberbice"
+    country_code: "SE",
+    state_code: "gavleborgs_lan"
   },
   {
-    "country_code": "RU",
-    "state_code": "moskovskaya_oblast"
+    country_code: "VN",
+    state_code: "da_nang_city"
   },
   {
-    "country_code": "GH",
-    "state_code": "upper_east"
+    country_code: "PL",
+    state_code: "lubusz"
   },
   {
-    "country_code": "RO",
-    "state_code": "iasi"
+    country_code: "FR",
+    state_code: "nouvelleaquitaine"
   },
   {
-    "country_code": "BD",
-    "state_code": "sylhet"
+    country_code: "CI",
+    state_code: "abidjan_autonomous_district"
   },
   {
-    "country_code": "TH",
-    "state_code": "nakhon_si_thammarat"
+    country_code: "NG",
+    state_code: "niger"
   },
   {
-    "country_code": "EG",
-    "state_code": "port_said"
+    country_code: "TW",
+    state_code: "takao"
   },
   {
-    "country_code": "SI",
-    "state_code": "municipality_of_ruse"
+    country_code: "PT",
+    state_code: "portalegre"
   },
   {
-    "country_code": "SK",
-    "state_code": "trenciansky_kraj"
+    country_code: "IN",
+    state_code: "telangana"
   },
   {
-    "country_code": "HN",
-    "state_code": "francisco_morazan_department"
+    country_code: "MY",
+    state_code: "kelantan"
   },
   {
-    "country_code": "US",
-    "state_code": "indiana"
+    country_code: "RO",
+    state_code: "galati_county"
   },
   {
-    "country_code": "SZ",
-    "state_code": "manzini"
+    country_code: "UG",
+    state_code: "mubende"
   },
   {
-    "country_code": "HR",
-    "state_code": "brodposavina"
+    country_code: "ML",
+    state_code: "bamako"
   },
   {
-    "country_code": "PH",
-    "state_code": "davao"
+    country_code: "KW",
+    state_code: "al_ahmadi"
   },
   {
-    "country_code": "LS",
-    "state_code": "mafeteng"
+    country_code: "FR",
+    state_code: "auvergnerhonealpes"
   },
   {
-    "country_code": "EG",
-    "state_code": "cairo"
+    country_code: "EE",
+    state_code: "laanevirumaa"
   },
   {
-    "country_code": "KR",
-    "state_code": "jeollanamdo"
+    country_code: "ID",
+    state_code: "kepulauan_riau"
   },
   {
-    "country_code": "JO",
-    "state_code": "aqaba"
+    country_code: "VE",
+    state_code: "zulia"
   },
   {
-    "country_code": "TZ",
-    "state_code": "simiyu"
+    country_code: "SV",
+    state_code: "san_miguel_department"
   },
   {
-    "country_code": "IT",
-    "state_code": "emiliaromagna"
+    country_code: "ME",
+    state_code: "herceg_novi"
   },
   {
-    "country_code": "MK",
-    "state_code": "stip"
+    country_code: "TH",
+    state_code: "chiang_rai"
   },
   {
-    "country_code": "EG",
-    "state_code": "al_jizah"
+    country_code: "MY",
+    state_code: "perlis"
   },
   {
-    "country_code": "VN",
-    "state_code": "đong_nai"
+    country_code: "JP",
+    state_code: "saitama"
   },
   {
-    "country_code": "SI",
-    "state_code": "maribor"
+    country_code: "DZ",
+    state_code: "relizane"
   },
   {
-    "country_code": "GH",
-    "state_code": "western"
+    country_code: "CO",
+    state_code: "bogota_dc"
   },
   {
-    "country_code": "GI",
-    "state_code": "gibraltar"
+    country_code: "GM",
+    state_code: "upper_river"
   },
   {
-    "country_code": "SI",
-    "state_code": "sostanj"
+    country_code: "ZA",
+    state_code: "kwazulunatal"
   },
   {
-    "country_code": "IQ",
-    "state_code": "erbil"
+    country_code: "IE",
+    state_code: "wexford"
   },
   {
-    "country_code": "FI",
-    "state_code": "central_ostrobothnia"
+    country_code: "SE",
+    state_code: "norrbotten"
   },
   {
-    "country_code": "CH",
-    "state_code": "lucerne"
+    country_code: "JP",
+    state_code: "fukui"
   },
   {
-    "country_code": "FR",
-    "state_code": "brittany"
+    country_code: "BR",
+    state_code: "sao_paulo"
   },
   {
-    "country_code": "VC",
-    "state_code": "charlotte"
+    country_code: "BG",
+    state_code: "smolyan"
   },
   {
-    "country_code": "JP",
-    "state_code": "aichi"
+    country_code: "PH",
+    state_code: "misamis_occidental"
   },
   {
-    "country_code": "TZ",
-    "state_code": "dodoma"
+    country_code: "RO",
+    state_code: "neamt"
   },
   {
-    "country_code": "TN",
-    "state_code": "ben_arous_governorate"
+    country_code: "BA",
+    state_code: "federation_of_bh"
   },
   {
-    "country_code": "OM",
-    "state_code": "al_buraimi"
+    country_code: "SE",
+    state_code: "stockholms_lan"
   },
   {
-    "country_code": "OM",
-    "state_code": "janub_ash_sharqiyah"
+    country_code: "KE",
+    state_code: "uasin_gishu"
   },
   {
-    "country_code": "CL",
-    "state_code": "region_metropolitana_de_santiago"
+    country_code: "ID",
+    state_code: "bengkulu"
   },
   {
-    "country_code": "AL",
-    "state_code": "durres"
+    country_code: "US",
+    state_code: "california"
   },
   {
-    "country_code": "AO",
-    "state_code": "luanda"
+    country_code: "GM",
+    state_code: "banjul"
   },
   {
-    "country_code": "PK",
-    "state_code": "balochistan"
+    country_code: "DE",
+    state_code: "bavaria"
   },
   {
-    "country_code": "SE",
-    "state_code": "vasternorrlands_lan"
+    country_code: "TN",
+    state_code: "la_manouba"
   },
   {
-    "country_code": "KE",
-    "state_code": "kilifi_county"
+    country_code: "KE",
+    state_code: "baringo"
   },
   {
-    "country_code": "KW",
-    "state_code": "al_ahmadi"
+    country_code: "BD",
+    state_code: "noakhali"
   },
   {
-    "country_code": "IQ",
-    "state_code": "dhi_qar"
+    country_code: "MK",
+    state_code: "centar"
   },
   {
-    "country_code": "KE",
-    "state_code": "embu_county"
+    country_code: "VN",
+    state_code: "thanh_hoa"
   },
   {
-    "country_code": "PH",
-    "state_code": "laguna"
+    country_code: "CA",
+    state_code: "nova_scotia"
   },
   {
-    "country_code": "IL",
-    "state_code": "southern_district"
+    country_code: "FI",
+    state_code: "pirkanmaa"
   },
   {
-    "country_code": "KR",
-    "state_code": "gwangju"
+    country_code: "NG",
+    state_code: "fct"
   },
   {
-    "country_code": "PT",
-    "state_code": "guarda"
+    country_code: "CN",
+    state_code: "guizhou"
   },
   {
-    "country_code": "RS",
-    "state_code": "moravicki_okrug"
+    country_code: "DE",
+    state_code: "saxony"
   },
   {
-    "country_code": "RO",
-    "state_code": "bihor"
+    country_code: "TZ",
+    state_code: "mbeya"
   },
   {
-    "country_code": "TR",
-    "state_code": "konya"
+    country_code: "KE",
+    state_code: "marsabit"
   },
   {
-    "country_code": "PH",
-    "state_code": "marinduque"
+    country_code: "SE",
+    state_code: "skane_lan"
   },
   {
-    "country_code": "DK",
-    "state_code": "midtjylland"
+    country_code: "MY",
+    state_code: "negeri_sembilan"
   },
   {
-    "country_code": "AR",
-    "state_code": "santiago_del_estero"
+    country_code: "KR",
+    state_code: "seoulteukbyeolsi"
   },
   {
-    "country_code": "BO",
-    "state_code": "la_paz_department"
+    country_code: "HU",
+    state_code: "gyormosonsopron"
   },
   {
-    "country_code": "SK",
-    "state_code": "banska_bystrica_region"
+    country_code: "KE",
+    state_code: "narok_county"
   },
   {
-    "country_code": "VN",
-    "state_code": "khanh_hoa"
+    country_code: "UA",
+    state_code: "ternopil"
   },
   {
-    "country_code": "LC",
-    "state_code": "gros_islet"
+    country_code: "JM",
+    state_code: "trelawny_parish"
   },
   {
-    "country_code": "SE",
-    "state_code": "vasternorrlands_lan"
+    country_code: "TH",
+    state_code: "nakhon_pathom"
   },
   {
-    "country_code": "TW",
-    "state_code": "kaohsiung"
+    country_code: "DE",
+    state_code: "state_of_berlin"
   },
   {
-    "country_code": "HR",
-    "state_code": "zagreb_county"
+    country_code: "IN",
+    state_code: "jammu_and_kashmir"
   },
   {
-    "country_code": "MU",
-    "state_code": "rodrigues_islands"
+    country_code: "NZ",
+    state_code: "manawatuwanganui"
   },
   {
-    "country_code": "TT",
-    "state_code": "port_of_spain"
+    country_code: "BR",
+    state_code: "sergipe"
   },
   {
-    "country_code": "TH",
-    "state_code": "phuket"
+    country_code: "CM",
+    state_code: "sudouest"
   },
   {
-    "country_code": "AU",
-    "state_code": "northern_territory"
+    country_code: "DZ",
+    state_code: "guelma"
   },
   {
-    "country_code": "IN",
-    "state_code": "gujarat"
+    country_code: "EC",
+    state_code: "guayas"
   },
   {
-    "country_code": "IQ",
-    "state_code": "alqadisiyah"
+    country_code: "FR",
+    state_code: "bourgogne"
   },
   {
-    "country_code": "IN",
-    "state_code": "bihar"
+    country_code: "TH",
+    state_code: "nonthaburi"
   },
   {
-    "country_code": "GH",
-    "state_code": "ashanti"
+    country_code: "PH",
+    state_code: "eastern_visayas"
   },
   {
-    "country_code": "NL",
-    "state_code": "sint_maarten"
+    country_code: "ZA",
+    state_code: "mpumalanga"
   },
   {
-    "country_code": "TZ",
-    "state_code": "shinyanga"
+    country_code: "NG",
+    state_code: "osun"
   },
   {
-    "country_code": "HR",
-    "state_code": "county_of_osijekbaranja"
+    country_code: "IN",
+    state_code: "goa"
   },
   {
-    "country_code": "PH",
-    "state_code": "batangas"
+    country_code: "HR",
+    state_code: "varazdin_county"
   },
   {
-    "country_code": "TR",
-    "state_code": "balıkesir"
+    country_code: "SE",
+    state_code: "kronobergs_lan"
   },
   {
-    "country_code": "BQ",
-    "state_code": "sint_eustatius"
+    country_code: "RO",
+    state_code: "bacau_county"
   },
   {
-    "country_code": "NG",
-    "state_code": "taraba"
+    country_code: "GU",
+    state_code: "hagatna"
   },
   {
-    "country_code": "NP",
-    "state_code": "koshi"
+    country_code: "VN",
+    state_code: "khanh_hoa_province"
   },
   {
-    "country_code": "DZ",
-    "state_code": "batna"
+    country_code: "CA",
+    state_code: "ontario"
   },
   {
-    "country_code": "IE",
-    "state_code": "dublin"
+    country_code: "ES",
+    state_code: "castilla_y_leon"
   },
   {
-    "country_code": "IN",
-    "state_code": "chhattisgarh"
+    country_code: "PR",
+    state_code: "bayamon"
   },
   {
-    "country_code": "AE",
-    "state_code": "ash_shariqah"
+    country_code: "PH",
+    state_code: "leyte"
   },
   {
-    "country_code": "SI",
-    "state_code": "municipality_of_brezice"
+    country_code: "AE",
+    state_code: "sharjah"
   },
   {
-    "country_code": "PH",
-    "state_code": "isabela"
+    country_code: "NO",
+    state_code: "buskerud"
   },
   {
-    "country_code": "PE",
-    "state_code": "lima"
+    country_code: "TC",
+    state_code: "turks_and_caicos_islands"
   },
   {
-    "country_code": "SA",
-    "state_code": "makkah_al_mukarramah"
+    country_code: "MX",
+    state_code: "michoacan_de_ocampo"
   },
   {
-    "country_code": "JP",
-    "state_code": "kagawa"
+    country_code: "NG",
+    state_code: "abuja_federal_capital_territory"
   },
   {
-    "country_code": "GH",
-    "state_code": "eastern_region"
+    country_code: "ET",
+    state_code: "south_ethiopia_regional_state"
   },
   {
-    "country_code": "VI",
-    "state_code": "saint_croix_island"
+    country_code: "LC",
+    state_code: "micoud"
   },
   {
-    "country_code": "PR",
-    "state_code": "manati"
+    country_code: "US",
+    state_code: "new_hampshire"
   },
   {
-    "country_code": "NZ",
-    "state_code": "west_coast"
+    country_code: "GR",
+    state_code: "kentriki_makedonia"
   },
   {
-    "country_code": "RS",
-    "state_code": "juznobacki_okrug"
+    country_code: "EE",
+    state_code: "tartu"
   },
   {
-    "country_code": "SE",
-    "state_code": "norrbottens_lan"
+    country_code: "EG",
+    state_code: "luxor"
   },
   {
-    "country_code": "BF",
-    "state_code": "houet"
+    country_code: "TR",
+    state_code: "mugla"
   },
   {
-    "country_code": "CN",
-    "state_code": "shaanxi"
+    country_code: "PH",
+    state_code: "catanduanes"
   },
   {
-    "country_code": "SK",
-    "state_code": "banskobystricky_kraj"
+    country_code: "BB",
+    state_code: "saint_thomas"
   },
   {
-    "country_code": "DZ",
-    "state_code": "mascara"
+    country_code: "JP",
+    state_code: "okinawa"
   },
   {
-    "country_code": "PL",
-    "state_code": "lodzkie"
+    country_code: "KN",
+    state_code: "trinity_palmetto_point"
   },
   {
-    "country_code": "IE",
-    "state_code": "waterford"
+    country_code: "EG",
+    state_code: "alexandria"
   },
   {
-    "country_code": "NA",
-    "state_code": "omaheke"
+    country_code: "US",
+    state_code: "district_of_columbia"
   },
   {
-    "country_code": "LC",
-    "state_code": "grosislet"
+    country_code: "CH",
+    state_code: "solothurn"
   },
   {
-    "country_code": "CM",
-    "state_code": "littoral"
+    country_code: "PH",
+    state_code: "bicol"
   },
   {
-    "country_code": "MQ",
-    "state_code": "martinique"
+    country_code: "ET",
+    state_code: "dire_dawa"
   },
   {
-    "country_code": "KZ",
-    "state_code": "almaty"
+    country_code: "FR",
+    state_code: "provencealpescote_dazur"
   },
   {
-    "country_code": "CG",
-    "state_code": "brazzaville"
+    country_code: "GP",
+    state_code: "guadeloupe"
   },
   {
-    "country_code": "ES",
-    "state_code": "canarias"
+    country_code: "MA",
+    state_code: "fesmeknes"
   },
   {
-    "country_code": "LT",
-    "state_code": "utena"
+    country_code: "EG",
+    state_code: "ad_daqahliyah"
   },
   {
-    "country_code": "MT",
-    "state_code": "zabbar"
+    country_code: "LK",
+    state_code: "central_province"
   },
   {
-    "country_code": "LV",
-    "state_code": "riga"
+    country_code: "US",
+    state_code: "oklahoma"
   },
   {
-    "country_code": "ZM",
-    "state_code": "lusaka_province"
+    country_code: "BE",
+    state_code: "namur"
   },
   {
-    "country_code": "UG",
-    "state_code": "iganga"
+    country_code: "BM",
+    state_code: "sandys"
   },
   {
-    "country_code": "DE",
-    "state_code": "sachsenanhalt"
+    country_code: "PH",
+    state_code: "albay"
   },
   {
-    "country_code": "JM",
-    "state_code": "westmoreland"
+    country_code: "TW",
+    state_code: "taichung"
   },
   {
-    "country_code": "OM",
-    "state_code": "dhofar"
+    country_code: "AT",
+    state_code: "oberosterreich"
   },
   {
-    "country_code": "SE",
-    "state_code": "gavleborg"
+    country_code: "CH",
+    state_code: "zurich"
   },
   {
-    "country_code": "RO",
-    "state_code": "arad_county"
+    country_code: "LY",
+    state_code: "an_nuqat_al_khams"
   },
   {
-    "country_code": "RO",
-    "state_code": "salaj"
+    country_code: "IS",
+    state_code: "reykjavikurborg"
   },
   {
-    "country_code": "PA",
-    "state_code": "panama"
+    country_code: "PT",
+    state_code: "regiao_autonoma_da_madeira"
   },
   {
-    "country_code": "MK",
-    "state_code": "struga"
+    country_code: "CW",
+    state_code: "curacao"
   },
   {
-    "country_code": "BM",
-    "state_code": "hamilton_city"
+    country_code: "KE",
+    state_code: "makueni"
   },
   {
-    "country_code": "IT",
-    "state_code": "liguria"
+    country_code: "ET",
+    state_code: "tigrai"
   },
   {
-    "country_code": "RS",
-    "state_code": "macva"
+    country_code: "PE",
+    state_code: "lambayeque"
   },
   {
-    "country_code": "IT",
-    "state_code": "torino"
+    country_code: "BD",
+    state_code: "chittagong"
   },
   {
-    "country_code": "SA",
-    "state_code": "mecca_region"
+    country_code: "LV",
+    state_code: "riga"
   },
   {
-    "country_code": "VN",
-    "state_code": "dong_nai"
+    country_code: "MV",
+    state_code: "shaviyani_atholhu"
   },
   {
-    "country_code": "SZ",
-    "state_code": "hhohho_region"
+    country_code: "PL",
+    state_code: "mazowieckie"
   },
   {
-    "country_code": "ET",
-    "state_code": "sidama_region"
+    country_code: "RO",
+    state_code: "ilfov"
   },
   {
-    "country_code": "ES",
-    "state_code": "madrid_comunidad_de"
+    country_code: "DE",
+    state_code: "mecklenburgvorpommern"
   },
   {
-    "country_code": "KE",
-    "state_code": "mombasa"
+    country_code: "AL",
+    state_code: "shkoder_county"
   },
   {
-    "country_code": "PT",
-    "state_code": "braganca"
+    country_code: "AE",
+    state_code: "ajman"
   },
   {
-    "country_code": "GB",
-    "state_code": "northern_ireland"
+    country_code: "XK",
+    state_code: "ferizaj"
   },
   {
-    "country_code": "AI",
-    "state_code": "the_valley"
+    country_code: "CO",
+    state_code: "risaralda_department"
   },
   {
-    "country_code": "PT",
-    "state_code": "lisboa"
+    country_code: "DM",
+    state_code: "saint_george_parish"
   },
   {
-    "country_code": "TN",
-    "state_code": "lariana"
+    country_code: "DE",
+    state_code: "sachsen"
   },
   {
-    "country_code": "NZ",
-    "state_code": "nelson"
+    country_code: "GG",
+    state_code: "castel"
   },
   {
-    "country_code": "PH",
-    "state_code": "masbate"
+    country_code: "AU",
+    state_code: "new_south_wales"
   },
   {
-    "country_code": "UZ",
-    "state_code": "toshkent"
+    country_code: "IN",
+    state_code: "telangana"
   },
   {
-    "country_code": "FI",
-    "state_code": "kymenlaakso"
+    country_code: "MX",
+    state_code: "mexico"
   },
   {
-    "country_code": "IQ",
-    "state_code": "kirkuk"
+    country_code: "SG",
+    state_code: "singapore"
   },
   {
-    "country_code": "SZ",
-    "state_code": "manzini_region"
+    country_code: "ET",
+    state_code: "harari"
   },
   {
-    "country_code": "JM",
-    "state_code": "clarendon"
+    country_code: "US",
+    state_code: "rhode_island"
   },
   {
-    "country_code": "ZM",
-    "state_code": "northwestern"
+    country_code: "AL",
+    state_code: "kukes"
   },
   {
-    "country_code": "TR",
-    "state_code": "mersin"
+    country_code: "KE",
+    state_code: "kajiado"
   },
   {
-    "country_code": "VN",
-    "state_code": "quang_ninh"
+    country_code: "DE",
+    state_code: "thuringia"
   },
   {
-    "country_code": "TT",
-    "state_code": "arima"
+    country_code: "NP",
+    state_code: "sudurpashchim"
   },
   {
-    "country_code": "AE",
-    "state_code": "al_fujayrah"
+    country_code: "MX",
+    state_code: "sonora"
   },
   {
-    "country_code": "LS",
-    "state_code": "thabatseka"
+    country_code: "KR",
+    state_code: "ulsangwangyeoksi"
   },
   {
-    "country_code": "MV",
-    "state_code": "north_thiladhunmathi"
+    country_code: "SN",
+    state_code: "dakar"
   },
   {
-    "country_code": "MX",
-    "state_code": "ciudad_de_mexico"
+    country_code: "SB",
+    state_code: "guadalcanal"
   },
-  {
-    "country_code": "LT",
-    "state_code": "vilnius"
-  },
-  {
-    "country_code": "GU",
-    "state_code": "tamuning"
-  },
-  {
-    "country_code": "CZ",
-    "state_code": "kralovehradecky_kraj"
-  },
-  {
-    "country_code": "IN",
-    "state_code": "arunachal_pradesh"
-  },
-  {
-    "country_code": "BB",
-    "state_code": "saint_peter"
-  },
-  {
-    "country_code": "PR",
-    "state_code": "naranjito"
-  },
-  {
-    "country_code": "SI",
-    "state_code": "urban_municipality_of_velenje"
-  },
-  {
-    "country_code": "CR",
-    "state_code": "alajuela_province"
-  },
-  {
-    "country_code": "SK",
-    "state_code": "bratislava_region"
-  },
-  {
-    "country_code": "PE",
-    "state_code": "san_martin"
-  },
-  {
-    "country_code": "FI",
-    "state_code": "uusimaa"
-  },
-  {
-    "country_code": "AR",
-    "state_code": "san_luis"
-  },
-  {
-    "country_code": "YE",
-    "state_code": "amanat_alasimah"
-  },
-  {
-    "country_code": "SE",
-    "state_code": "skane_lan"
-  },
-  {
-    "country_code": "BT",
-    "state_code": "paro"
-  }
 ];
 
 module.exports = { STATE_CODE_ROWS };

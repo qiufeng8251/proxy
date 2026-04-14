@@ -10,6 +10,8 @@ const { promisify } = require("util");
 const execFileAsync = promisify(execFile);
 const { SocksProxyAgent } = require("socks-proxy-agent");
 const { STATE_CODE_ROWS } = require("./stateCodes");
+const { CITY_CODE_ROWS } = require("./cityCodes");
+const { ISP_CODE_ROWS } = require("./ispCodes");
 
 /**
  * sing-box / 9proxy 简易控制台：聚合本机 9proxy 端口 API、代理列表、按 tag 切换并写 CONFIG_PATH；
@@ -150,37 +152,101 @@ async function getProxy() {
     }
 }
 
+/** @type {null | { rows: typeof STATE_CODE_ROWS, countries: string[], statesByCountry: Record<string, string[]>, citiesByCountry: Record<string, { city_code: string, city_name: string }[]>, ispsByCountry: Record<string, { isp_code: string, isp_name: string }[]> }} */
+let memoLocationCodes = null;
+
 /**
- * 从内置州省表整理出国家列表、各国下的州代码，供前端下拉与新增代理选区。
- * @returns {{ rows: typeof STATE_CODE_ROWS, countries: string[], statesByCountry: Record<string, string[]> }}
+ * 从内置州/市/ISP 表整理国家与各层级代码，供前端筛选规则与新增代理选区（进程内缓存）。
+ * @returns {{ rows: typeof STATE_CODE_ROWS, countries: string[], statesByCountry: Record<string, string[]>, citiesByCountry: Record<string, { city_code: string, city_name: string }[]>, ispsByCountry: Record<string, { isp_code: string, isp_name: string }[]> }}
  */
 function getLocationCodes() {
-        const countriesSet = new Set();
-        const statesByCountry = {};
+    if (memoLocationCodes) {
+        return memoLocationCodes;
+    }
+    const countriesSet = new Set();
+    const statesByCountry = {};
 
-        for (let i = 0; i < STATE_CODE_ROWS.length; i += 1) {
-            const countryCode = STATE_CODE_ROWS[i].country_code;
-            const stateCode = STATE_CODE_ROWS[i].state_code;
-            if (!countryCode) {
-                continue;
-            }
-            countriesSet.add(countryCode);
-            if (!statesByCountry[countryCode]) {
-                statesByCountry[countryCode] = [];
-            }
-            if (stateCode && !statesByCountry[countryCode].includes(stateCode)) {
-                statesByCountry[countryCode].push(stateCode);
-            }
+    for (let i = 0; i < STATE_CODE_ROWS.length; i += 1) {
+        const countryCode = STATE_CODE_ROWS[i].country_code;
+        const stateCode = STATE_CODE_ROWS[i].state_code;
+        if (!countryCode) {
+            continue;
         }
+        countriesSet.add(countryCode);
+        if (!statesByCountry[countryCode]) {
+            statesByCountry[countryCode] = [];
+        }
+        if (stateCode && !statesByCountry[countryCode].includes(stateCode)) {
+            statesByCountry[countryCode].push(stateCode);
+        }
+    }
 
-        const countries = Array.from(countriesSet).sort();
-        countries.forEach((country) => statesByCountry[country].sort());
+    const citiesByCountry = {};
+    for (let i = 0; i < CITY_CODE_ROWS.length; i += 1) {
+        const r = CITY_CODE_ROWS[i];
+        const cc = r.country_code;
+        if (!cc) {
+            continue;
+        }
+        countriesSet.add(cc);
+        if (!citiesByCountry[cc]) {
+            citiesByCountry[cc] = [];
+        }
+        if (r.city_code) {
+            citiesByCountry[cc].push({
+                city_code: r.city_code,
+                city_name: r.city_name != null ? String(r.city_name) : ""
+            });
+        }
+    }
 
-        return {
-            rows: STATE_CODE_ROWS,
-            countries,
-            statesByCountry
-        };
+    const ispsByCountry = {};
+    for (let i = 0; i < ISP_CODE_ROWS.length; i += 1) {
+        const r = ISP_CODE_ROWS[i];
+        const cc = r.country_code;
+        if (!cc) {
+            continue;
+        }
+        countriesSet.add(cc);
+        if (!ispsByCountry[cc]) {
+            ispsByCountry[cc] = [];
+        }
+        if (r.isp_code) {
+            ispsByCountry[cc].push({
+                isp_code: r.isp_code,
+                isp_name: r.isp_name != null ? String(r.isp_name) : ""
+            });
+        }
+    }
+
+    const countries = Array.from(countriesSet).sort();
+    countries.forEach((country) => {
+        if (statesByCountry[country]) {
+            statesByCountry[country].sort();
+        }
+        if (citiesByCountry[country]) {
+            citiesByCountry[country].sort((a, b) =>
+                String(a.city_name).localeCompare(String(b.city_name), "en")
+            );
+        }
+        if (ispsByCountry[country]) {
+            ispsByCountry[country].sort((a, b) =>
+                String(a.isp_name || a.isp_code).localeCompare(
+                    String(b.isp_name || b.isp_code),
+                    "en"
+                )
+            );
+        }
+    });
+
+    memoLocationCodes = {
+        rows: STATE_CODE_ROWS,
+        countries,
+        statesByCountry,
+        citiesByCountry,
+        ispsByCountry
+    };
+    return memoLocationCodes;
 }
 
 /**
@@ -580,6 +646,95 @@ function setOutboundWifiInUserMeta(tag, name) {
         return { ok: false, error: "写入 meta 失败: " + (e.message || String(e)) };
     }
     return { ok: true };
+}
+
+function readProxyUserMetaRoot() {
+    try {
+        if (!fs.existsSync(USER_META_PATH)) {
+            return { wifi_by_outbound: {} };
+        }
+        const parsed = JSON.parse(fs.readFileSync(USER_META_PATH, "utf8"));
+        return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+            ? parsed
+            : { wifi_by_outbound: {} };
+    } catch {
+        return { wifi_by_outbound: {} };
+    }
+}
+
+function writeProxyUserMetaRoot(root) {
+    if (
+        !root.wifi_by_outbound
+        || typeof root.wifi_by_outbound !== "object"
+        || Array.isArray(root.wifi_by_outbound)
+    ) {
+        root.wifi_by_outbound = {};
+    }
+    fs.mkdirSync(path.dirname(USER_META_PATH), { recursive: true });
+    fs.writeFileSync(USER_META_PATH, `${JSON.stringify(root, null, 2)}\n`, "utf8");
+}
+
+function nineFilterDefaults() {
+    return {
+        country: "",
+        states: [],
+        cities: [],
+        isps: [],
+        today: false,
+        t: "2"
+    };
+}
+
+function normNineFilterPayload(f) {
+    const o = f && typeof f === "object" ? f : {};
+    return {
+        country: typeof o.country === "string" ? o.country.trim().toUpperCase() : "",
+        states: Array.isArray(o.states) ? o.states.map((x) => String(x).trim()).filter(Boolean) : [],
+        cities: Array.isArray(o.cities) ? o.cities.map((x) => String(x).trim()).filter(Boolean) : [],
+        isps: Array.isArray(o.isps) ? o.isps.map((x) => String(x).trim()).filter(Boolean) : [],
+        today: o.today === true || o.today === "true" || o.today === 1 || o.today === "1",
+        t: o.t === "1" || o.t === 1 ? "1" : "2"
+    };
+}
+
+function getNineFilterForOutbound(tag) {
+    const t = String(tag || "").trim();
+    if (!t) {
+        return nineFilterDefaults();
+    }
+    const root = readProxyUserMetaRoot();
+    const bucket = root.nine_filter_by_outbound;
+    if (!bucket || typeof bucket !== "object" || Array.isArray(bucket)) {
+        return nineFilterDefaults();
+    }
+    const raw = bucket[t];
+    if (!raw || typeof raw !== "object") {
+        return nineFilterDefaults();
+    }
+    return normNineFilterPayload(raw);
+}
+
+function setNineFilterForOutbound(tag, filter) {
+    const t = String(tag || "").trim();
+    if (!t) {
+        return { ok: false, error: "缺少 tag" };
+    }
+    const norm = normNineFilterPayload(filter);
+    const root = readProxyUserMetaRoot();
+    if (
+        !root.nine_filter_by_outbound
+        || typeof root.nine_filter_by_outbound !== "object"
+        || Array.isArray(root.nine_filter_by_outbound)
+    ) {
+        root.nine_filter_by_outbound = {};
+    }
+    root.nine_filter_by_outbound[t] = norm;
+    try {
+        writeProxyUserMetaRoot(root);
+    } catch (e) {
+        return { ok: false, error: e.message || String(e) };
+    }
+    return { ok: true, filter: norm };
 }
 
 /**
@@ -1896,7 +2051,7 @@ app.get("/api/switch-proxy-direct", async (req, res) => {
 
 /**
  * GET /api/location-codes
- * 返回内置 `stateCodes` 整理后的国家列表、各国州代码及完整行数据，供前端筛选与新增代理。
+ * 返回内置州/市/ISP 表整理后的国家列表、各国州/城市/ISP 及完整州行数据，供前端筛选规则与新增代理。
  */
 app.get("/api/location-codes", (req, res) => {
     const data = getLocationCodes();
@@ -1985,6 +2140,43 @@ app.get("/api/user-wifi", (req, res) => {
         tag,
         wifi_name: String(wifiName).trim()
     });
+});
+
+/**
+ * GET /api/user-nine-filter?tag=出站tag
+ * 读取 `proxy-user-meta.json` 内按 tag 保存的筛选规则（country/state/city/isp/today/t 等，仅持久化）。
+ */
+app.get("/api/user-nine-filter", (req, res) => {
+    const tag = req.query.tag != null ? String(req.query.tag).trim() : "";
+    if (!tag) {
+        return res.status(400).json({ success: false, msg: "缺少 tag" });
+    }
+    res.json({
+        success: true,
+        tag,
+        filter: getNineFilterForOutbound(tag)
+    });
+});
+
+/**
+ * POST /api/user-nine-filter
+ * JSON：`{ "tag": "…", "filter": { "country", "states", "cities", "isps", "today", "t" } }`，写入 meta（仅保存，不请求 9proxy）。
+ */
+app.post("/api/user-nine-filter", (req, res) => {
+    const tag = req.body?.tag != null ? String(req.body.tag).trim() : "";
+    if (!tag) {
+        return res.status(400).json({ success: false, msg: "缺少 tag" });
+    }
+    const f = req.body?.filter;
+    const country = typeof f?.country === "string" ? f.country.trim().toUpperCase() : "";
+    if (!country) {
+        return res.status(400).json({ success: false, msg: "filter.country 必填（国家代码）" });
+    }
+    const r = setNineFilterForOutbound(tag, f);
+    if (!r.ok) {
+        return res.status(500).json({ success: false, msg: r.error || "保存失败" });
+    }
+    res.json({ success: true, msg: "ok", tag, filter: r.filter });
 });
 
 /**
@@ -2106,7 +2298,6 @@ app.get("/api/add-proxy", async (req, res) => {
             "port",
             "ports",
             "plan",
-            "today",
             "t"
         ];
         const params = {};
@@ -2116,6 +2307,14 @@ app.get("/api/add-proxy", async (req, res) => {
                 params[key] = value.trim();
             }
         });
+        if (req.query.today !== undefined && req.query.today !== "") {
+            const tv = String(req.query.today).trim().toLowerCase();
+            if (tv === "true" || tv === "1") {
+                params.today = "true";
+            } else if (tv === "false" || tv === "0") {
+                params.today = "false";
+            }
+        }
         if (!params.num) params.num = "1";
         if (!params.port) params.port = "60000";
         if (!params.t) params.t = "2";
@@ -2686,6 +2885,86 @@ app.get("/", (req, res) => {
     .nineproxy-refresh-btn:hover {
       background: #e5e7eb;
     }
+    .user-actions-cell {
+      white-space: nowrap;
+      text-align: right;
+    }
+    .user-actions-cell .switch-btn {
+      margin-right: 6px;
+    }
+    .nine-filter-rule-btn {
+      font-size: 12px;
+      padding: 5px 8px;
+      vertical-align: middle;
+    }
+    .nf-dialog-inner {
+      max-width: 520px;
+      max-height: 90vh;
+      overflow: auto;
+    }
+    .nf-hint {
+      font-size: 12px;
+      color: #6b7280;
+      margin: 0 0 12px;
+      line-height: 1.45;
+    }
+    .nf-row {
+      margin-bottom: 10px;
+    }
+    .nf-row label {
+      display: block;
+      font-size: 12px;
+      color: #374151;
+      margin-bottom: 4px;
+    }
+    .nf-row-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .nf-row-toolbar .wifi-name-input {
+      flex: 1;
+      min-width: 100px;
+    }
+    .nf-row-toolbar select {
+      flex: 1;
+      min-width: 140px;
+      max-width: 100%;
+    }
+    .nf-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 26px;
+      margin-top: 4px;
+    }
+    .nf-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #e0e7ff;
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-size: 12px;
+      max-width: 100%;
+    }
+    .nf-chip span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 360px;
+    }
+    .nf-chip-x {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      color: #4338ca;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0 2px;
+    }
   </style>
 </head>
 <body>
@@ -2722,7 +3001,7 @@ app.get("/", (req, res) => {
               <th style="width:120px;">IP 州/省</th>
               <th style="width:120px;">城市</th>
               <th style="width:72px;">在线</th>
-              <th style="width:88px;">操作</th>
+              <th style="width:200px;">操作</th>
             </tr>
           </thead>
           <tbody id="userBody"></tbody>
@@ -2844,6 +3123,66 @@ app.get("/", (req, res) => {
           </div>
         </div>
       </dialog>
+      <dialog id="nineFilterRuleDialog" class="dialog-proxy-pick">
+        <div class="modal-inner nf-dialog-inner">
+          <h3 style="margin-top:0;">9proxy 筛选规则 · <code id="nfTagLabel"></code></h3>
+          <p class="nf-hint">
+            仅写入本机 <code>proxy-user-meta.json</code>：country、state、city、isp、today、t（1=txt，2=json）。流程：先选国家，再在该国家下添加州/市/ISP；若未选国家时先从全局列表添加了州/市/ISP，再选择国家将清空已选州/市/ISP。各列均可搜索。保存仅写磁盘，不发起创建或切换代理的请求。
+          </p>
+          <div class="nf-row">
+            <label for="nfCountrySelect">country（国家代码）</label>
+            <div class="nf-row-toolbar">
+              <input type="text" id="nfCountrySearch" class="wifi-name-input" placeholder="搜索国家码" maxlength="8" autocomplete="off" />
+              <select id="nfCountrySelect"></select>
+            </div>
+          </div>
+          <div class="nf-row">
+            <label>state（州/省，可多枚）</label>
+            <div class="nf-row-toolbar">
+              <input type="text" id="nfStateSearch" class="wifi-name-input" placeholder="搜索" autocomplete="off" />
+              <select id="nfStatePick"></select>
+              <button type="button" class="cancel-btn" id="nfStateAddBtn">加入</button>
+            </div>
+            <div class="nf-chips" id="nfStateChips"></div>
+          </div>
+          <div class="nf-row">
+            <label>city（城市，可多枚）</label>
+            <div class="nf-row-toolbar">
+              <input type="text" id="nfCitySearch" class="wifi-name-input" placeholder="搜索" autocomplete="off" />
+              <select id="nfCityPick"></select>
+              <button type="button" class="cancel-btn" id="nfCityAddBtn">加入</button>
+            </div>
+            <div class="nf-chips" id="nfCityChips"></div>
+          </div>
+          <div class="nf-row">
+            <label>isp（运营商，可多枚）</label>
+            <div class="nf-row-toolbar">
+              <input type="text" id="nfIspSearch" class="wifi-name-input" placeholder="搜索" autocomplete="off" />
+              <select id="nfIspPick"></select>
+              <button type="button" class="cancel-btn" id="nfIspAddBtn">加入</button>
+            </div>
+            <div class="nf-chips" id="nfIspChips"></div>
+          </div>
+          <div class="nf-row">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+              <input type="checkbox" id="nfToday" />
+              today（仅今日更新代理）
+            </label>
+          </div>
+          <div class="nf-row">
+            <label for="nfTSelect">t（响应类型）</label>
+            <select id="nfTSelect">
+              <option value="2">2 — JSON</option>
+              <option value="1">1 — 文本 txt</option>
+            </select>
+          </div>
+          <div class="status" id="nfFilterStatus" style="min-height:1.2em;"></div>
+          <div class="modal-actions">
+            <button type="button" class="cancel-btn" id="nfCancelFilterBtn">取消</button>
+            <button type="button" class="switch-btn" id="nfSaveFilterBtn">保存</button>
+          </div>
+        </div>
+      </dialog>
       <dialog id="nineProxyLoginDialog">
         <div class="modal-inner">
           <h3 style="margin:0 0 12px;font-size:16px;">9proxy 登录</h3>
@@ -2912,8 +3251,34 @@ app.get("/", (req, res) => {
     const nineProxyLoginStatus = document.getElementById("nineProxyLoginStatus");
     const nineProxyLoginCancelBtn = document.getElementById("nineProxyLoginCancelBtn");
     const nineProxyLoginSubmitBtn = document.getElementById("nineProxyLoginSubmitBtn");
+    const nineFilterRuleDialog = document.getElementById("nineFilterRuleDialog");
+    const nfTagLabel = document.getElementById("nfTagLabel");
+    const nfCountrySearch = document.getElementById("nfCountrySearch");
+    const nfCountrySelect = document.getElementById("nfCountrySelect");
+    const nfStateSearch = document.getElementById("nfStateSearch");
+    const nfStatePick = document.getElementById("nfStatePick");
+    const nfStateAddBtn = document.getElementById("nfStateAddBtn");
+    const nfCitySearch = document.getElementById("nfCitySearch");
+    const nfCityPick = document.getElementById("nfCityPick");
+    const nfCityAddBtn = document.getElementById("nfCityAddBtn");
+    const nfIspSearch = document.getElementById("nfIspSearch");
+    const nfIspPick = document.getElementById("nfIspPick");
+    const nfIspAddBtn = document.getElementById("nfIspAddBtn");
+    const nfToday = document.getElementById("nfToday");
+    const nfTSelect = document.getElementById("nfTSelect");
+    const nfFilterStatus = document.getElementById("nfFilterStatus");
+    const nfCancelFilterBtn = document.getElementById("nfCancelFilterBtn");
+    const nfSaveFilterBtn = document.getElementById("nfSaveFilterBtn");
     const endpoint = "/api/proxy-list";
     let statesByCountry = {};
+    /** 9proxy CLI 已登录（用于用户表「筛选规则」按钮） */
+    let nineProxyLoggedGlobal = false;
+    const locData = {
+      countries: [],
+      statesByCountry: {},
+      citiesByCountry: {},
+      ispsByCountry: {}
+    };
     let allProxyList = [];
     /** 最近一次拉取代理列表时 9proxy 不可用提示（仅用于状态栏） */
     let lastNineProxyListNote = "";
@@ -2952,6 +3317,7 @@ app.get("/", (req, res) => {
     }
 
     function renderNineProxyAccountBar(data, httpOk) {
+      nineProxyLoggedGlobal = false;
       if (!nineProxyBarText || !nineProxyLoginBtn) {
         return;
       }
@@ -2972,6 +3338,7 @@ app.get("/", (req, res) => {
         return;
       }
       if (data.logged === true) {
+        nineProxyLoggedGlobal = true;
         const n = data.remaining_ips;
         const rip =
           typeof n === "number" && Number.isFinite(n) ? String(n) : "—";
@@ -3101,12 +3468,13 @@ app.get("/", (req, res) => {
       return null;
     }
 
-    function renderUserRows(users, portRows) {
+    function renderUserRows(users, portRows, nineLogged) {
       portRows = Array.isArray(portRows) ? portRows : [];
       if (!Array.isArray(users) || users.length === 0) {
         userBody.innerHTML = '<tr><td colspan="8">暂无路由规则或未读取到用户条目</td></tr>';
         return;
       }
+      const showFilter = nineLogged === true;
       userBody.innerHTML = users.map((row) => {
         const overlay =
           row.port_status_overlay && typeof row.port_status_overlay === "object"
@@ -3184,12 +3552,436 @@ app.get("/", (req, res) => {
           "<td>" + (reg || '<span class="muted-cell">-</span>') + "</td>" +
           "<td>" + (city || '<span class="muted-cell">-</span>') + "</td>" +
           "<td>" + onlineCell + "</td>" +
-          '<td><button type="button" class="switch-btn use-from-user-btn" data-outbound="' +
+          '<td class="user-actions-cell">' +
+          '<button type="button" class="switch-btn use-from-user-btn" data-outbound="' +
           tagAttr +
-          '">切换</button></td>' +
+          '">切换</button>' +
+          (showFilter
+            ? '<button type="button" class="cancel-btn nine-filter-rule-btn" data-outbound="' +
+              tagAttr +
+              '">筛选规则</button>'
+            : "") +
+          "</td>" +
           "</tr>"
         );
       }).join("");
+    }
+
+    let nfCurrentTag = "";
+    const nfChipStore = { states: [], cities: [], isps: [] };
+    const nfChipElIds = { states: "nfStateChips", cities: "nfCityChips", isps: "nfIspChips" };
+
+    function nfHasChip(kind, v) {
+      return (nfChipStore[kind] || []).some(function (x) {
+        return x.v === v;
+      });
+    }
+
+    function nfRenderChips(kind) {
+      const id = nfChipElIds[kind];
+      const el = id ? document.getElementById(id) : null;
+      if (!el) {
+        return;
+      }
+      const arr = nfChipStore[kind] || [];
+      el.innerHTML = arr
+        .map(function (c) {
+          return (
+            '<span class="nf-chip"><span title="' +
+            escapeHtml(c.lab) +
+            '">' +
+            escapeHtml(c.lab) +
+            '</span><button type="button" class="nf-chip-x" data-nf-kind="' +
+            kind +
+            '" data-nf-v="' +
+            escapeHtml(c.v) +
+            '">&times;</button></span>'
+          );
+        })
+        .join("");
+    }
+
+    function nfRenderAllChips() {
+      nfRenderChips("states");
+      nfRenderChips("cities");
+      nfRenderChips("isps");
+    }
+
+    function nfResetChips() {
+      nfChipStore.states = [];
+      nfChipStore.cities = [];
+      nfChipStore.isps = [];
+      nfRenderAllChips();
+    }
+
+    function nfAddChip(kind, v, lab) {
+      if (!v || nfHasChip(kind, v)) {
+        return;
+      }
+      nfChipStore[kind].push({ v: v, lab: lab || v });
+      nfRenderChips(kind);
+    }
+
+    function nfRemoveChip(kind, v) {
+      nfChipStore[kind] = (nfChipStore[kind] || []).filter(function (x) {
+        return x.v !== v;
+      });
+      nfRenderChips(kind);
+    }
+
+    function nfRebuildCountryOptions() {
+      if (!nfCountrySelect) {
+        return;
+      }
+      const q = nfCountrySearch
+        ? String(nfCountrySearch.value || "")
+            .trim()
+            .toUpperCase()
+        : "";
+      const cur = nfCountrySelect.value;
+      const list = (locData.countries || []).filter(function (c) {
+        return !q || c.indexOf(q) !== -1;
+      });
+      nfCountrySelect.innerHTML =
+        '<option value="">\uFF08\u8BF7\u9009\u62E9\u56FD\u5BB6\uFF09</option>' +
+        list
+          .map(function (c) {
+            return '<option value="' + c + '">' + c + "</option>";
+          })
+          .join("");
+      if (list.indexOf(cur) !== -1) {
+        nfCountrySelect.value = cur;
+      }
+    }
+
+    function nfBuildStatePickOptions() {
+      const cc = nfCountrySelect
+        ? String(nfCountrySelect.value || "")
+            .trim()
+            .toUpperCase()
+        : "";
+      const q = nfStateSearch
+        ? String(nfStateSearch.value || "")
+            .trim()
+            .toLowerCase()
+        : "";
+      const out = [];
+      if (cc) {
+        (locData.statesByCountry[cc] || []).forEach(function (sc) {
+          if (!q || sc.toLowerCase().indexOf(q) !== -1) {
+            out.push({ v: sc, lab: sc });
+          }
+        });
+      } else {
+        (locData.countries || []).forEach(function (c) {
+          (locData.statesByCountry[c] || []).forEach(function (sc) {
+            const v = c + "|" + sc;
+            const lab = c + " — " + sc;
+            if (
+              !q ||
+              lab.toLowerCase().indexOf(q) !== -1 ||
+              v.toLowerCase().indexOf(q) !== -1
+            ) {
+              out.push({ v: v, lab: lab });
+            }
+          });
+        });
+      }
+      return out.slice(0, 300);
+    }
+
+    function nfRefreshStatePick() {
+      if (!nfStatePick) {
+        return;
+      }
+      const opts = nfBuildStatePickOptions();
+      const cur = nfStatePick.value;
+      nfStatePick.innerHTML =
+        '<option value="">\uFF08\u9009\u4E00\u9879\u52A0\u5165\uFF09</option>' +
+        opts
+          .map(function (o) {
+            return (
+              '<option value="' +
+              escapeHtml(o.v) +
+              '">' +
+              escapeHtml(o.lab) +
+              "</option>"
+            );
+          })
+          .join("");
+      if (opts.some(function (o) { return o.v === cur; })) {
+        nfStatePick.value = cur;
+      }
+    }
+
+    function nfBuildCityPickOptions() {
+      const cc = nfCountrySelect
+        ? String(nfCountrySelect.value || "")
+            .trim()
+            .toUpperCase()
+        : "";
+      const q = nfCitySearch
+        ? String(nfCitySearch.value || "")
+            .trim()
+            .toLowerCase()
+        : "";
+      const out = [];
+      function consider(v, lab) {
+        if (
+          !q ||
+          lab.toLowerCase().indexOf(q) !== -1 ||
+          String(v).toLowerCase().indexOf(q) !== -1
+        ) {
+          out.push({ v: v, lab: lab });
+        }
+      }
+      if (cc) {
+        (locData.citiesByCountry[cc] || []).forEach(function (row) {
+          consider(
+            row.city_code,
+            row.city_code + " — " + (row.city_name || "")
+          );
+        });
+      } else {
+        (locData.countries || []).forEach(function (c) {
+          (locData.citiesByCountry[c] || []).forEach(function (row) {
+            consider(
+              c + "|" + row.city_code,
+              c + " — " + row.city_code + " — " + (row.city_name || "")
+            );
+          });
+        });
+      }
+      return out.slice(0, 300);
+    }
+
+    function nfRefreshCityPick() {
+      if (!nfCityPick) {
+        return;
+      }
+      const opts = nfBuildCityPickOptions();
+      const cur = nfCityPick.value;
+      nfCityPick.innerHTML =
+        '<option value="">\uFF08\u9009\u4E00\u9879\u52A0\u5165\uFF09</option>' +
+        opts
+          .map(function (o) {
+            return (
+              '<option value="' +
+              escapeHtml(o.v) +
+              '">' +
+              escapeHtml(o.lab) +
+              "</option>"
+            );
+          })
+          .join("");
+      if (opts.some(function (o) { return o.v === cur; })) {
+        nfCityPick.value = cur;
+      }
+    }
+
+    function nfBuildIspPickOptions() {
+      const cc = nfCountrySelect
+        ? String(nfCountrySelect.value || "")
+            .trim()
+            .toUpperCase()
+        : "";
+      const q = nfIspSearch
+        ? String(nfIspSearch.value || "")
+            .trim()
+            .toLowerCase()
+        : "";
+      const out = [];
+      function consider(v, lab) {
+        if (
+          !q ||
+          lab.toLowerCase().indexOf(q) !== -1 ||
+          String(v).toLowerCase().indexOf(q) !== -1
+        ) {
+          out.push({ v: v, lab: lab });
+        }
+      }
+      if (cc) {
+        (locData.ispsByCountry[cc] || []).forEach(function (row) {
+          const bit = (row.isp_name || row.isp_code || "").trim();
+          consider(row.isp_code, row.isp_code + (bit ? " — " + bit : ""));
+        });
+      } else {
+        (locData.countries || []).forEach(function (c) {
+          (locData.ispsByCountry[c] || []).forEach(function (row) {
+            const bit = (row.isp_name || row.isp_code || "").trim();
+            consider(
+              c + "|" + row.isp_code,
+              c + " — " + row.isp_code + (bit ? " — " + bit : "")
+            );
+          });
+        });
+      }
+      return out.slice(0, 300);
+    }
+
+    function nfRefreshIspPick() {
+      if (!nfIspPick) {
+        return;
+      }
+      const opts = nfBuildIspPickOptions();
+      const cur = nfIspPick.value;
+      nfIspPick.innerHTML =
+        '<option value="">\uFF08\u9009\u4E00\u9879\u52A0\u5165\uFF09</option>' +
+        opts
+          .map(function (o) {
+            return (
+              '<option value="' +
+              escapeHtml(o.v) +
+              '">' +
+              escapeHtml(o.lab) +
+              "</option>"
+            );
+          })
+          .join("");
+      if (opts.some(function (o) { return o.v === cur; })) {
+        nfIspPick.value = cur;
+      }
+    }
+
+    function nfOnCountryChange() {
+      nfResetChips();
+      nfRefreshStatePick();
+      nfRefreshCityPick();
+      nfRefreshIspPick();
+    }
+
+    async function openNineFilterRuleDialog(tag) {
+      nfCurrentTag = String(tag || "").trim();
+      if (!nfCurrentTag || !nineFilterRuleDialog) {
+        return;
+      }
+      if (!locData.countries.length) {
+        await loadLocationCodes();
+      }
+      if (nfTagLabel) {
+        nfTagLabel.textContent = nfCurrentTag;
+      }
+      if (nfFilterStatus) {
+        nfFilterStatus.textContent = "";
+      }
+      try {
+        const resp = await fetch(
+          "/api/user-nine-filter?tag=" + encodeURIComponent(nfCurrentTag)
+        );
+        const data = await resp.json();
+        if (!resp.ok || data.success === false) {
+          throw new Error(data.msg || data.error || "读取失败");
+        }
+        const f = data.filter || {};
+        nfChipStore.states = [];
+        nfChipStore.cities = [];
+        nfChipStore.isps = [];
+        (f.states || []).forEach(function (s) {
+          const t = String(s).trim();
+          if (t) {
+            nfChipStore.states.push({ v: t, lab: t });
+          }
+        });
+        (f.cities || []).forEach(function (s) {
+          const t = String(s).trim();
+          if (t) {
+            nfChipStore.cities.push({ v: t, lab: t });
+          }
+        });
+        (f.isps || []).forEach(function (s) {
+          const t = String(s).trim();
+          if (t) {
+            nfChipStore.isps.push({ v: t, lab: t });
+          }
+        });
+        nfRenderAllChips();
+        if (nfCountrySearch) {
+          nfCountrySearch.value = "";
+        }
+        nfRebuildCountryOptions();
+        if (nfCountrySelect) {
+          nfCountrySelect.value = f.country ? String(f.country).trim().toUpperCase() : "";
+        }
+        if (nfToday) {
+          nfToday.checked = f.today === true;
+        }
+        if (nfTSelect) {
+          nfTSelect.value = f.t === "1" || f.t === 1 ? "1" : "2";
+        }
+        nfRefreshStatePick();
+        nfRefreshCityPick();
+        nfRefreshIspPick();
+        nineFilterRuleDialog.showModal();
+      } catch (e) {
+        setUserStatus("\u7b5b\u9009\u89c4\u5219: " + (e.message || String(e)));
+      }
+    }
+
+    async function nfSaveFilter() {
+      if (!nfCurrentTag || !nfFilterStatus) {
+        return;
+      }
+      const cc = nfCountrySelect
+        ? String(nfCountrySelect.value || "")
+            .trim()
+            .toUpperCase()
+        : "";
+      if (!cc) {
+        nfFilterStatus.textContent = "\u8bf7\u9009\u62e9\u56fd\u5bb6\u540e\u518d\u4fdd\u5b58";
+        return;
+      }
+      function normList(kind) {
+        return (nfChipStore[kind] || [])
+          .map(function (row) {
+            const v = row.v;
+            const bar = v.indexOf("|");
+            if (bar === -1) {
+              return v;
+            }
+            const c = v.slice(0, bar);
+            const code = v.slice(bar + 1);
+            return c === cc ? code : null;
+          })
+          .filter(Boolean);
+      }
+      nfFilterStatus.textContent = "\u6b63\u5728\u4fdd\u5b58\u2026";
+      if (nfSaveFilterBtn) {
+        nfSaveFilterBtn.disabled = true;
+      }
+      try {
+        const resp = await fetch("/api/user-nine-filter", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tag: nfCurrentTag,
+            filter: {
+              country: cc,
+              states: normList("states"),
+              cities: normList("cities"),
+              isps: normList("isps"),
+              today: nfToday ? nfToday.checked : false,
+              t: nfTSelect ? nfTSelect.value : "2"
+            }
+          })
+        });
+        const data = await resp.json();
+        if (!resp.ok || data.success === false) {
+          throw new Error(data.msg || data.error || "\u4fdd\u5b58\u5931\u8d25");
+        }
+        nfFilterStatus.textContent = "\u5df2\u4fdd\u5b58\u5230\u51fa\u7ad9 tag";
+        if (nineFilterRuleDialog) {
+          nineFilterRuleDialog.close();
+        }
+        setUserStatus(
+          "\u7b5b\u9009\u89c4\u5219\u5df2\u4fdd\u5b58\uFF08" + nfCurrentTag + "\uFF09"
+        );
+      } catch (e) {
+        nfFilterStatus.textContent = e.message || String(e);
+      } finally {
+        if (nfSaveFilterBtn) {
+          nfSaveFilterBtn.disabled = false;
+        }
+      }
     }
 
     function setUseProxyFromUserStatus(text) {
@@ -3522,16 +4314,17 @@ app.get("/", (req, res) => {
             : "port_status 不可用（HTTP " + portResp.status + "）";
         }
         const users = Array.isArray(userData.users) ? userData.users : [];
-        renderUserRows(users, portRows);
         const accData = await accResp.json().catch(() => ({}));
         renderNineProxyAccountBar(accData, accResp.ok);
+        renderUserRows(users, portRows, nineProxyLoggedGlobal);
         let msg = "共 " + users.length + " 个用户；port_status " + portRows.length + " 条";
         if (portNote) {
           msg += " · " + portNote;
         }
         setUserStatus(msg);
       } catch (err) {
-        renderUserRows([], []);
+        nineProxyLoggedGlobal = false;
+        renderUserRows([], [], false);
         renderNineProxyAccountBar(null, false);
         setUserStatus("加载失败: " + err.message);
       }
@@ -3611,6 +4404,10 @@ app.get("/", (req, res) => {
         const data = await resp.json();
         const countries = Array.isArray(data?.countries) ? data.countries : [];
         statesByCountry = data?.statesByCountry || {};
+        locData.countries = countries;
+        locData.statesByCountry = data?.statesByCountry || {};
+        locData.citiesByCountry = data?.citiesByCountry || {};
+        locData.ispsByCountry = data?.ispsByCountry || {};
         countryInput.innerHTML = '<option value="">country (国家代码)</option>' +
           countries.map((country) => '<option value="' + country + '">' + country + '</option>').join("");
         countryInput.value = "US";
@@ -3969,6 +4766,7 @@ app.get("/", (req, res) => {
           nineProxyLoginStatus.textContent = data.msg || "登录成功";
           nineProxyLoginDialog.close();
           await refreshNineProxyAccountBar();
+          await loadSingboxUsers();
           await loadProxyList();
         } catch (e) {
           nineProxyLoginStatus.textContent = e.message || String(e);
@@ -4039,6 +4837,14 @@ app.get("/", (req, res) => {
         }
         return;
       }
+      const nfRuleBtn = ev.target.closest(".nine-filter-rule-btn");
+      if (nfRuleBtn) {
+        const tagNf = nfRuleBtn.getAttribute("data-outbound");
+        if (tagNf) {
+          void openNineFilterRuleDialog(tagNf);
+        }
+        return;
+      }
       const toggle = ev.target.closest(".wifi-toggle");
       if (toggle) {
         const inner = toggle.closest(".wifi-cell-inner");
@@ -4084,6 +4890,91 @@ app.get("/", (req, res) => {
         btn.click();
       }
     });
+    if (nineFilterRuleDialog) {
+      nineFilterRuleDialog.addEventListener("click", function (ev) {
+        const x = ev.target.closest(".nf-chip-x");
+        if (!x) {
+          return;
+        }
+        const kind = x.getAttribute("data-nf-kind");
+        const v = x.getAttribute("data-nf-v");
+        if (kind && v != null) {
+          nfRemoveChip(kind, v);
+        }
+      });
+    }
+    if (nfCountrySelect && nfCountrySearch) {
+      nfCountrySearch.addEventListener("input", function () {
+        nfRebuildCountryOptions();
+      });
+      nfCountrySelect.addEventListener("change", function () {
+        nfOnCountryChange();
+      });
+    }
+    if (nfStateSearch) {
+      nfStateSearch.addEventListener("input", function () {
+        nfRefreshStatePick();
+      });
+    }
+    if (nfStateAddBtn && nfStatePick) {
+      nfStateAddBtn.addEventListener("click", function () {
+        const v = nfStatePick.value;
+        if (!v) {
+          return;
+        }
+        const lab =
+          nfStatePick.options[nfStatePick.selectedIndex]
+            ? nfStatePick.options[nfStatePick.selectedIndex].textContent
+            : v;
+        nfAddChip("states", v, lab);
+      });
+    }
+    if (nfCitySearch) {
+      nfCitySearch.addEventListener("input", function () {
+        nfRefreshCityPick();
+      });
+    }
+    if (nfCityAddBtn && nfCityPick) {
+      nfCityAddBtn.addEventListener("click", function () {
+        const v = nfCityPick.value;
+        if (!v) {
+          return;
+        }
+        const lab =
+          nfCityPick.options[nfCityPick.selectedIndex]
+            ? nfCityPick.options[nfCityPick.selectedIndex].textContent
+            : v;
+        nfAddChip("cities", v, lab);
+      });
+    }
+    if (nfIspSearch) {
+      nfIspSearch.addEventListener("input", function () {
+        nfRefreshIspPick();
+      });
+    }
+    if (nfIspAddBtn && nfIspPick) {
+      nfIspAddBtn.addEventListener("click", function () {
+        const v = nfIspPick.value;
+        if (!v) {
+          return;
+        }
+        const lab =
+          nfIspPick.options[nfIspPick.selectedIndex]
+            ? nfIspPick.options[nfIspPick.selectedIndex].textContent
+            : v;
+        nfAddChip("isps", v, lab);
+      });
+    }
+    if (nfCancelFilterBtn && nineFilterRuleDialog) {
+      nfCancelFilterBtn.addEventListener("click", function () {
+        nineFilterRuleDialog.close();
+      });
+    }
+    if (nfSaveFilterBtn) {
+      nfSaveFilterBtn.addEventListener("click", function () {
+        void nfSaveFilter();
+      });
+    }
     loadLocationCodes();
     loadSingboxUsers();
     loadProxyList();
