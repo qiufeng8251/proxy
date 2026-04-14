@@ -2338,6 +2338,85 @@ app.get("/api/add-proxy", async (req, res) => {
 });
 
 /**
+ * GET /api/proxy?tag=出站tag
+ * 读取该 tag 已保存的筛选规则，在本地端口区间内通过 9proxy `GET /api/port_free` 扫描得到空闲端口，
+ * 组装 num=1、t=2 及 country/state/city/isp/today 参数；当前仅 console.log，暂不请求 `${NINE_PROXY_BASE}/api/proxy`。
+ */
+app.get("/api/proxy", async (req, res) => {
+    const tag = req.query.tag != null ? String(req.query.tag).trim() : "";
+    if (!tag) {
+        return res.status(400).json({
+            success: false,
+            msg: "缺少 tag（用于读取已保存的筛选规则）"
+        });
+    }
+    const f = getNineFilterForOutbound(tag);
+    if (!f.country) {
+        return res.status(400).json({
+            success: false,
+            msg: "该出站尚未保存筛选规则或缺少国家，请先打开「筛选规则」配置并保存"
+        });
+    }
+    try {
+        const port = await pickPortViaPortFreeScan();
+        if (port == null) {
+            return res.json({
+                success: false,
+                msg: "无可用本地 SOCKS 端口（已在区间内扫描 9proxy port_free）"
+            });
+        }
+        const params = {
+            num: "1",
+            port: String(port),
+            t: "2",
+            country: f.country
+        };
+        const joinCsv = (arr) =>
+            Array.isArray(arr) && arr.length
+                ? arr
+                      .map((x) => String(x).trim())
+                      .filter(Boolean)
+                      .join(",")
+                : "";
+        const stateStr = joinCsv(f.states);
+        if (stateStr) {
+            params.state = stateStr;
+        }
+        const cityStr = joinCsv(f.cities);
+        if (cityStr) {
+            params.city = cityStr;
+        }
+        const ispStr = joinCsv(f.isps);
+        if (ispStr) {
+            params.isp = ispStr;
+        }
+        if (f.today) {
+            params.today = "true";
+        }
+        const proxyUrl = `${NINE_PROXY_BASE}/api/proxy`;
+        console.log("[9proxy] /api/proxy dry-run tag=%s", tag);
+        console.log("[9proxy] /api/proxy dry-run params=%j", params);
+        console.log("[9proxy] /api/proxy dry-run would GET %s (not called)", proxyUrl);
+        res.json({
+            success: true,
+            msg: "已组装参数（未请求 9proxy /api/proxy，见服务端日志）",
+            dry_run: true,
+            port,
+            tag,
+            filter: f,
+            params,
+            data: { message: "dry-run" }
+        });
+    } catch (e) {
+        res.json({
+            success: false,
+            msg: NINE_PROXY_UNAVAILABLE_HINT,
+            error: e.message || String(e)
+        });
+    }
+});
+
+/**
  * GET /api/9proxy-account
  * 本机执行 `9proxy setting -d` 判断是否登录；已登录时再执行 `9proxy proxy -b` 取剩余 IP。
  */
@@ -2895,10 +2974,12 @@ app.get("/", (req, res) => {
       box-sizing: border-box;
     }
     .user-actions-cell .switch-btn,
-    .user-actions-cell .nine-filter-rule-btn {
+    .user-actions-cell .nine-filter-rule-btn,
+    .user-actions-cell .nine-rule-switch-btn {
       flex-shrink: 0;
     }
-    .nine-filter-rule-btn {
+    .nine-filter-rule-btn,
+    .nine-rule-switch-btn {
       font-size: 12px;
       padding: 5px 8px;
       vertical-align: middle;
@@ -3546,7 +3627,10 @@ app.get("/", (req, res) => {
           tagAttr +
           '">切换</button>' +
           (showFilter
-            ? '<button type="button" class="cancel-btn nine-filter-rule-btn" data-outbound="' +
+            ? '<button type="button" class="switch-btn nine-rule-switch-btn" data-outbound="' +
+              tagAttr +
+              '">\u89c4\u5219\u5207\u6362</button>' +
+              '<button type="button" class="cancel-btn nine-filter-rule-btn" data-outbound="' +
               tagAttr +
               '">筛选规则</button>'
             : "") +
@@ -4820,6 +4904,44 @@ app.get("/", (req, res) => {
         const tag = useFromUser.getAttribute("data-outbound");
         if (tag) {
           await openUseProxyForOutbound(tag);
+        }
+        return;
+      }
+      const ruleSwitchBtn = ev.target.closest(".nine-rule-switch-btn");
+      if (ruleSwitchBtn) {
+        const tagRs = ruleSwitchBtn.getAttribute("data-outbound");
+        if (tagRs) {
+          ruleSwitchBtn.disabled = true;
+          void (async function () {
+            try {
+              setUserStatus("\u6b63\u5728\u6309\u7b5b\u9009\u89c4\u5219\u8bf7\u6c42\u65b0\u4ee3\u7406\u2026");
+              const resp = await fetch(
+                "/api/proxy?tag=" + encodeURIComponent(tagRs)
+              );
+              const data = await resp.json().catch(() => ({}));
+              if (!resp.ok || data.success === false) {
+                throw new Error(data.msg || data.error || "\u8bf7\u6c42\u5931\u8d25");
+              }
+              const detail =
+                data.data && data.data.message != null
+                  ? String(data.data.message)
+                  : "";
+              const portHint =
+                data.port != null ? "\uFF08\u672c\u5730\u7aef\u53e3 " + String(data.port) + "\uFF09" : "";
+              setUserStatus(
+                "\u89c4\u5219\u5207\u6362\u6210\u529f" +
+                  portHint +
+                  (detail ? " " + detail : "")
+              );
+              await Promise.all([loadSingboxUsers(), loadProxyList()]);
+            } catch (e) {
+              setUserStatus(
+                "\u89c4\u5219\u5207\u6362\u5931\u8d25: " + (e.message || String(e))
+              );
+            } finally {
+              ruleSwitchBtn.disabled = false;
+            }
+          })();
         }
         return;
       }
