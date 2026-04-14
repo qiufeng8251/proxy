@@ -2340,42 +2340,9 @@ app.get("/api/add-proxy", async (req, res) => {
 });
 
 /**
- * 序列化发往 9proxy `GET /api/proxy` 的 query，键顺序与完整示例一致：
- * t → num → port → country → isp → city → zip → state（若有 today 则排在最后）。
- * @param {Record<string, string|undefined>} p
- */
-function serializeNineProxyApiProxyQuery(p) {
-    const order = [
-        "t",
-        "num",
-        "port",
-        "country",
-        "isp",
-        "city",
-        "zip",
-        "state",
-        "today"
-    ];
-    const parts = [];
-    for (let i = 0; i < order.length; i += 1) {
-        const key = order[i];
-        const v = p[key];
-        if (v === undefined || v === null) {
-            continue;
-        }
-        const s = String(v).trim();
-        if (s === "") {
-            continue;
-        }
-        parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(s)}`);
-    }
-    return parts.join("&");
-}
-
-/**
  * GET /api/proxy?tag=出站tag
  * 读取该 tag 已保存的筛选规则，在本地端口区间内通过 9proxy `GET /api/port_free` 扫描得到空闲端口，
- * 再以 num=1、t=2 调用 9proxy `GET /api/proxy`；query 键顺序见 `serializeNineProxyApiProxyQuery`。
+ * 再以 num=1、t=2 及筛选字段调用 9proxy `GET /api/proxy`。
  */
 app.get("/api/proxy", async (req, res) => {
     const tag = req.query.tag != null ? String(req.query.tag).trim() : "";
@@ -2392,6 +2359,8 @@ app.get("/api/proxy", async (req, res) => {
             msg: "该出站尚未保存筛选规则或缺少国家，请先打开「筛选规则」配置并保存"
         });
     }
+    let nineProxyRequestUrl = null;
+    let nineProxyRequestParams = null;
     try {
         const port = await pickPortViaPortFreeScan();
         if (port == null) {
@@ -2431,10 +2400,11 @@ app.get("/api/proxy", async (req, res) => {
         if (f.today) {
             params.today = "true";
         }
-        const result = await axios.get(`${NINE_PROXY_BASE}/api/proxy`, {
+        nineProxyRequestUrl = `${NINE_PROXY_BASE}/api/proxy`;
+        nineProxyRequestParams = { ...params };
+        const result = await axios.get(nineProxyRequestUrl, {
             ...AXIOS_OPTS_NO_PROXY,
-            params,
-            paramsSerializer: serializeNineProxyApiProxyQuery
+            params
         });
         res.json({
             success: true,
@@ -2445,11 +2415,16 @@ app.get("/api/proxy", async (req, res) => {
             data: result.data
         });
     } catch (e) {
-        res.json({
+        const out = {
             success: false,
             msg: NINE_PROXY_UNAVAILABLE_HINT,
             error: e.message || String(e)
-        });
+        };
+        if (nineProxyRequestUrl) {
+            out.nine_proxy_api = nineProxyRequestUrl;
+            out.nine_proxy_params = nineProxyRequestParams;
+        }
+        res.json(out);
     }
 });
 
@@ -3437,11 +3412,17 @@ app.get("/", (req, res) => {
       userStatusText.textContent = text;
     }
 
-    function showProxyRuleSwitchErrorDialog(message) {
-      const text =
+    function showProxyRuleSwitchErrorDialog(message, data) {
+      let text =
         message != null && String(message).trim() !== ""
           ? String(message)
           : "\u8bf7\u6c42\u5931\u8d25";
+      if (data && data.nine_proxy_api) {
+        text += "\n\nAPI:\n" + String(data.nine_proxy_api);
+      }
+      if (data && data.nine_proxy_params != null && typeof data.nine_proxy_params === "object") {
+        text += "\n\n\u53c2\u6570:\n" + JSON.stringify(data.nine_proxy_params, null, 2);
+      }
       if (proxyRuleSwitchErrorText) {
         proxyRuleSwitchErrorText.textContent = text;
       }
@@ -5038,7 +5019,7 @@ app.get("/", (req, res) => {
               }
               if (errMsg) {
                 setUserStatus("\u89c4\u5219\u5207\u6362\u5931\u8d25: " + errMsg);
-                showProxyRuleSwitchErrorDialog(errMsg);
+                showProxyRuleSwitchErrorDialog(errMsg, data);
                 return;
               }
               const detail =
@@ -5056,7 +5037,7 @@ app.get("/", (req, res) => {
             } catch (e) {
               const errMsg = e.message || String(e);
               setUserStatus("\u89c4\u5219\u5207\u6362\u5931\u8d25: " + errMsg);
-              showProxyRuleSwitchErrorDialog(errMsg);
+              showProxyRuleSwitchErrorDialog(errMsg, null);
             } finally {
               setAllRuleSwitchFlowBusy(false);
             }
