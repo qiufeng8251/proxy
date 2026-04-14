@@ -152,12 +152,12 @@ async function getProxy() {
     }
 }
 
-/** @type {null | { rows: typeof STATE_CODE_ROWS, countries: string[], statesByCountry: Record<string, string[]>, citiesByCountry: Record<string, { city_code: string, city_name: string }[]>, ispsByCountry: Record<string, { isp_code: string, isp_name: string }[]> }} */
+/** @type {null | { rows: typeof STATE_CODE_ROWS, countries: string[], statesByCountry: Record<string, { state_code: string, state_name: string }[]>, citiesByCountry: Record<string, { city_code: string, city_name: string }[]>, ispsByCountry: Record<string, { isp_code: string, isp_name: string }[]> }} */
 let memoLocationCodes = null;
 
 /**
  * 从内置州/市/ISP 表整理国家与各层级代码，供前端筛选规则与新增代理选区（进程内缓存）。
- * @returns {{ rows: typeof STATE_CODE_ROWS, countries: string[], statesByCountry: Record<string, string[]>, citiesByCountry: Record<string, { city_code: string, city_name: string }[]>, ispsByCountry: Record<string, { isp_code: string, isp_name: string }[]> }}
+ * @returns {{ rows: typeof STATE_CODE_ROWS, countries: string[], statesByCountry: Record<string, { state_code: string, state_name: string }[]>, citiesByCountry: Record<string, { city_code: string, city_name: string }[]>, ispsByCountry: Record<string, { isp_code: string, isp_name: string }[]> }}
  */
 function getLocationCodes() {
     if (memoLocationCodes) {
@@ -167,8 +167,9 @@ function getLocationCodes() {
     const statesByCountry = {};
 
     for (let i = 0; i < STATE_CODE_ROWS.length; i += 1) {
-        const countryCode = STATE_CODE_ROWS[i].country_code;
-        const stateCode = STATE_CODE_ROWS[i].state_code;
+        const row = STATE_CODE_ROWS[i];
+        const countryCode = row.country_code;
+        const stateCode = row.state_code;
         if (!countryCode) {
             continue;
         }
@@ -176,9 +177,27 @@ function getLocationCodes() {
         if (!statesByCountry[countryCode]) {
             statesByCountry[countryCode] = [];
         }
-        if (stateCode && !statesByCountry[countryCode].includes(stateCode)) {
-            statesByCountry[countryCode].push(stateCode);
+        if (!stateCode) {
+            continue;
         }
+        const list = statesByCountry[countryCode];
+        if (list.some((x) => x.state_code === stateCode)) {
+            continue;
+        }
+        const stateName =
+            row.state_name != null && String(row.state_name).trim() !== ""
+                ? String(row.state_name).trim()
+                : String(stateCode)
+                      .split("_")
+                      .map((part) =>
+                          part ? part.charAt(0).toUpperCase() + part.slice(1).toLowerCase() : ""
+                      )
+                      .filter(Boolean)
+                      .join(" ");
+        list.push({
+            state_code: stateCode,
+            state_name: stateName
+        });
     }
 
     const citiesByCountry = {};
@@ -222,7 +241,12 @@ function getLocationCodes() {
     const countries = Array.from(countriesSet).sort();
     countries.forEach((country) => {
         if (statesByCountry[country]) {
-            statesByCountry[country].sort();
+            statesByCountry[country].sort((a, b) =>
+                String(a.state_name || a.state_code).localeCompare(
+                    String(b.state_name || b.state_code),
+                    "en"
+                )
+            );
         }
         if (citiesByCountry[country]) {
             citiesByCountry[country].sort((a, b) =>
@@ -2339,10 +2363,223 @@ app.get("/api/add-proxy", async (req, res) => {
     }
 });
 
+/** @type {Map<string, Map<string, string>> | null} country → (isp_code 小写 → isp_name) */
+let nineIspCodeToNameByCountry = null;
+/** @type {Map<string, string> | null} `country\\0city_code小写` → city_name */
+let nineCityKeyToName = null;
+/** @type {Map<string, string> | null} `country\\0state_code小写` → state_name */
+let nineStateKeyToName = null;
+
+function ensureNineProxyIspLookup() {
+    if (nineIspCodeToNameByCountry) {
+        return nineIspCodeToNameByCountry;
+    }
+    const root = new Map();
+    for (let i = 0; i < ISP_CODE_ROWS.length; i += 1) {
+        const r = ISP_CODE_ROWS[i];
+        const cc = String(r.country_code || "")
+            .trim()
+            .toUpperCase();
+        const code = String(r.isp_code || "")
+            .trim()
+            .toLowerCase();
+        if (!cc || !code) {
+            continue;
+        }
+        if (!root.has(cc)) {
+            root.set(cc, new Map());
+        }
+        const name = String(r.isp_name || r.isp_code || "").trim();
+        const inner = root.get(cc);
+        inner.set(code, name || code);
+        if (name) {
+            inner.set(name.toLowerCase(), name);
+        }
+    }
+    nineIspCodeToNameByCountry = root;
+    return root;
+}
+
+function ensureNineProxyCityLookup() {
+    if (nineCityKeyToName) {
+        return nineCityKeyToName;
+    }
+    const m = new Map();
+    for (let i = 0; i < CITY_CODE_ROWS.length; i += 1) {
+        const r = CITY_CODE_ROWS[i];
+        const cc = String(r.country_code || "")
+            .trim()
+            .toUpperCase();
+        const code = String(r.city_code || "")
+            .trim()
+            .toLowerCase();
+        if (!cc || !code) {
+            continue;
+        }
+        const name = String(r.city_name || r.city_code || "").trim();
+        const canon = name || code;
+        m.set(`${cc}\0${code}`, canon);
+        if (name) {
+            m.set(`${cc}\0${name.toLowerCase()}`, canon);
+        }
+    }
+    nineCityKeyToName = m;
+    return m;
+}
+
+function ensureNineProxyStateLookup() {
+    if (nineStateKeyToName) {
+        return nineStateKeyToName;
+    }
+    const m = new Map();
+    for (let i = 0; i < STATE_CODE_ROWS.length; i += 1) {
+        const r = STATE_CODE_ROWS[i];
+        const cc = String(r.country_code || "")
+            .trim()
+            .toUpperCase();
+        const sc = String(r.state_code || "")
+            .trim()
+            .toLowerCase();
+        if (!cc || !sc) {
+            continue;
+        }
+        const nm =
+            r.state_name != null && String(r.state_name).trim() !== ""
+                ? String(r.state_name).trim()
+                : String(r.state_code || "")
+                      .split("_")
+                      .map((part) =>
+                          part ? part.charAt(0).toUpperCase() + part.slice(1).toLowerCase() : ""
+                      )
+                      .filter(Boolean)
+                      .join(" ");
+        m.set(`${cc}\0${sc}`, nm);
+        if (nm.toLowerCase() !== sc) {
+            m.set(`${cc}\0${nm.toLowerCase()}`, nm);
+        }
+    }
+    nineStateKeyToName = m;
+    return m;
+}
+
+function buildNineProxyIspParam(country, ispTokens) {
+    const cc = String(country || "")
+        .trim()
+        .toUpperCase();
+    const byCountry = ensureNineProxyIspLookup().get(cc);
+    const parts = [];
+    const arr = Array.isArray(ispTokens) ? ispTokens : [];
+    for (let i = 0; i < arr.length; i += 1) {
+        let code = String(arr[i] || "").trim();
+        if (!code) {
+            continue;
+        }
+        const bar = code.indexOf("|");
+        if (bar !== -1) {
+            const c0 = code.slice(0, bar).trim().toUpperCase();
+            code = code.slice(bar + 1).trim();
+            if (c0 && c0 !== cc) {
+                continue;
+            }
+        }
+        const key = code.toLowerCase();
+        const disp =
+            byCountry && byCountry.has(key) ? byCountry.get(key) : code;
+        if (disp) {
+            parts.push(disp);
+        }
+    }
+    return parts.join(",");
+}
+
+function buildNineProxyCityParam(country, cityTokens) {
+    const cc = String(country || "")
+        .trim()
+        .toUpperCase();
+    const map = ensureNineProxyCityLookup();
+    const parts = [];
+    const arr = Array.isArray(cityTokens) ? cityTokens : [];
+    for (let i = 0; i < arr.length; i += 1) {
+        let code = String(arr[i] || "").trim();
+        if (!code) {
+            continue;
+        }
+        const bar = code.indexOf("|");
+        if (bar !== -1) {
+            const c0 = code.slice(0, bar).trim().toUpperCase();
+            code = code.slice(bar + 1).trim();
+            if (c0 && c0 !== cc) {
+                continue;
+            }
+        }
+        const key = `${cc}\0${code.toLowerCase()}`;
+        const disp = map.get(key) || code.replace(/_/g, " ");
+        if (disp) {
+            parts.push(disp);
+        }
+    }
+    return parts.join(",");
+}
+
+function buildNineProxyStateParam(country, stateTokens) {
+    const cc = String(country || "")
+        .trim()
+        .toUpperCase();
+    const map = ensureNineProxyStateLookup();
+    const parts = [];
+    const arr = Array.isArray(stateTokens) ? stateTokens : [];
+    for (let i = 0; i < arr.length; i += 1) {
+        let code = String(arr[i] || "").trim();
+        if (!code) {
+            continue;
+        }
+        const bar = code.indexOf("|");
+        if (bar !== -1) {
+            const c0 = code.slice(0, bar).trim().toUpperCase();
+            code = code.slice(bar + 1).trim();
+            if (c0 && c0 !== cc) {
+                continue;
+            }
+        }
+        const key = `${cc}\0${code.toLowerCase()}`;
+        const disp =
+            map.get(key) ||
+            code
+                .split("_")
+                .map((part) =>
+                    part ? part.charAt(0).toUpperCase() + part.slice(1).toLowerCase() : ""
+                )
+                .filter(Boolean)
+                .join(" ");
+        if (disp) {
+            parts.push(disp);
+        }
+    }
+    return parts.join(",");
+}
+
+function serializeNineProxyApiProxyQuery(p) {
+    const order = ["t", "num", "port", "country", "isp", "city", "zip", "state", "today"];
+    const parts = [];
+    for (let i = 0; i < order.length; i += 1) {
+        const key = order[i];
+        const v = p[key];
+        if (v === undefined || v === null) {
+            continue;
+        }
+        const s = String(v).trim();
+        if (s === "") {
+            continue;
+        }
+        parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(s)}`);
+    }
+    return parts.join("&");
+}
+
 /**
  * GET /api/proxy?tag=出站tag
  * 读取该 tag 已保存的筛选规则，在本地端口区间内通过 9proxy `GET /api/port_free` 扫描得到空闲端口，
- * 再以 num=1、t=2 及筛选字段调用 9proxy `GET /api/proxy`。
+ * 再以 num=1、t=2 及筛选字段调用 9proxy `GET /api/proxy`（isp/city/state 由内建表转为展示名，query 键顺序固定）。
  */
 app.get("/api/proxy", async (req, res) => {
     const tag = req.query.tag != null ? String(req.query.tag).trim() : "";
@@ -2369,21 +2606,14 @@ app.get("/api/proxy", async (req, res) => {
                 msg: "无可用本地 SOCKS 端口（已在区间内扫描 9proxy port_free）"
             });
         }
-        const joinCsv = (arr) =>
-            Array.isArray(arr) && arr.length
-                ? arr
-                      .map((x) => String(x).trim())
-                      .filter(Boolean)
-                      .join(",")
-                : "";
-        const stateStr = joinCsv(f.states);
-        const cityStr = joinCsv(f.cities);
-        const ispStr = joinCsv(f.isps);
+        const stateStr = buildNineProxyStateParam(f.country, f.states);
+        const cityStr = buildNineProxyCityParam(f.country, f.cities);
+        const ispStr = buildNineProxyIspParam(f.country, f.isps);
         const zipStr = f.zip != null ? String(f.zip).trim() : "";
         const params = {};
-        params.t = 2;
-        params.num = 1;
-        params.port = Number(port);
+        params.t = "2";
+        params.num = "1";
+        params.port = String(port);
         params.country = f.country;
         if (ispStr) {
             params.isp = ispStr;
@@ -2395,7 +2625,7 @@ app.get("/api/proxy", async (req, res) => {
             params.zip = zipStr;
         }
         if (stateStr) {
-            params.state = 'Texas';
+            params.state = stateStr;
         }
         if (f.today) {
             params.today = "true";
@@ -2404,7 +2634,8 @@ app.get("/api/proxy", async (req, res) => {
         nineProxyRequestParams = { ...params };
         const result = await axios.get(nineProxyRequestUrl, {
             ...AXIOS_OPTS_NO_PROXY,
-            params
+            params,
+            paramsSerializer: serializeNineProxyApiProxyQuery
         });
         res.json({
             success: true,
@@ -3789,6 +4020,13 @@ app.get("/", (req, res) => {
       }
     }
 
+    function nfStateRowName(row) {
+      if (typeof row === "string") {
+        return String(row || "").trim();
+      }
+      return String(row.state_name || row.state_code || "").trim();
+    }
+
     function nfBuildStatePickOptions() {
       const cc = nfCountrySelect
         ? String(nfCountrySelect.value || "")
@@ -3802,16 +4040,24 @@ app.get("/", (req, res) => {
         : "";
       const out = [];
       if (cc) {
-        (locData.statesByCountry[cc] || []).forEach(function (sc) {
-          if (!q || sc.toLowerCase().indexOf(q) !== -1) {
-            out.push({ v: sc, lab: sc });
+        (locData.statesByCountry[cc] || []).forEach(function (row) {
+          const sn = nfStateRowName(row);
+          if (!sn) {
+            return;
+          }
+          if (!q || sn.toLowerCase().indexOf(q) !== -1) {
+            out.push({ v: sn, lab: sn });
           }
         });
       } else {
         (locData.countries || []).forEach(function (c) {
-          (locData.statesByCountry[c] || []).forEach(function (sc) {
-            const v = c + "|" + sc;
-            const lab = c + " — " + sc;
+          (locData.statesByCountry[c] || []).forEach(function (row) {
+            const sn = nfStateRowName(row);
+            if (!sn) {
+              return;
+            }
+            const v = c + "|" + sn;
+            const lab = c + " — " + sn;
             if (
               !q ||
               lab.toLowerCase().indexOf(q) !== -1 ||
@@ -3872,17 +4118,26 @@ app.get("/", (req, res) => {
       }
       if (cc) {
         (locData.citiesByCountry[cc] || []).forEach(function (row) {
+          const cn = String(row.city_name || row.city_code || "").trim();
+          if (!cn) {
+            return;
+          }
           consider(
-            row.city_code,
-            row.city_code + " — " + (row.city_name || "")
+            cn,
+            cn +
+              (row.city_code && row.city_code !== cn ? " — " + row.city_code : "")
           );
         });
       } else {
         (locData.countries || []).forEach(function (c) {
           (locData.citiesByCountry[c] || []).forEach(function (row) {
+            const cn = String(row.city_name || row.city_code || "").trim();
+            if (!cn) {
+              return;
+            }
             consider(
-              c + "|" + row.city_code,
-              c + " — " + row.city_code + " — " + (row.city_name || "")
+              c + "|" + cn,
+              c + " — " + cn + (row.city_code ? " — " + row.city_code : "")
             );
           });
         });
@@ -3937,16 +4192,25 @@ app.get("/", (req, res) => {
       }
       if (cc) {
         (locData.ispsByCountry[cc] || []).forEach(function (row) {
-          const bit = (row.isp_name || row.isp_code || "").trim();
-          consider(row.isp_code, row.isp_code + (bit ? " — " + bit : ""));
+          const inm = String(row.isp_name || row.isp_code || "").trim();
+          if (!inm) {
+            return;
+          }
+          consider(
+            inm,
+            inm + (row.isp_code && row.isp_code !== inm ? " — " + row.isp_code : "")
+          );
         });
       } else {
         (locData.countries || []).forEach(function (c) {
           (locData.ispsByCountry[c] || []).forEach(function (row) {
-            const bit = (row.isp_name || row.isp_code || "").trim();
+            const inm = String(row.isp_name || row.isp_code || "").trim();
+            if (!inm) {
+              return;
+            }
             consider(
-              c + "|" + row.isp_code,
-              c + " — " + row.isp_code + (bit ? " — " + bit : "")
+              c + "|" + inm,
+              c + " — " + inm + (row.isp_code ? " — " + row.isp_code : "")
             );
           });
         });
@@ -4486,8 +4750,23 @@ app.get("/", (req, res) => {
 
     function fillStateOptions(countryCode) {
       const stateList = statesByCountry[countryCode] || [];
-      stateInput.innerHTML = '<option value="">state (州/省)</option>' +
-        stateList.map((state) => '<option value="' + state + '">' + state + '</option>').join("");
+      stateInput.innerHTML =
+        '<option value="">state (州/省)</option>' +
+        stateList
+          .map(function (row) {
+            const label =
+              typeof row === "string"
+                ? row
+                : String(row.state_name || row.state_code || "").trim();
+            return (
+              '<option value="' +
+              escapeHtml(label) +
+              '">' +
+              escapeHtml(label) +
+              "</option>"
+            );
+          })
+          .join("");
     }
 
     function populateFilterOptions(list) {
