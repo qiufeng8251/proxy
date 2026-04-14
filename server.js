@@ -3418,10 +3418,10 @@ app.get("/", (req, res) => {
           ? String(message)
           : "\u8bf7\u6c42\u5931\u8d25";
       if (data && data.nine_proxy_api) {
-        text += "\n\nAPI:\n" + String(data.nine_proxy_api);
+        text += "\\n\\nAPI:\\n" + String(data.nine_proxy_api);
       }
       if (data && data.nine_proxy_params != null && typeof data.nine_proxy_params === "object") {
-        text += "\n\n\u53c2\u6570:\n" + JSON.stringify(data.nine_proxy_params, null, 2);
+        text += "\\n\\n\u53c2\u6570:\\n" + JSON.stringify(data.nine_proxy_params, null, 2);
       }
       if (proxyRuleSwitchErrorText) {
         proxyRuleSwitchErrorText.textContent = text;
