@@ -4917,7 +4917,18 @@ app.get("/", (req, res) => {
       if (ruleSwitchBtn) {
         const tagRs = ruleSwitchBtn.getAttribute("data-outbound");
         if (tagRs) {
-          ruleSwitchBtn.disabled = true;
+          function setAllRuleSwitchFlowBusy(busy) {
+            if (!userBody) {
+              return;
+            }
+            userBody.querySelectorAll(".use-from-user-btn").forEach(function (b) {
+              b.disabled = busy;
+            });
+            userBody.querySelectorAll(".nine-rule-switch-btn").forEach(function (b) {
+              b.disabled = busy;
+            });
+          }
+          setAllRuleSwitchFlowBusy(true);
           void (async function () {
             try {
               setUserStatus("\u6b63\u5728\u6309\u7b5b\u9009\u89c4\u5219\u8bf7\u6c42\u65b0\u4ee3\u7406\u2026");
@@ -4945,7 +4956,7 @@ app.get("/", (req, res) => {
                 "\u89c4\u5219\u5207\u6362\u5931\u8d25: " + (e.message || String(e))
               );
             } finally {
-              ruleSwitchBtn.disabled = false;
+              setAllRuleSwitchFlowBusy(false);
             }
           })();
         }
