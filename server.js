@@ -2339,135 +2339,10 @@ app.get("/api/add-proxy", async (req, res) => {
     }
 });
 
-/** @type {Map<string, Map<string, string>> | null} country → (isp_code 小写 → isp_name) */
-let nineIspCodeToNameByCountry = null;
-/** @type {Map<string, string> | null} `country\\0city_code小写` → city_name */
-let nineCityKeyToName = null;
-
-function ensureNineProxyIspLookup() {
-    if (nineIspCodeToNameByCountry) {
-        return nineIspCodeToNameByCountry;
-    }
-    const root = new Map();
-    for (let i = 0; i < ISP_CODE_ROWS.length; i += 1) {
-        const r = ISP_CODE_ROWS[i];
-        const cc = String(r.country_code || "")
-            .trim()
-            .toUpperCase();
-        const code = String(r.isp_code || "")
-            .trim()
-            .toLowerCase();
-        if (!cc || !code) {
-            continue;
-        }
-        if (!root.has(cc)) {
-            root.set(cc, new Map());
-        }
-        const name = String(r.isp_name || r.isp_code || "").trim();
-        root.get(cc).set(code, name || code);
-    }
-    nineIspCodeToNameByCountry = root;
-    return root;
-}
-
-function ensureNineProxyCityLookup() {
-    if (nineCityKeyToName) {
-        return nineCityKeyToName;
-    }
-    const m = new Map();
-    for (let i = 0; i < CITY_CODE_ROWS.length; i += 1) {
-        const r = CITY_CODE_ROWS[i];
-        const cc = String(r.country_code || "")
-            .trim()
-            .toUpperCase();
-        const code = String(r.city_code || "")
-            .trim()
-            .toLowerCase();
-        if (!cc || !code) {
-            continue;
-        }
-        const name = String(r.city_name || r.city_code || "").trim();
-        m.set(`${cc}\0${code}`, name || code);
-    }
-    nineCityKeyToName = m;
-    return m;
-}
-
-/**
- * 将筛选里保存的 isp_code（及 `国家|code`）转为 9proxy 接受的 `AS… 名称` 串，多枚用英文逗号拼接（无空格），与官方示例一致。
- * @param {string} country
- * @param {string[]} ispTokens
- */
-function buildNineProxyIspParam(country, ispTokens) {
-    const cc = String(country || "")
-        .trim()
-        .toUpperCase();
-    const byCountry = ensureNineProxyIspLookup().get(cc);
-    const parts = [];
-    const arr = Array.isArray(ispTokens) ? ispTokens : [];
-    for (let i = 0; i < arr.length; i += 1) {
-        let code = String(arr[i] || "").trim();
-        if (!code) {
-            continue;
-        }
-        const bar = code.indexOf("|");
-        if (bar !== -1) {
-            const c0 = code.slice(0, bar).trim().toUpperCase();
-            code = code.slice(bar + 1).trim();
-            if (c0 && c0 !== cc) {
-                continue;
-            }
-        }
-        const key = code.toLowerCase();
-        const disp =
-            byCountry && byCountry.has(key)
-                ? byCountry.get(key)
-                : code;
-        if (disp) {
-            parts.push(disp);
-        }
-    }
-    return parts.join(",");
-}
-
-/**
- * 将筛选里保存的 city_code 转为城市展示名，多枚用英文逗号拼接。
- * @param {string} country
- * @param {string[]} cityTokens
- */
-function buildNineProxyCityParam(country, cityTokens) {
-    const cc = String(country || "")
-        .trim()
-        .toUpperCase();
-    const map = ensureNineProxyCityLookup();
-    const parts = [];
-    const arr = Array.isArray(cityTokens) ? cityTokens : [];
-    for (let i = 0; i < arr.length; i += 1) {
-        let code = String(arr[i] || "").trim();
-        if (!code) {
-            continue;
-        }
-        const bar = code.indexOf("|");
-        if (bar !== -1) {
-            const c0 = code.slice(0, bar).trim().toUpperCase();
-            code = code.slice(bar + 1).trim();
-            if (c0 && c0 !== cc) {
-                continue;
-            }
-        }
-        const key = `${cc}\0${code.toLowerCase()}`;
-        const disp = map.get(key) || code.replace(/_/g, " ");
-        if (disp) {
-            parts.push(disp);
-        }
-    }
-    return parts.join(",");
-}
-
 /**
  * GET /api/proxy?tag=出站tag
  * 读取该 tag 已保存的筛选规则，在本地端口区间内通过 9proxy `GET /api/port_free` 扫描得到空闲端口，
- * 再以 num=1、t=2 及筛选字段调用 9proxy `GET /api/proxy`（isp/city 由内建表转为与官方一致的展示串，query 键顺序固定）。
+ * 再以 num=1、t=2 及筛选字段调用 9proxy `GET /api/proxy`。
  */
 app.get("/api/proxy", async (req, res) => {
     const tag = req.query.tag != null ? String(req.query.tag).trim() : "";
@@ -2502,13 +2377,13 @@ app.get("/api/proxy", async (req, res) => {
                       .join(",")
                 : "";
         const stateStr = joinCsv(f.states);
-        const cityStr = buildNineProxyCityParam(f.country, f.cities);
-        const ispStr = buildNineProxyIspParam(f.country, f.isps);
+        const cityStr = joinCsv(f.cities);
+        const ispStr = joinCsv(f.isps);
         const zipStr = f.zip != null ? String(f.zip).trim() : "";
         const params = {};
-        params.t = "2";
-        params.num = "1";
-        params.port = String(port);
+        params.t = 2;
+        params.num = 1;
+        params.port = Number(port);
         params.country = f.country;
         if (ispStr) {
             params.isp = ispStr;
@@ -2520,7 +2395,7 @@ app.get("/api/proxy", async (req, res) => {
             params.zip = zipStr;
         }
         if (stateStr) {
-            params.state = stateStr;
+            params.state = 'Texas';
         }
         if (f.today) {
             params.today = "true";
