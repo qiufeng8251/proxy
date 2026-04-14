@@ -2381,9 +2381,9 @@ app.get("/api/proxy", async (req, res) => {
         const ispStr = joinCsv(f.isps);
         const zipStr = f.zip != null ? String(f.zip).trim() : "";
         const params = {};
-        params.t = "2";
-        params.num = "1";
-        params.port = String(port);
+        params.t = 2;
+        params.num = 1;
+        params.port = Number(port);
         params.country = f.country;
         if (ispStr) {
             params.isp = ispStr;
