@@ -4057,13 +4057,12 @@ app.get("/", (req, res) => {
               return;
             }
             const v = c + "|" + sn;
-            const lab = c + " — " + sn;
             if (
               !q ||
-              lab.toLowerCase().indexOf(q) !== -1 ||
+              sn.toLowerCase().indexOf(q) !== -1 ||
               v.toLowerCase().indexOf(q) !== -1
             ) {
-              out.push({ v: v, lab: lab });
+              out.push({ v: v, lab: sn });
             }
           });
         });
@@ -4122,11 +4121,7 @@ app.get("/", (req, res) => {
           if (!cn) {
             return;
           }
-          consider(
-            cn,
-            cn +
-              (row.city_code && row.city_code !== cn ? " — " + row.city_code : "")
-          );
+          consider(cn, cn);
         });
       } else {
         (locData.countries || []).forEach(function (c) {
@@ -4135,10 +4130,14 @@ app.get("/", (req, res) => {
             if (!cn) {
               return;
             }
-            consider(
-              c + "|" + cn,
-              c + " — " + cn + (row.city_code ? " — " + row.city_code : "")
-            );
+            const v = c + "|" + cn;
+            if (
+              !q ||
+              cn.toLowerCase().indexOf(q) !== -1 ||
+              v.toLowerCase().indexOf(q) !== -1
+            ) {
+              out.push({ v: v, lab: cn });
+            }
           });
         });
       }
@@ -4196,10 +4195,7 @@ app.get("/", (req, res) => {
           if (!inm) {
             return;
           }
-          consider(
-            inm,
-            inm + (row.isp_code && row.isp_code !== inm ? " — " + row.isp_code : "")
-          );
+          consider(inm, inm);
         });
       } else {
         (locData.countries || []).forEach(function (c) {
@@ -4208,10 +4204,14 @@ app.get("/", (req, res) => {
             if (!inm) {
               return;
             }
-            consider(
-              c + "|" + inm,
-              c + " — " + inm + (row.isp_code ? " — " + row.isp_code : "")
-            );
+            const v = c + "|" + inm;
+            if (
+              !q ||
+              inm.toLowerCase().indexOf(q) !== -1 ||
+              v.toLowerCase().indexOf(q) !== -1
+            ) {
+              out.push({ v: v, lab: inm });
+            }
           });
         });
       }
