@@ -2366,9 +2366,9 @@ app.get("/api/proxy", async (req, res) => {
             });
         }
         const params = {
+            t: "2",
             num: "1",
             port: String(port),
-            t: "2",
             country: f.country
         };
         const joinCsv = (arr) =>
