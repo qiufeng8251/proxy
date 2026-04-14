@@ -2392,6 +2392,36 @@ app.get("/api/port_status", async (req, res) => {
 });
 
 /**
+ * GET /api/port-check（兼容 /api/port_check）
+ * 将本服务收到的 query 原样透传至上游 GET /api/port_check，响应体与 HTTP 状态与上游一致。
+ * 常用参数：`t=2`、`ports=all`（或单个端口）。
+ */
+async function handlePortCheckProxy(req, res) {
+    try {
+        const r = await axios.get(`${NINE_PROXY_BASE}/api/port_check`, {
+            ...AXIOS_OPTS_NO_PROXY,
+            params: req.query,
+            timeout: 15000
+        });
+        const st = typeof r.status === "number" && r.status > 0 ? r.status : 200;
+        return res.status(st).json(r.data);
+    } catch (e) {
+        console.warn("[9proxy] /api/port-check (→ /api/port_check):", e.message || e);
+        if (e.response && e.response.data != null) {
+            return res.status(e.response.status || 502).json(e.response.data);
+        }
+        return res.status(502).json({
+            error: true,
+            message: NINE_PROXY_UNAVAILABLE_HINT,
+            nine_proxy_available: false,
+            detail: e.message || String(e)
+        });
+    }
+}
+app.get("/api/port-check", handlePortCheckProxy);
+app.get("/api/port_check", handlePortCheckProxy);
+
+/**
  * GET /api/port-free
  * 将本服务收到的 query 原样透传至 9proxy 的 GET /api/port_free（释放/回收本地端口等资源，不是「查空闲」）。
  * 参数名与取值以 9proxy 文档为准（常见如 `t`、`ports`），响应体与 HTTP 状态与 9proxy 一致。
