@@ -53,8 +53,10 @@ if [ "$INSTALL_NINEPROXY" -eq 1 ]; then
         sudo apt install -y ./"$DEB_FILE" || die "安装 9proxy deb 失败"
     fi
 
-    echo "启用并启动 9proxy 服务（systemctl enable --now 9proxyd）..."
-    sudo systemctl enable --now 9proxyd || die "systemctl enable --now 9proxyd 失败（开机自启 + 当前启动）"
+    echo "启用 9proxy 服务（systemctl enable 9proxyd.service）..."
+    sudo systemctl enable 9proxyd.service || die "systemctl enable 9proxyd.service 失败（开机自启）"
+    echo "启动 9proxy 服务（systemctl start 9proxyd.service）..."
+    sudo systemctl start 9proxyd.service || die "systemctl start 9proxyd.service 失败（当前启动）"
 
     echo "跳过 9proxy 账号登录（按需可手动执行: 9proxy auth -u USER -p PASS）。"
 
