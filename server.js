@@ -2677,6 +2677,63 @@ app.post("/api/custom-proxies", async (req, res) => {
 });
 
 /**
+ * DELETE /api/custom-proxies/:id
+ * 删除自定义 SOCKS5；若该代理正在被任一出站 tag 使用，则禁止删除。
+ */
+app.delete("/api/custom-proxies/:id", (req, res) => {
+    try {
+        const id = req.params?.id != null ? String(req.params.id).trim() : "";
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                msg: "缺少自定义代理 id"
+            });
+        }
+        if (!id.startsWith("custom-")) {
+            return res.status(400).json({
+                success: false,
+                msg: "仅支持删除自定义代理（id 需以 custom- 开头）"
+            });
+        }
+
+        const list = readCustomProxiesFile();
+        const idx = list.findIndex((e) => String(e?.id || "") === id);
+        if (idx < 0) {
+            return res.status(404).json({
+                success: false,
+                msg: "未找到自定义代理: " + id
+            });
+        }
+
+        const entry = list[idx];
+        const bindKey = normalizeBindingKey(`${entry.host}:${entry.port}`);
+        const bindingMap = getSocksBindingToUsersMap();
+        const usingTags = Array.isArray(bindingMap[bindKey]) ? bindingMap[bindKey] : [];
+        if (usingTags.length > 0) {
+            return res.status(409).json({
+                success: false,
+                msg: `该代理正在被用户使用，无法删除（${usingTags.join("、")}）`,
+                using_users: usingTags
+            });
+        }
+
+        list.splice(idx, 1);
+        writeCustomProxiesFile(list);
+        return res.json({
+            success: true,
+            msg: "已删除自定义代理",
+            id
+        });
+    } catch (e) {
+        return res.status(500).json({
+            success: false,
+            msg: e.message || "删除自定义代理失败",
+            error: e.message
+        });
+    }
+});
+
+/**
  * GET /api/port_status
  * 转发 9proxy port_status，并为每条端口记录的 public_ip 补充 ip_country / ip_region / ip_city（ipinfo）。
  */
@@ -5169,6 +5226,25 @@ app.get("/", (req, res) => {
       return data.data;
     }
 
+    async function deleteCustomProxyById(proxyId) {
+      const id = String(proxyId || "").trim();
+      if (!id) {
+        throw new Error("缺少代理 ID");
+      }
+      if (!id.startsWith("custom-")) {
+        throw new Error("仅支持删除自定义代理");
+      }
+      const resp = await fetch(
+        "/api/custom-proxies/" + encodeURIComponent(id),
+        { method: "DELETE" }
+      );
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok || data.success === false) {
+        throw new Error(data.msg || data.error || "删除失败");
+      }
+      return data;
+    }
+
     async function fetchProxyListData(options) {
       const lite = options && options.lite === true;
       const url = lite ? endpoint + "?lite=1" : endpoint;
@@ -5568,6 +5644,14 @@ app.get("/", (req, res) => {
           item.bound_wifi_name && String(item.bound_wifi_name).trim() !== ""
             ? escapeHtml(String(item.bound_wifi_name).trim())
             : "-";
+        const isCustom = item && item.is_custom === true;
+        const customDeleteBtn = isCustom
+          ? hasUserUse
+            ? '<button type="button" class="switch-btn" disabled title="该代理正在被用户使用，无法删除">删除</button>'
+            : '<button type="button" class="switch-btn" onclick="deleteCustomProxyFlow(\\'' +
+              escapeHtml(String(item.id || "")) +
+              '\\')">删除</button>'
+          : "";
         return \`
           <tr class="\${rowClass}">
             <td>\${item.id || "-"}</td>
@@ -5588,11 +5672,47 @@ app.get("/", (req, res) => {
               >
                 使用
               </button>
+              \${customDeleteBtn}
             </td>
           </tr>
         \`;
       }).join("");
     }
+
+    async function deleteCustomProxyFlow(proxyId) {
+      const id = String(proxyId || "").trim();
+      if (!id) {
+        setStatus("删除失败: 缺少代理 ID");
+        return;
+      }
+      const row = allProxyList.find((p) => String(p.id) === id);
+      if (!row || row.is_custom !== true) {
+        setStatus("仅支持删除自定义代理");
+        return;
+      }
+      const boundUserStr = row.bound_user != null ? String(row.bound_user).trim() : "";
+      if (boundUserStr) {
+        const msg = "该代理正在被用户使用（" + boundUserStr + "），不可删除";
+        setStatus(msg);
+        showActionToast(msg, "error");
+        return;
+      }
+      if (!window.confirm("确定删除该自定义代理吗？\\n\\nID: " + id)) {
+        return;
+      }
+      try {
+        setStatus("正在删除自定义代理…");
+        await deleteCustomProxyById(id);
+        await loadProxyList();
+        setStatus("已删除自定义代理: " + id);
+        showActionToast("已删除自定义代理", "success");
+      } catch (e) {
+        const tip = e.message || String(e);
+        setStatus("删除自定义代理失败: " + tip);
+        showActionToast("删除失败: " + tip, "error");
+      }
+    }
+    window.deleteCustomProxyFlow = deleteCustomProxyFlow;
 
     async function openSwitchModal(proxyId) {
       if (!proxyId) {
