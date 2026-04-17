@@ -1352,9 +1352,63 @@ async function enrichSingboxUsersWithSocksGeo(users, config, debugLogs) {
 }
 
 /**
+ * 用户管理行：非本机 SOCKS 出站时提供展示用账号、与 `custom-proxies.json` 匹配的备注（不返回密码）。
+ * @param {object} config
+ * @param {string} tag
+ * @returns {{ socks_account: string, socks_custom_label: string }}
+ */
+function socksCustomDisplayForRouteUser(config, tag) {
+    const ob = getSocksOutboundObForTag(config, tag);
+    if (!ob || ob.type !== "socks" || ob.server == null || ob.server_port == null) {
+        return { socks_account: "", socks_custom_label: "" };
+    }
+    const server = String(ob.server).trim();
+    const port = Number(ob.server_port);
+    if (!server || !Number.isFinite(port) || port <= 0) {
+        return { socks_account: "", socks_custom_label: "" };
+    }
+    const isLocal =
+        server === "127.0.0.1"
+        || server === "localhost"
+        || server === "::1";
+    if (isLocal) {
+        return { socks_account: "", socks_custom_label: "" };
+    }
+    const account = ob.username != null ? String(ob.username).trim() : "";
+    const pw = ob.password != null ? String(ob.password) : "";
+    const list = readCustomProxiesFile();
+    const hk = normalizeBindingKey(server);
+    let label = "";
+    for (let i = 0; i < list.length; i += 1) {
+        const e = list[i];
+        if (!e || typeof e !== "object") {
+            continue;
+        }
+        if (normalizeBindingKey(String(e.host || "")) !== hk) {
+            continue;
+        }
+        if (Number(e.port) !== port) {
+            continue;
+        }
+        if (String(e.username ?? "") !== account) {
+            continue;
+        }
+        if (String(e.password ?? "") !== pw) {
+            continue;
+        }
+        label = normalizeCustomProxyLabel(e.label);
+        break;
+    }
+    return {
+        socks_account: account,
+        socks_custom_label: label
+    };
+}
+
+/**
  * 从 `route.rules` 收集带 `outbound` 的规则，与 SOCKS 出站地址、WiFi 展示名组合成「用户管理」行数据
  *（不要求 auth_user）。
- * @returns {{ ok: boolean, error?: string, users: Array<{ outbound: string, socks_address: string, wifi_name: string }> }} `socks_address` 为 `host:port`、`直连`（`type:direct`）或空。
+ * @returns {{ ok: boolean, error?: string, users: Array<{ outbound: string, socks_address: string, wifi_name: string, socks_account?: string, socks_custom_label?: string }> }} `socks_address` 为 `host:port`、`直连`（`type:direct`）或空；远端 SOCKS 附 `socks_account` / `socks_custom_label` 供界面区分。
  */
 function getSingboxRouteUsers() {
     try {
@@ -1385,7 +1439,8 @@ function getSingboxRouteUsers() {
             users.push({
                 outbound: tag,
                 socks_address: socksAddressForOutboundTag(config, tag),
-                wifi_name: typeof wn === "string" && wn.trim() !== "" ? wn.trim() : ""
+                wifi_name: typeof wn === "string" && wn.trim() !== "" ? wn.trim() : "",
+                ...socksCustomDisplayForRouteUser(config, tag)
             });
         }
         return { ok: true, users };
@@ -3847,6 +3902,11 @@ app.get("/", (req, res) => {
       max-width: 94vw;
       max-height: 90vh;
     }
+    /* 用户管理 · 切换代理：选项文案很长，单独加宽容器 */
+    dialog.dialog-proxy-pick.dialog-user-proxy-switch {
+      width: min(960px, 98vw);
+      max-width: 98vw;
+    }
     dialog.dialog-proxy-pick .modal-inner {
       max-height: min(82vh, 720px);
       overflow-y: auto;
@@ -4256,7 +4316,7 @@ app.get("/", (req, res) => {
           </div>
         </div>
       </dialog>
-      <dialog id="useProxyFromUserDialog" class="dialog-proxy-pick">
+      <dialog id="useProxyFromUserDialog" class="dialog-proxy-pick dialog-user-proxy-switch">
         <div class="modal-inner">
           <h3 style="margin-top:0;">切换代理</h3>
           <p class="status" id="useProxyFromUserMeta" style="margin:0 0 10px;font-size:13px;color:#374151;"></p>
@@ -4750,6 +4810,25 @@ app.get("/", (req, res) => {
         const bindHint = addrRaw
           ? '<div class="' + userBindSocksClass(row) + '">' + escapeHtml(addrRaw) + "</div>"
           : "";
+        const userSocksCue = (function () {
+          if (isDirectUser) {
+            return "";
+          }
+          const lab =
+            row.socks_custom_label != null
+              ? String(row.socks_custom_label).trim()
+              : "";
+          if (lab) {
+            return lab;
+          }
+          const acc =
+            row.socks_account != null ? String(row.socks_account).trim() : "";
+          return acc ? "账号 " + acc : "";
+        })();
+        const userSocksCueHtml =
+          userSocksCue !== ""
+            ? '<div class="custom-proxy-cue">' + escapeHtml(userSocksCue) + "</div>"
+            : "";
         const wifiVal = escapeHtml(String(row.wifi_name || "").trim());
         const wnRaw = String(row.wifi_name || "").trim();
         let wifiDisplay;
@@ -4784,7 +4863,12 @@ app.get("/", (req, res) => {
           "</div>";
         return (
           "<tr>" +
-          "<td><strong>" + escapeHtml(row.outbound || "-") + "</strong>" + bindHint + "</td>" +
+          "<td><strong>" +
+          escapeHtml(row.outbound || "-") +
+          "</strong>" +
+          bindHint +
+          userSocksCueHtml +
+          "</td>" +
           "<td>" +
           wifiCell +
           "</td>" +
