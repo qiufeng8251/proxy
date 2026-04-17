@@ -1543,11 +1543,28 @@ function writeCustomProxiesFile(proxies) {
 }
 
 /**
- * 转为与 today_list 类似的列表项（不含密码）；`binding` 与 SOCKS 出站地址一致便于绑定列展示。
- * @param {{ id: string, host: string, port: number }} c
+ * 规范化自定义 SOCKS 备注长度（写入 custom-proxies.json 的 `label`）。
+ * @param {unknown} v
+ * @returns {string}
+ */
+function normalizeCustomProxyLabel(v) {
+    const s = String(v ?? "").trim();
+    if (!s) {
+        return "";
+    }
+    const max = 120;
+    return s.length > max ? s.slice(0, max) : s;
+}
+
+/**
+ * 转为与 today_list 类似的列表项（不含密码）；`binding` 仅 `host:port`（与 sing-box 出站比对键一致）。
+ * `custom_label` / `custom_account` 仅供界面区分「同 host:port、不同账密」的条目。
+ * @param {{ id: string, host: string, port: number, username?: string, label?: string }} c
  */
 function customProxyToApiRow(c) {
     const bind = `${c.host}:${c.port}`;
+    const label = normalizeCustomProxyLabel(c?.label);
+    const account = String(c.username ?? "").trim();
     return {
         id: c.id,
         ip: "",
@@ -1556,7 +1573,9 @@ function customProxyToApiRow(c) {
         state: "",
         is_online: false,
         binding: bind,
-        is_custom: true
+        is_custom: true,
+        custom_label: label,
+        custom_account: account
     };
 }
 
@@ -2624,6 +2643,7 @@ app.post("/api/user-nine-filter", (req, res) => {
 
 /**
  * 添加自定义 SOCKS5（格式 host:port:username:password），持久化到 custom-proxies.json。
+ * 可选 `label` / `note`：备注（用于区分同一 host:port 下不同账号），最长 120 字符。
  */
 app.post("/api/custom-proxies", async (req, res) => {
     try {
@@ -2640,6 +2660,12 @@ app.post("/api/custom-proxies", async (req, res) => {
                 msg: "格式应为 host:port:username:password（端口 1-65535）"
             });
         }
+        const labelRaw =
+            req.body?.label != null
+                ? req.body.label
+                : req.body?.note != null
+                  ? req.body.note
+                  : "";
         const list = readCustomProxiesFile();
         const dup = findDuplicateCustomEntry(list, parsed);
         if (dup) {
@@ -2658,6 +2684,10 @@ app.post("/api/custom-proxies", async (req, res) => {
             password: parsed.password,
             created_at: new Date().toISOString()
         };
+        const lab = normalizeCustomProxyLabel(labelRaw);
+        if (lab) {
+            entry.label = lab;
+        }
         list.push(entry);
         writeCustomProxiesFile(list);
         const apiRow = customProxyToApiRow(entry);
@@ -2671,6 +2701,63 @@ app.post("/api/custom-proxies", async (req, res) => {
         return res.status(500).json({
             success: false,
             msg: e.message || "保存自定义代理失败",
+            error: e.message
+        });
+    }
+});
+
+/**
+ * PATCH /api/custom-proxies/:id
+ * JSON：`{ "label": "…" }` 更新备注（空字符串清除）；用于区分同 host:port 的多条自定义 SOCKS。
+ */
+app.patch("/api/custom-proxies/:id", (req, res) => {
+    try {
+        const id = req.params?.id != null ? String(req.params.id).trim() : "";
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                msg: "缺少自定义代理 id"
+            });
+        }
+        if (!id.startsWith("custom-")) {
+            return res.status(400).json({
+                success: false,
+                msg: "仅支持修改自定义代理（id 需以 custom- 开头）"
+            });
+        }
+        if (!Object.prototype.hasOwnProperty.call(req.body ?? {}, "label")) {
+            return res.status(400).json({
+                success: false,
+                msg: "请求体需包含 label 字段（字符串，可为空以清除备注）"
+            });
+        }
+        const list = readCustomProxiesFile();
+        const idx = list.findIndex((e) => String(e?.id || "") === id);
+        if (idx < 0) {
+            return res.status(404).json({
+                success: false,
+                msg: "未找到自定义代理: " + id
+            });
+        }
+        const lab = normalizeCustomProxyLabel(req.body.label);
+        const entry = list[idx];
+        if (lab) {
+            entry.label = lab;
+        } else {
+            delete entry.label;
+        }
+        list[idx] = entry;
+        writeCustomProxiesFile(list);
+        const apiRow = customProxyToApiRow(entry);
+        return res.json({
+            success: true,
+            msg: "备注已更新",
+            data: apiRow
+        });
+    } catch (e) {
+        return res.status(500).json({
+            success: false,
+            msg: e.message || "更新备注失败",
             error: e.message
         });
     }
@@ -4014,6 +4101,22 @@ app.get("/", (req, res) => {
       line-height: 1;
       padding: 0 2px;
     }
+    .custom-proxy-cue {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 4px;
+      line-height: 1.35;
+      word-break: break-all;
+    }
+    .proxy-actions-cell {
+      white-space: normal;
+      display: inline-flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      max-width: 280px;
+      vertical-align: top;
+    }
   </style>
 </head>
 <body>
@@ -4131,6 +4234,16 @@ app.get("/", (req, res) => {
               />
               <button type="button" id="switchAddCustomSocksBtn" class="cancel-btn">添加到列表</button>
             </div>
+            <label for="switchCustomSocksLabel" style="margin-top:8px;display:block;font-size:13px;color:#6b7280;">备注（可选，区分同地址不同账号）</label>
+            <input
+              type="text"
+              id="switchCustomSocksLabel"
+              class="wifi-name-input"
+              style="width:100%;box-sizing:border-box;margin-top:4px;"
+              placeholder="例如：店铺A、同事账号2"
+              maxlength="120"
+              autocomplete="off"
+            />
           </div>
           <div class="modal-row">
             <label for="switchUserSelect">绑定出站（sing-box SOCKS tag）</label>
@@ -4160,6 +4273,16 @@ app.get("/", (req, res) => {
               />
               <button type="button" id="userAddCustomSocksBtn" class="cancel-btn">添加</button>
             </div>
+            <label for="userCustomSocksLabel" style="margin-top:8px;display:block;font-size:13px;color:#6b7280;">备注（可选）</label>
+            <input
+              type="text"
+              id="userCustomSocksLabel"
+              class="wifi-name-input"
+              style="width:100%;box-sizing:border-box;margin-top:4px;"
+              placeholder="区分同 host:port 的不同账号"
+              maxlength="120"
+              autocomplete="off"
+            />
           </div>
           <div class="modal-row">
             <label for="useProxySelectFromUser">选择今日代理</label>
@@ -4290,8 +4413,10 @@ app.get("/", (req, res) => {
     const cancelUseProxyFromUserBtn = document.getElementById("cancelUseProxyFromUserBtn");
     const confirmUseProxyFromUserBtn = document.getElementById("confirmUseProxyFromUserBtn");
     const switchCustomSocksLine = document.getElementById("switchCustomSocksLine");
+    const switchCustomSocksLabel = document.getElementById("switchCustomSocksLabel");
     const switchAddCustomSocksBtn = document.getElementById("switchAddCustomSocksBtn");
     const userCustomSocksLine = document.getElementById("userCustomSocksLine");
+    const userCustomSocksLabel = document.getElementById("userCustomSocksLabel");
     const userAddCustomSocksBtn = document.getElementById("userAddCustomSocksBtn");
     const nineProxyBarText = document.getElementById("nineProxyBarText");
     const nineProxyLoginBtn = document.getElementById("nineProxyLoginBtn");
@@ -5145,6 +5270,20 @@ app.get("/", (req, res) => {
       useProxyFromUserStatus.textContent = text;
     }
 
+    function customProxyCaptionForUi(item) {
+      if (!item || item.is_custom !== true) {
+        return "";
+      }
+      const lab =
+        item.custom_label != null ? String(item.custom_label).trim() : "";
+      if (lab) {
+        return lab;
+      }
+      const acc =
+        item.custom_account != null ? String(item.custom_account).trim() : "";
+      return acc ? "账号 " + acc : "";
+    }
+
     function buildTodayProxyOptionsHtml(list) {
       const parts = [];
       for (let i = 0; i < list.length; i += 1) {
@@ -5154,11 +5293,13 @@ app.get("/", (req, res) => {
           continue;
         }
         const isCustom = p.is_custom === true;
+        const cue = customProxyCaptionForUi(p);
         const ip = p.ip != null ? String(p.ip).trim() : "";
         const city = p.city != null ? String(p.city) : "";
         const st = p.state != null ? String(p.state).trim() : "";
         const loc = city || (isCustom ? "自定义" : "");
         const label =
+          (cue ? cue + " · " : "") +
           (loc ? loc + " · " : "") +
           (st ? st + " · " : "") +
           (ip || "-") +
@@ -5209,15 +5350,20 @@ app.get("/", (req, res) => {
       sel.appendChild(dirOpt);
     }
 
-    async function addCustomSocksLine(line) {
+    async function addCustomSocksLine(line, labelOpt) {
       const t = String(line || "").trim();
       if (!t) {
         throw new Error("请输入代理字符串");
       }
+      const body = { line: t };
+      const lo = labelOpt != null ? String(labelOpt).trim() : "";
+      if (lo) {
+        body.label = lo;
+      }
       const resp = await fetch("/api/custom-proxies", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ line: t })
+        body: JSON.stringify(body)
       });
       const data = await resp.json();
       if (!resp.ok || data.success === false) {
@@ -5645,6 +5791,24 @@ app.get("/", (req, res) => {
             ? escapeHtml(String(item.bound_wifi_name).trim())
             : "-";
         const isCustom = item && item.is_custom === true;
+        const bindingMain =
+          item.binding != null && String(item.binding).trim() !== ""
+            ? escapeHtml(String(item.binding).trim())
+            : "-";
+        const customCueRaw = customProxyCaptionForUi(item);
+        const bindingCellHtml =
+          isCustom && customCueRaw
+            ? '<div>' +
+              bindingMain +
+              '</div><div class="custom-proxy-cue">' +
+              escapeHtml(customCueRaw) +
+              "</div>"
+            : bindingMain;
+        const customRemarkBtn = isCustom
+          ? '<button type="button" class="cancel-btn" onclick="editCustomProxyLabelFlow(\\'' +
+            escapeHtml(String(item.id || "")) +
+            '\\')">备注</button>'
+          : "";
         const customDeleteBtn = isCustom
           ? hasUserUse
             ? '<button type="button" class="switch-btn" disabled title="该代理正在被用户使用，无法删除">删除</button>'
@@ -5660,11 +5824,11 @@ app.get("/", (req, res) => {
             <td>\${countryFlag(item.country_code)} \${item.country_code || "-"}</td>
             <td>\${item.state || "-"}</td>
             <td class="\${onlineClass}">\${onlineText}</td>
-            <td>\${item.binding || "-"}</td>
+            <td>\${bindingCellHtml}</td>
             <td class="multi-bind-cell">\${boundUserCell}</td>
             <td class="multi-bind-cell">\${boundWifiCell}</td>
             <td class="\${useStatusClass}">\${useStatusText}</td>
-            <td>
+            <td class="proxy-actions-cell">
               <button
                 type="button"
                 class="switch-btn"
@@ -5672,6 +5836,7 @@ app.get("/", (req, res) => {
               >
                 使用
               </button>
+              \${customRemarkBtn}
               \${customDeleteBtn}
             </td>
           </tr>
@@ -5697,7 +5862,9 @@ app.get("/", (req, res) => {
         showActionToast(msg, "error");
         return;
       }
-      if (!window.confirm("确定删除该自定义代理吗？\\n\\nID: " + id)) {
+      const capDel = customProxyCaptionForUi(row);
+      const capDelLine = capDel ? "\\n\\n" + capDel : "";
+      if (!window.confirm("确定删除该自定义代理吗？\\n\\nID: " + id + capDelLine)) {
         return;
       }
       try {
@@ -5714,6 +5881,51 @@ app.get("/", (req, res) => {
     }
     window.deleteCustomProxyFlow = deleteCustomProxyFlow;
 
+    async function editCustomProxyLabelFlow(proxyId) {
+      const id = String(proxyId || "").trim();
+      if (!id.startsWith("custom-")) {
+        setStatus("仅支持修改自定义代理备注");
+        return;
+      }
+      const row = allProxyList.find((p) => String(p.id) === id);
+      if (!row || row.is_custom !== true) {
+        setStatus("未找到自定义代理");
+        return;
+      }
+      const cur =
+        row.custom_label != null ? String(row.custom_label).trim() : "";
+      const next = window.prompt(
+        "自定义 SOCKS 备注（可选，便于区分同一 host:port 的多账号；留空清除备注，列表仍显示 SOCKS 用户名）",
+        cur
+      );
+      if (next === null) {
+        return;
+      }
+      try {
+        setStatus("正在保存备注…");
+        const resp = await fetch(
+          "/api/custom-proxies/" + encodeURIComponent(id),
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ label: next })
+          }
+        );
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || data.success === false) {
+          throw new Error(data.msg || data.error || "保存失败");
+        }
+        await loadProxyList();
+        setStatus("备注已更新 · " + id);
+        showActionToast("备注已保存", "success");
+      } catch (e) {
+        const tip = e.message || String(e);
+        setStatus("备注保存失败: " + tip);
+        showActionToast(tip, "error");
+      }
+    }
+    window.editCustomProxyLabelFlow = editCustomProxyLabelFlow;
+
     async function openSwitchModal(proxyId) {
       if (!proxyId) {
         setStatus("缺少代理 ID");
@@ -5722,9 +5934,21 @@ app.get("/", (req, res) => {
       pendingSwitchProxyId = proxyId;
       setSwitchStatus("");
       const row = allProxyList.find((p) => String(p.id) === String(proxyId));
-      switchProxyMeta.textContent = row
-        ? "代理 ID: " + proxyId + (row.ip ? " · IP " + row.ip : "")
-        : "代理 ID: " + proxyId;
+      if (row) {
+        const bits = ["代理 ID: " + proxyId];
+        if (row.is_custom === true) {
+          const c = customProxyCaptionForUi(row);
+          if (c) {
+            bits.push(c);
+          }
+        }
+        if (row.ip) {
+          bits.push("IP " + String(row.ip).trim());
+        }
+        switchProxyMeta.textContent = bits.join(" · ");
+      } else {
+        switchProxyMeta.textContent = "代理 ID: " + proxyId;
+      }
 
       try {
         const resp = await fetch("/api/singbox-users");
@@ -6068,8 +6292,14 @@ app.get("/", (req, res) => {
       try {
         switchAddCustomSocksBtn.disabled = true;
         setSwitchStatus("正在保存自定义代理…");
-        await addCustomSocksLine(switchCustomSocksLine.value);
+        await addCustomSocksLine(
+          switchCustomSocksLine.value,
+          switchCustomSocksLabel ? switchCustomSocksLabel.value : ""
+        );
         switchCustomSocksLine.value = "";
+        if (switchCustomSocksLabel) {
+          switchCustomSocksLabel.value = "";
+        }
         await loadProxyList();
         setSwitchStatus(
           "已加入代理列表（顶部「自定义」）。当前仍为已选中的那条；新代理请到列表中点「使用」。"
@@ -6087,8 +6317,14 @@ app.get("/", (req, res) => {
       try {
         userAddCustomSocksBtn.disabled = true;
         setUseProxyFromUserStatus("正在保存…");
-        const row = await addCustomSocksLine(userCustomSocksLine.value);
+        const row = await addCustomSocksLine(
+          userCustomSocksLine.value,
+          userCustomSocksLabel ? userCustomSocksLabel.value : ""
+        );
         userCustomSocksLine.value = "";
+        if (userCustomSocksLabel) {
+          userCustomSocksLabel.value = "";
+        }
         const { list } = await fetchProxyListData();
         if (!list.length) {
           useProxySelectFromUser.innerHTML =
