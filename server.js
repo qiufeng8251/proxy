@@ -3930,19 +3930,23 @@ app.get("/", (req, res) => {
     .nineproxy-refresh-btn:hover {
       background: #e5e7eb;
     }
-    .user-actions-cell {
+    /* 勿在 td 上 display:flex，否则会脱离 table-cell 对齐模型，与其它列竖向对不齐 */
+    .user-table td.user-actions-cell {
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+    .user-actions-inner {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 8px;
-      white-space: nowrap;
-      width: 100%;
+      flex-wrap: wrap;
       box-sizing: border-box;
     }
-    .user-actions-cell .switch-btn,
-    .user-actions-cell .nine-filter-rule-btn,
-    .user-actions-cell .nine-rule-switch-btn,
-    .user-actions-cell .nine-filter-actions {
+    .user-actions-inner .switch-btn,
+    .user-actions-inner .nine-filter-rule-btn,
+    .user-actions-inner .nine-rule-switch-btn,
+    .user-actions-inner .nine-filter-actions {
       flex-shrink: 0;
     }
     .nine-filter-actions {
@@ -4738,6 +4742,7 @@ app.get("/", (req, res) => {
           "<td>" + (city || '<span class="muted-cell">-</span>') + "</td>" +
           "<td>" + onlineCell + "</td>" +
           '<td class="user-actions-cell">' +
+          '<div class="user-actions-inner">' +
           '<button type="button" class="switch-btn use-from-user-btn" data-outbound="' +
           tagAttr +
           '">切换</button>' +
@@ -4751,7 +4756,7 @@ app.get("/", (req, res) => {
               '">筛选规则</button>' +
               "</span>"
             : "") +
-          "</td>" +
+          "</div></td>" +
           "</tr>"
         );
       }).join("");
