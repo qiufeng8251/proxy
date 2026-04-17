@@ -588,7 +588,7 @@ async function enrichProxyState(list) {
  * @returns {import("socks-proxy-agent").SocksProxyAgent}
  */
 function buildSocksAgent(proxy) {
-    const url = `socks5://${proxy.username}:${proxy.password}@${proxy.ip}:${proxy.port}`;
+    const url = `socks5://${decodeURIComponent(proxy.username)}:${proxy.password}@${proxy.ip}:${proxy.port}`;
     return new SocksProxyAgent(url);
 }
 
@@ -637,8 +637,8 @@ function formatSocksHostForUrl(host) {
 function buildSocksAgentFromEntry(entry) {
     const host = formatSocksHostForUrl(entry.host);
     const port = Number(entry.port);
-    const u = encodeURIComponent(String(entry.username ?? ""));
-    const p = encodeURIComponent(String(entry.password ?? ""));
+    const u = String(entry.username ?? "");
+    const p = String(entry.password ?? "");
     const url = `socks5://${u}:${p}@${host}:${port}`;
     return new SocksProxyAgent(url);
 }
