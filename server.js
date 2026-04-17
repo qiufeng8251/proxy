@@ -785,7 +785,24 @@ function normalizeBindingKey(addr) {
 }
 
 /**
- * 读取 sing-box 配置中所有 SOCKS 出站，按 `server:port` 分组得到绑定的出站 tag 列表
+ * SOCKS 绑定匹配键（与 attachBoundUserToProxyList、`custom-proxy` 删除校验一致）。
+ * 无用户名：等价于 `normalizeBindingKey(host:port)`。
+ * 有用户名：`host:port:username` 再规范化，与同地址无认证或其它账号区分。
+ */
+function socksAuthBindingLookupKey(server, port, username) {
+    const host = String(server ?? "").trim();
+    const p = Number(port);
+    const portPart = Number.isFinite(p) && p > 0 ? p : String(port ?? "").trim();
+    const u = String(username ?? "").trim();
+    let composite = `${host}:${portPart}`;
+    if (u) {
+        composite += `:${u}`;
+    }
+    return normalizeBindingKey(composite);
+}
+
+/**
+ * 读取 sing-box 配置中所有 SOCKS 出站，按 `server:port`（及非空 `username` 时含账号）分组得到绑定的出站 tag 列表
  *（多出站可共用同一端口，故值为 string[]）。
  * @returns {Record<string, string[]>}
  */
@@ -809,7 +826,11 @@ function getSocksBindingToUsersMap() {
                 && ob.server
                 && ob.server_port != null
             ) {
-                const key = normalizeBindingKey(`${ob.server}:${ob.server_port}`);
+                const key = socksAuthBindingLookupKey(
+                    ob.server,
+                    ob.server_port,
+                    ob.username != null ? ob.username : ""
+                );
                 if (!key) {
                     continue;
                 }
@@ -1001,6 +1022,7 @@ function setNineFilterForOutbound(tag, filter) {
 /**
  * 将 9proxy 返回的 `binding` 与本地 SOCKS 出站对照，为每条代理补充
  * `bound_users`、`bound_user`（顿号拼接）、`bound_wifi_name`（与 tag 顺序对齐的 WiFi，无则「—」）。
+ * 匹配键：默认 `binding`（host:port）；自定义 SOCKS 使用 `binding_lookup_key`（含 SOCKS 用户名时与出站一致）。
  * @param {object[]|null|undefined} list
  * @param {Record<string, string|string[]>} bindingMap `getSocksBindingToUsersMap()` 的返回值
  * @returns {object[]|null|undefined}
@@ -1011,7 +1033,10 @@ function attachBoundUserToProxyList(list, bindingMap) {
     }
     const wifiByTag = getOutboundWifiNameMap();
     return list.map((item) => {
-        const key = normalizeBindingKey(item?.binding);
+        const key =
+            item?.binding_lookup_key != null && String(item.binding_lookup_key).trim() !== ""
+                ? String(item.binding_lookup_key).trim()
+                : normalizeBindingKey(item?.binding);
         let tags = [];
         if (key && bindingMap[key]) {
             const v = bindingMap[key];
@@ -1571,7 +1596,8 @@ function writeCustomProxiesFile(proxies) {
 }
 
 /**
- * 转为与 today_list 类似的列表项（不含密码）；`binding` 仅 `host:port`（与 sing-box 出站比对键一致）。
+ * 转为与 today_list 类似的列表项（不含密码）；`binding` 仅 `host:port`（界面与直连切换比对仍用不含账号串）。
+ * `binding_lookup_key`：`getSocksBindingToUsersMap` / `attachBoundUserToProxyList` 匹配用（含用户名）。
  * `custom_account` 用于界面区分「同 host:port、不同账密」。
  * @param {{ id: string, host: string, port: number, username?: string }} c
  */
@@ -1586,6 +1612,7 @@ function customProxyToApiRow(c) {
         state: "",
         is_online: false,
         binding: bind,
+        binding_lookup_key: socksAuthBindingLookupKey(c.host, c.port, c.username),
         is_custom: true,
         custom_account: account
     };
@@ -2737,7 +2764,7 @@ app.delete("/api/custom-proxies/:id", (req, res) => {
         }
 
         const entry = list[idx];
-        const bindKey = normalizeBindingKey(`${entry.host}:${entry.port}`);
+        const bindKey = socksAuthBindingLookupKey(entry.host, entry.port, entry.username);
         const bindingMap = getSocksBindingToUsersMap();
         const usingTags = Array.isArray(bindingMap[bindKey]) ? bindingMap[bindKey] : [];
         if (usingTags.length > 0) {
