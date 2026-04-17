@@ -3583,7 +3583,7 @@ app.get("/", (req, res) => {
     }
     .user-table th,
     .user-table td {
-      vertical-align: top;
+      vertical-align: middle;
     }
     .muted-cell {
       color: #9ca3af;
@@ -3933,7 +3933,7 @@ app.get("/", (req, res) => {
     .user-actions-cell {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
+      align-items: center;
       gap: 8px;
       white-space: nowrap;
       width: 100%;
