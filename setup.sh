@@ -58,20 +58,40 @@ if [ "$INSTALL_NINEPROXY" -eq 1 ]; then
     echo "启动 9proxy 服务（systemctl start 9proxyd.service）..."
     sudo systemctl start 9proxyd.service || die "systemctl start 9proxyd.service 失败（当前启动）"
 
+    if ! systemctl is-active --quiet 9proxyd.service; then
+        echo "systemctl status 9proxyd.service:" >&2
+        systemctl status 9proxyd.service --no-pager -l >&2 || true
+        die "9proxyd 未处于 active 状态；请查看: sudo journalctl -u 9proxyd.service -n 80 --no-pager"
+    fi
+    # 守护进程偶发稍晚就绪，避免紧接着 CLI 仍报 daemon not running
+    sleep 1
+
     echo "跳过 9proxy 账号登录（按需可手动执行: 9proxy auth -u USER -p PASS）。"
 
     echo "设置 9proxy 端口数量为 50..."
-    9proxy setting -l 50 || die "9proxy 设置端口数量失败（命令: 9proxy setting -l 50）"
+    if SETTING_OUT="$(9proxy setting -l 50 2>&1)"; then
+        :
+    else
+        echo "$SETTING_OUT" >&2
+        if echo "$SETTING_OUT" | grep -qi 'daemon not running'; then
+            die "9proxy 守护进程未就绪（setting 失败）。请执行: sudo systemctl status 9proxyd.service；sudo journalctl -u 9proxyd.service -n 80 --no-pager"
+        fi
+        die "9proxy 设置端口数量失败（命令: 9proxy setting -l 50）"
+    fi
 
     echo "检查 API 状态..."
     API_STATUS_OUTPUT="$(9proxy api -d 2>&1 || true)"
     echo "$API_STATUS_OUTPUT"
 
+    if echo "$API_STATUS_OUTPUT" | grep -qi 'daemon not running'; then
+        die "9proxy 守护进程未运行，无法解析 API。请先确认: sudo systemctl start 9proxyd.service；查看日志: sudo journalctl -u 9proxyd.service -n 80 --no-pager。若 sudo 提示 unable to resolve host，请在 /etc/hosts 增加: 127.0.0.1 $(hostname -f 2>/dev/null || hostname)"
+    fi
+
     API_STATUS="$(echo "$API_STATUS_OUTPUT" | awk -F: '/API Status/{print $2}' | xargs | tr '[:upper:]' '[:lower:]')"
     API_PORT="$(echo "$API_STATUS_OUTPUT" | awk -F: '/API Port/{print $2}' | xargs)"
 
     if [ -z "$API_STATUS" ] || [ -z "$API_PORT" ]; then
-        die "无法从 9proxy api -d 输出中解析 API Status/API Port"
+        die "无法从 9proxy api -d 输出中解析 API Status/API Port（请先确认 9proxyd 已运行且 CLI 输出含上述字段）"
     fi
 
     if [ "$API_PORT" != "8080" ]; then
