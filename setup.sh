@@ -147,7 +147,7 @@ PROJECT_DIR="proxy"
 if [ -d "$PROJECT_DIR" ]; then
     echo "项目目录已存在，跳过 clone"
 else
-    git clone https://gitee.com/qiufeng1/proxy.git || die "git clone 项目失败"
+    git clone https://github.com/qiufeng8251/proxy.git || die "git clone 项目失败"
 fi
 
 cd "$PROJECT_DIR" || die "无法进入目录: $PROJECT_DIR"
