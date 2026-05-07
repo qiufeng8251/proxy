@@ -20,7 +20,7 @@ show_menu() {
     echo ""
     echo "请选择操作："
     echo "  1) 安装（完整流程）"
-    echo "  2) 更新（git pull、npm install、PM2 重启，并重新应用 sing-box 配置）"
+    echo "  2) 更新（git pull、npm install、PM2 重启；如需改 sing-box 请选 4）"
     echo "  3) 卸载（将 $CONFIG_FILE 恢复为修改前的备份并重启 sing-box）"
     echo "  4) 仅更新 sing-box（仅执行 configure_singbox，不改代码、不重启 PM2）"
     echo ""
@@ -321,7 +321,7 @@ do_install() {
 do_update() {
     install_base_deps
 
-    for c in git jq npm node pm2; do
+    for c in git npm node pm2; do
         have_cmd "$c" || die "缺少命令: $c（请先执行选项 1 安装）"
     done
 
@@ -341,7 +341,6 @@ do_update() {
     fi
     pm2 save || die "pm2 save 失败"
 
-    configure_singbox
     echo "========== 更新完成 =========="
 }
 
