@@ -3,7 +3,6 @@
 set -euo pipefail
 
 CONFIG_FILE="/etc/v2ray-agent/sing-box/conf/config.json"
-ORIGINAL_BACKUP="${CONFIG_FILE}.bak.original"
 PROJECT_DIR="proxy"
 ECOSYSTEM_FILE="ecosystem.config.cjs"
 
@@ -21,7 +20,7 @@ show_menu() {
     echo "请选择操作："
     echo "  1) 安装（完整流程）"
     echo "  2) 更新（git pull、npm install、PM2 重启；如需改 sing-box 请选 4）"
-    echo "  3) 卸载（将 $CONFIG_FILE 恢复为修改前的备份并重启 sing-box）"
+    echo "  3) 卸载（PM2 停止 proxy-server；从 $CONFIG_FILE 删除 outbounds、route 并重启 sing-box）"
     echo "  4) 仅更新 sing-box（仅执行 configure_singbox，不改代码、不重启 PM2）"
     echo ""
 }
@@ -193,13 +192,6 @@ configure_singbox() {
 
     [ -f "$CONFIG_FILE" ] || die "未找到 sing-box 配置: $CONFIG_FILE"
 
-    echo "备份 sing-box 配置..."
-    if [ ! -f "$ORIGINAL_BACKUP" ]; then
-        echo "首次修改：保存原始副本 -> $ORIGINAL_BACKUP"
-        sudo cp "$CONFIG_FILE" "$ORIGINAL_BACKUP" || die "保存原始 sing-box 配置失败"
-    fi
-    sudo cp "$CONFIG_FILE" "${CONFIG_FILE}.bak" || die "备份 sing-box 配置失败"
-
     echo "按入站 UUID 用户生成出站：tag=用户ID（UUID 首段 8 位），类型默认为 direct（直连）；并写入 auth_user 路由..."
 
     read -r -p "WiFi 名称前缀（写入 conf/proxy-user-meta.json，供控制台显示，如 OB → OB_1、OB_2…；留空则清空映射）: " WIFI_NAME_PREFIX
@@ -354,25 +346,38 @@ do_configure_singbox_only() {
 }
 
 do_uninstall_config_only() {
-    echo "========== 卸载：恢复 sing-box config.json =========="
+    install_base_deps
+    have_cmd jq || die "缺少 jq"
 
-    if [ -f "$ORIGINAL_BACKUP" ]; then
-        echo "使用首次修改前备份恢复: $ORIGINAL_BACKUP"
-        sudo cp "$ORIGINAL_BACKUP" "$CONFIG_FILE" || die "恢复 $CONFIG_FILE 失败"
-    elif [ -f "${CONFIG_FILE}.bak" ]; then
-        echo "未找到 $ORIGINAL_BACKUP，使用最近一次修改前备份: ${CONFIG_FILE}.bak"
-        sudo cp "${CONFIG_FILE}.bak" "$CONFIG_FILE" || die "恢复 $CONFIG_FILE 失败"
+    echo "========== 卸载：PM2 停止项目、清理 sing-box 配置 =========="
+
+    if have_cmd pm2; then
+        if pm2 describe proxy-server >/dev/null 2>&1; then
+            echo "停止 PM2 应用 proxy-server..."
+            pm2 stop proxy-server || die "pm2 stop proxy-server 失败"
+            pm2 save || die "pm2 save 失败"
+        else
+            echo "PM2 中无应用 proxy-server，跳过停止。"
+        fi
     else
-        die "找不到备份文件（$ORIGINAL_BACKUP 或 ${CONFIG_FILE}.bak），无法恢复 config.json"
+        echo "未找到 pm2 命令，跳过 PM2 停止。"
     fi
 
-    sudo jq empty "$CONFIG_FILE" || die "恢复后的 sing-box 配置 JSON 无效"
+    [ -f "$CONFIG_FILE" ] || die "未找到: $CONFIG_FILE"
+
+    TMP_JSON="$(mktemp)"
+    trap 'rm -f "$TMP_JSON"' EXIT
+
+    sudo jq 'del(.outbounds, .route)' "$CONFIG_FILE" >"$TMP_JSON" || die "jq 删除 outbounds/route 失败"
+    jq empty "$TMP_JSON" || die "生成的 JSON 无效"
+    sudo cp "$TMP_JSON" "$CONFIG_FILE" || die "写入 $CONFIG_FILE 失败"
+    sudo jq empty "$CONFIG_FILE" || die "写入后的 sing-box 配置 JSON 无效"
 
     echo "重启 sing-box..."
     sudo systemctl restart sing-box || die "systemctl restart sing-box 失败"
 
-    echo "已将 $CONFIG_FILE 恢复为备份中的内容。"
-    echo "========== 卸载（配置恢复）完成 =========="
+    echo "已停止 proxy-server（若存在）；已从 $CONFIG_FILE 移除顶层字段 outbounds、route。"
+    echo "========== 卸载完成 =========="
 }
 
 show_menu
